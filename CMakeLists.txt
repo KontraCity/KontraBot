@@ -12,7 +12,7 @@ add_executable(KontraBot
     "source/common/js_interpreter.cpp"
     "source/youtube/error.cpp"
     "source/main.cpp"
-)
+ "source/youtube/client.cpp")
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Packages configuration --- ###

@@ -2,22 +2,11 @@
 #include <iostream>
 
 // Custom modules
-#include "common/curl.hpp"
+#include "youtube/client.hpp"
 using namespace kc;
 
 int main()
 {
-    try
-    {
-        Curl::Response response = Curl::Get("https://www.youtube.com");
-        std::cout << "https://www.youtube.com access: " << response.code << '\n';
-    }
-    catch (const std::runtime_error& error)
-    {
-        std::cerr << "Runtime error: " << error.what() << '\n';
-    }
-    catch (const std::invalid_argument& error)
-    {
-        std::cerr << "Invalid argument: " << error.what() << '\n';
-    }
+    auto response = Youtube::Client::Instance->requestApi(Youtube::Client::Type::Web, "player", { {"videoId", "1V_xRb0x9aw"} });
+    std::cout << response.code << '\n';
 }
