@@ -220,4 +220,17 @@ void Youtube::Video::downloadInfo()
     }
 }
 
+void Youtube::Video::checkOptional() const
+{
+    /*
+    *   It should be possible to call this function from getters, hence it is const.
+    *   However optional fields getters may require the data to be downloaded, so it is okay to disable const qualifier if needed.
+    */
+    if (!m_optionalKnown)
+    {
+        Video* mutableThis = const_cast<Video*>(this);
+        mutableThis->downloadInfo();
+    }
+}
+
 } // namespace kc

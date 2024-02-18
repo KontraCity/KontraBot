@@ -41,9 +41,9 @@ namespace Youtube
         {
             /*
             *       Normal YouTube video that can be a:
-            *               - Traditional video;
-            *               - YouTube shorts video;
-            *               - Livestream recording.
+            *           - Traditional video;
+            *           - YouTube shorts video;
+            *           - Livestream recording.
             *       All info fields are available and audio can be extracted.
             */
             Normal,
@@ -56,8 +56,8 @@ namespace Youtube
 
             /*
             *       Premiered YouTube video that has a reveal date and will be:
-            *               -> Revealed as a livestream;
-            *               -> Converted to normal YouTube video after the reveal.
+            *           -> Revealed as a livestream;
+            *           -> Converted to normal YouTube video after the reveal.
             *       Duration and view count fields are not availablem, audio can't be extracted.
             */
             Upcoming,
@@ -124,6 +124,11 @@ namespace Youtube
         /// @throw kc::Youtube::YoutubeError if YouTube error occurs
         void downloadInfo();
 
+        /// @brief Check optional fields availability
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        void checkOptional() const;
+
         /// @brief Get video ID
         /// @return Video ID
         inline const std::string& id() const
@@ -186,12 +191,7 @@ namespace Youtube
         /// @return Video category
         inline const std::string& category() const
         {
-            if (!m_optionalKnown)
-            {
-                Video* mutableThis = const_cast<Video*>(this);
-                mutableThis->downloadInfo();
-            }
-
+            checkOptional();
             return m_category;
         }
 
@@ -201,12 +201,7 @@ namespace Youtube
         /// @return Video upload date
         inline dt::date uploadDate() const
         {
-            if (!m_optionalKnown)
-            {
-                Video* mutableThis = const_cast<Video*>(this);
-                mutableThis->downloadInfo();
-            }
-
+            checkOptional();
             return m_uploadDate;
         }
 
@@ -216,12 +211,7 @@ namespace Youtube
         /// @return Video chapters
         inline const std::vector<Chapter>& chapters() const
         {
-            if (!m_optionalKnown)
-            {
-                Video* mutableThis = const_cast<Video*>(this);
-                mutableThis->downloadInfo();
-            }
-
+            checkOptional();
             return m_chapters;
         }
     };
