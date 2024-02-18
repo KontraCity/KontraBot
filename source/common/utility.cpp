@@ -2,18 +2,6 @@
 
 namespace kc {
 
-void Utility::EraseCommas(std::string& string)
-{
-    string.erase(
-        std::remove_if(
-            string.begin(),
-            string.end(),
-            [](char character) { return (character == ','); }
-        ),
-        string.end()
-    );
-}
-
 std::string Utility::ToString(dt::date date)
 {
     return fmt::format(

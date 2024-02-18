@@ -2,12 +2,10 @@
 
 // STL modules
 #include <string>
+#include <algorithm>
 
 // Library nlohmann/json
 #include <nlohmann/json.hpp>
-
-// Custom modules
-#include "common/utility.hpp"
 
 namespace kc {
 

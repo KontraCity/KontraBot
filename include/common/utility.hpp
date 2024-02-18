@@ -2,7 +2,6 @@
 
 // STL modules
 #include <string>
-#include <algorithm>
 
 // Library Boost.Date_Time
 #include <boost/date_time.hpp>
@@ -18,10 +17,6 @@ namespace pt = boost::posix_time;
 
 namespace Utility
 {
-    /// @brief Erase all commas characters in a string
-    /// @param string String to modify
-    void EraseCommas(std::string& string);
-
     /// @brief Convert date to string
     /// @param date Date to convert
     /// @return Converted date

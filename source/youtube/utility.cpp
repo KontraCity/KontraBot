@@ -39,7 +39,7 @@ uint64_t Youtube::Utility::ExtractViewCount(std::string viewCountString)
     if (viewCountString == "No views")
         return 0;
 
-    kc::Utility::EraseCommas(viewCountString);
+    std::erase_if(viewCountString, [](char character) { return (character == ','); });
     return std::stoull(viewCountString);
 }
 
