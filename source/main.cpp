@@ -2,34 +2,27 @@
 #include <iostream>
 
 // Custom modules
-#include "youtube/error.hpp"
+#include "common/js_interpreter.hpp"
 using namespace kc;
 
 int main()
 {
     try
     {
-        throw Youtube::YoutubeError(
-            Youtube::YoutubeError::Type::Unplayable,
-            "sJL6WA-aGkQ",
-            "Video unavailable",
-            "The uploader has not made this video available in your country"
-        );
-    }
-    catch (const Youtube::YoutubeError& error)
-    {
-        std::cerr << "YouTube error occured: " << error.what() << '\n';
-    }
+        JsInterpreter interpreter;
+        interpreter.execute("function fib(n) { return n <= 1 ? n : fib(n - 1) + fib(n - 2); }");
+        std::cout << interpreter.execute("console.log(fib(12))") << '\n';
 
-    try
-    {
-        throw Youtube::LocalError(
-            Youtube::LocalError::Type::ShortsPlaylist,
-            "PLnN2bBxGARv7fRxsCcWaxvGE6sn5Ypp1H"
-        );
+        interpreter.reset();
+        interpreter.execute("fib(12)");
     }
-    catch (const Youtube::LocalError& error)
+    catch (const std::runtime_error& error)
     {
-        std::cerr << "Local error occured: " << error.what() << '\n';
+        std::cerr << "Runtime error: " << error.what() << '\n';
     }
+    catch (const std::invalid_argument& error)
+    {
+        std::cerr << "Invalid argument: " << error.what() << '\n';
+    }
+    
 }
