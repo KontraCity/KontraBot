@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### --- Executable configuration --- ###
 add_executable(KontraBot
+    "source/youtube/error.cpp"
     "source/main.cpp"
 )
 target_include_directories(KontraBot PRIVATE "include/")
