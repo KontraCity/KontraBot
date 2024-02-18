@@ -1,0 +1,52 @@
+#include "youtube/utility.hpp"
+
+namespace kc {
+
+std::string Youtube::Utility::ExtractThumbnailUrl(const json& thumbnailsObject)
+{
+    int bestResolution = 0;
+    std::string bestThumbnailUrl;
+    for (const json& thumbnailObject : thumbnailsObject)
+    {
+        int currentResolution = (thumbnailObject["width"].get<int>() * thumbnailObject["height"].get<int>());
+        if (currentResolution > bestResolution)
+        {
+            bestResolution = currentResolution;
+            bestThumbnailUrl = thumbnailObject["url"];
+        }
+    }
+
+    return bestThumbnailUrl;
+}
+
+std::string Youtube::Utility::ExtractString(const json& stringObject)
+{
+    if (stringObject.contains("simpleText"))
+        return stringObject["simpleText"];
+
+    std::string string;
+    for (const json& runObject : stringObject["runs"])
+        string += runObject["text"];
+    return string;
+}
+
+uint64_t Youtube::Utility::ExtractViewCount(std::string viewCountString)
+{
+    /*
+    *   If the item has no views, YouTube API will return "No views" as a view count string instead of "0".
+    *   This has to be checked in order for std::stoull() to not fail.
+    */
+    if (viewCountString == "No views")
+        return 0;
+
+    kc::Utility::EraseCommas(viewCountString);
+    return std::stoull(viewCountString);
+}
+
+uint64_t Youtube::Utility::ExtractViewCount(const json& viewCountObject)
+{
+    std::string viewCountString = ExtractString(viewCountObject);
+    return ExtractViewCount(viewCountString);
+}
+
+} // namespace kc

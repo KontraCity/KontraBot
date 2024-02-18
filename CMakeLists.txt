@@ -10,9 +10,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(KontraBot
     "source/common/curl.cpp"
     "source/common/js_interpreter.cpp"
+    "source/common/utility.cpp"
+    "source/youtube/client.cpp"
     "source/youtube/error.cpp"
+    "source/youtube/utility.cpp"
     "source/main.cpp"
- "source/youtube/client.cpp")
+)
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Packages configuration --- ###
