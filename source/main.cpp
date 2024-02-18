@@ -2,19 +2,15 @@
 #include <iostream>
 
 // Custom modules
-#include "common/js_interpreter.hpp"
+#include "common/curl.hpp"
 using namespace kc;
 
 int main()
 {
     try
     {
-        JsInterpreter interpreter;
-        interpreter.execute("function fib(n) { return n <= 1 ? n : fib(n - 1) + fib(n - 2); }");
-        std::cout << interpreter.execute("console.log(fib(12))") << '\n';
-
-        interpreter.reset();
-        interpreter.execute("fib(12)");
+        Curl::Response response = Curl::Get("https://www.youtube.com");
+        std::cout << "https://www.youtube.com access: " << response.code << '\n';
     }
     catch (const std::runtime_error& error)
     {
@@ -24,5 +20,4 @@ int main()
     {
         std::cerr << "Invalid argument: " << error.what() << '\n';
     }
-    
 }
