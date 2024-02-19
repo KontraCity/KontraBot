@@ -8,10 +8,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### --- Executable configuration --- ###
 add_executable(KontraBot "source/main.cpp"
+    # Bot modules
+    "source/bot/config.cpp"
+
+    # Common modules
     "source/common/curl.cpp"
     "source/common/js_interpreter.cpp"
     "source/common/utility.cpp"
 
+    # YouTube modules
     "source/youtube/client.cpp"
     "source/youtube/error.cpp"
     "source/youtube/extractor.cpp"
