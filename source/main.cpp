@@ -8,6 +8,7 @@
 #include "common/utility.hpp"
 #include "youtube/item.hpp"
 #include "youtube/search.hpp"
+#include "youtube/extractor.hpp"
 using namespace kc;
 
 static void PrintItemInfo(const Youtube::Item& item)
@@ -88,6 +89,13 @@ static void PrintSearchResult(const Youtube::SearchResult& result)
 
 int main()
 {
-    Youtube::SearchResult result = Youtube::Search("Music playlist");
-    PrintSearchResult(result);
+    fmt::print("{: >9} {}\n", "Timestamp", "Length");
+    Youtube::Extractor extractor("WVOH00wVFbc");
+    while (true)
+    {
+        Youtube::Extractor::Frame frame = extractor.extractFrame();
+        if (frame.data.empty())
+            break;
+        fmt::print("{: >9} {} bytes\n", Utility::ToString(pt::time_duration(0, 0, 0, frame.timestamp * 1000)), frame.data.size());
+    }
 }

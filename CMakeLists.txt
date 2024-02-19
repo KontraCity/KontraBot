@@ -7,17 +7,18 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### --- Executable configuration --- ###
-add_executable(KontraBot
+add_executable(KontraBot "source/main.cpp"
     "source/common/curl.cpp"
     "source/common/js_interpreter.cpp"
     "source/common/utility.cpp"
+
     "source/youtube/client.cpp"
     "source/youtube/error.cpp"
+    "source/youtube/extractor.cpp"
     "source/youtube/playlist.cpp"
     "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
-    "source/main.cpp"
 )
 target_include_directories(KontraBot PRIVATE "include/")
 

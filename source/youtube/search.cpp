@@ -44,7 +44,7 @@ Youtube::SearchResult Youtube::Search(const std::string& query)
         ));
     }
 
-    // "tv_embedded" client is used for search because its response is the lightest.
+    // "tv_embedded" client is used for search because it's response is the lightest.
     Curl::Response searchResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "search", { {"query", query} });
     if (searchResponse.code != 200)
         throw std::runtime_error("kc::Youtube::Search(): Couldn't get YouTube API response");
@@ -71,7 +71,7 @@ Youtube::SearchResult Youtube::Related(const std::string& videoId)
         ));
     }
 
-    // "tv_embedded" client is used for related search because its response is the lightest.
+    // "tv_embedded" client is used for related search because it's response is the lightest.
     Curl::Response nextResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "next", { {"videoId", videoId } });
     if (nextResponse.code != 200)
         throw std::runtime_error("kc::Youtube::Related(): Couldn't get YouTube API response");
