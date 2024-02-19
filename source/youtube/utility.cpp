@@ -39,7 +39,14 @@ uint64_t Youtube::Utility::ExtractViewCount(std::string viewCountString)
     if (viewCountString == "No views")
         return 0;
 
-    std::erase_if(viewCountString, [](char character) { return (character == ','); });
+    viewCountString.erase(
+        std::remove_if(
+            viewCountString.begin(),
+            viewCountString.end(),
+            [](char character) { return (character == ','); }
+        ),
+        viewCountString.end()
+    );
     return std::stoull(viewCountString);
 }
 

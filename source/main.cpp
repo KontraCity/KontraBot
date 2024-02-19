@@ -2,28 +2,18 @@
 #include <iostream>
 
 // Custom modules
-#include "bot/timeout.hpp"
+#include "bot/locale/locale.hpp"
+#include "bot/locale/locale_en.hpp"
+#include "bot/locale/locale_ru.hpp"
 using namespace kc;
+
+static void Test(const Bot::Locale::Pointer& locale)
+{
+    std::cout << locale->SeekingTo("TIMESTAMP") << '\n';
+}
 
 int main()
 {
-    Bot::Timeout timeout([]() { std::cout << "Timeout!\n"; }, 1);
-    while (true)
-    {
-        char input;
-        std::cin >> input;
-        switch (input)
-        {
-            case 'E':
-                timeout.enable();
-                break;
-            case 'D':
-                timeout.disable();
-                break;
-            case 'R':
-                timeout.reset();
-                break;
-        }
-        std::cout << (timeout.enabled() ? "Enabled" : "Disabled") << '\n';
-    }
+    Test(std::make_unique<Bot::LocaleEn>());
+    Test(std::make_unique<Bot::LocaleRu>());
 }

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 project(KontraBot VERSION 1.9)
 
 ### --- C++ standart configuration --- ###
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 ### --- Executable configuration --- ###
@@ -25,7 +25,7 @@ add_executable(KontraBot "source/main.cpp"
     "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
-)
+ )
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Packages configuration --- ###

@@ -123,7 +123,14 @@ void Youtube::Playlist::parseVideos(const json& videoContentsObject)
 void Youtube::Playlist::parseVideoCount(const json& videoCountObject)
 {
     std::string videoCountString = Utility::ExtractString(videoCountObject);
-    std::erase_if(videoCountString, [](char character) { return (character == ','); });
+    videoCountString.erase(
+        std::remove_if(
+            videoCountString.begin(),
+            videoCountString.end(),
+            [](char character) { return (character == ','); }
+        ),
+        videoCountString.end()
+    );
     m_videoCount = (videoCountString == "No videos" ? 0 : std::stoi(videoCountString));
 }
 
