@@ -2,11 +2,28 @@
 #include <iostream>
 
 // Custom modules
-#include "bot/config.hpp"
+#include "bot/timeout.hpp"
 using namespace kc;
 
 int main()
 {
-    Bot::Config::Pointer config = std::make_shared<Bot::Config>();
-    std::cout << config->discordBotApiToken() << '\n';
+    Bot::Timeout timeout([]() { std::cout << "Timeout!\n"; }, 1);
+    while (true)
+    {
+        char input;
+        std::cin >> input;
+        switch (input)
+        {
+            case 'E':
+                timeout.enable();
+                break;
+            case 'D':
+                timeout.disable();
+                break;
+            case 'R':
+                timeout.reset();
+                break;
+        }
+        std::cout << (timeout.enabled() ? "Enabled" : "Disabled") << '\n';
+    }
 }

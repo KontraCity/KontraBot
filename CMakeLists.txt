@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_executable(KontraBot "source/main.cpp"
     # Bot modules
     "source/bot/config.cpp"
+    "source/bot/timeout.cpp"
 
     # Common modules
     "source/common/curl.cpp"
