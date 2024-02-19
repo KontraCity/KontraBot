@@ -7,6 +7,7 @@
 // Custom modules
 #include "common/utility.hpp"
 #include "youtube/item.hpp"
+#include "youtube/search.hpp"
 using namespace kc;
 
 static void PrintItemInfo(const Youtube::Item& item)
@@ -51,21 +52,42 @@ static void PrintItemInfo(const Youtube::Item& item)
             fmt::print("| {}\n", "Videos:");
             fmt::print("| | {: >5} {}\n", "Index", "Title");
             for (Youtube::Playlist::Iterator iterator = playlist.begin(); iterator; ++iterator)
-                fmt::print("| | {: >5} {}\n", iterator.index(), iterator->title());
+                fmt::print("| | {: >5} {}\n", (iterator.index() + 1), iterator->title());
             break;
         }
-        default:
+    }
+}
+
+static void PrintSearchResult(const Youtube::SearchResult& result)
+{
+    switch (result.type)
+    {
+        case Youtube::SearchResult::Type::Search:
+            fmt::print("Search \"{}\":\n", result.query);
             break;
+        case Youtube::SearchResult::Type::Related:
+            fmt::print("Related search \"{}\":\n", result.query);
+            break;
+    }
+
+    if (result.items.empty())
+    {
+        std::cout << "| No results.\n";
+        return;
+    }
+     
+    fmt::print("| {: >5} {: <8} {}\n", "Index", "Type", "Title");
+    for (size_t index = 0; index < result.items.size(); ++index)
+    {
+        if (result.items[index].type() == Youtube::Item::Type::Video)
+            fmt::print("| {: >5} {: <8} {}\n", (index + 1), "Video", std::get<Youtube::Video>(result.items[index]).title());
+        else
+            fmt::print("| {: >5} {: <8} {}\n", (index + 1), "Playlist", std::get<Youtube::Playlist>(result.items[index]).title());
     }
 }
 
 int main()
 {
-    Youtube::Video video(std::string("WVOH00wVFbc"));
-    PrintItemInfo(video);
-
-    std::cout << '\n';
-
-    Youtube::Playlist playlist(std::string("PLKUA473MWUv2jmkqIxzQR3YL4kuPArj4G"));
-    PrintItemInfo(playlist);
+    Youtube::SearchResult result = Youtube::Search("Music playlist");
+    PrintSearchResult(result);
 }

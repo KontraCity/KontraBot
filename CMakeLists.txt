@@ -14,6 +14,7 @@ add_executable(KontraBot
     "source/youtube/client.cpp"
     "source/youtube/error.cpp"
     "source/youtube/playlist.cpp"
+    "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
     "source/main.cpp"
