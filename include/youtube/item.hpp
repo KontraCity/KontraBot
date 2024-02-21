@@ -32,7 +32,7 @@ namespace Youtube
         }
 
         /// @brief Check if item holds value
-        /// @return True if item holds value, false otherwise
+        /// @return True if item holds value
         inline operator bool() const
         {
             return static_cast<Type>(index()) != Type::None;

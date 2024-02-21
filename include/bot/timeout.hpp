@@ -39,12 +39,8 @@ namespace Bot
         ~Timeout();
 
         /// @brief Check if timeout is enabled
-        /// @return True if enabled, false otherwise
-        inline bool enabled() const
-        {
-            std::lock_guard<std::mutex> lock(m_mutex);
-            return m_enabled;
-        }
+        /// @return True if enabled
+        bool enabled() const;
 
         /// @brief Enable timeout
         void enable();

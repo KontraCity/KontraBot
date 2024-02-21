@@ -4,10 +4,11 @@ namespace kc {
 
 Youtube::Extractor::Extractor(const std::string& videoId)
 {
-    if (!boost::regex_match(videoId, boost::regex(Video::ValidateId)))
+    if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): [videoId]: \"{0}\": Not a valid video ID",
+            "kc::Youtube::Extractor::Extractor(): [videoId]: \"{}\": "
+            "Not a valid video ID",
             videoId
         ));
     }
@@ -16,7 +17,23 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     {
         Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::Android, "player", { {"videoId", videoId} });
         if (playerResponse.code != 200)
-            throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't get YouTube API response");
+        {
+            /*
+            *   Android client API requests may sometimes fail with 400 "Bad Request" response code.
+            *   We have to retry the request if this happens.
+            */
+            if (attempt == ExtractorConst::MaxAttempts)
+            {
+                throw std::runtime_error(fmt::format(
+                    "kc::Youtube::Extractor::Extractor(): "
+                    "Couldn't get API response [video: \"{}\", client: \"android\", response code: {}]",
+                    videoId, playerResponse.code
+                ));
+            }
+            
+            spdlog::warn("Extraction attempt {}/{} of video \"{}\" failed, retrying", attempt, ExtractorConst::MaxAttempts, videoId);
+            continue;
+        }
 
         std::string audioUrl;
         try
@@ -26,7 +43,12 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             {
                 playerResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "player", { {"videoId", videoId} });
                 if (playerResponse.code != 200)
-                    throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't get YouTube API response");
+                {
+                    throw std::runtime_error(fmt::format(
+                        "kc::Youtube::Extractor::Extractor(): Couldn't get API response [video: \"{}\", player: \"tv_embedded\", response code: {}]",
+                        videoId, playerResponse.code
+                    ));
+                }
 
                 playerResponseJson = json::parse(playerResponse.data);
                 if (playerResponseJson["playabilityStatus"]["status"] != "OK")
@@ -74,32 +96,44 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             if (!urlResolved)
                 audioUrl = Youtube::Client::Instance->decryptSignatureCipher(audioUrl);
         }
-        catch (const json::exception&)
+        catch (const json::exception& error)
         {
-            throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't parse YouTube API response JSON");
+            throw std::runtime_error(fmt::format(
+                "kc::Youtube::Extractor::Extractor(): "
+                "Couldn't parse API response JSON [video: \"{}\", id: {}]",
+                videoId, error.id
+            ));
         }
 
         int result = avformat_open_input(&m_formatContext, audioUrl.c_str(), nullptr, nullptr);
         if (result == 0)
             break;
 
-        if (attempt == MaxExtractionAttempts)
+        if (attempt == ExtractorConst::MaxAttempts)
             throw LocalError(LocalError::Type::DownloadError, videoId);
-        spdlog::warn("Extraction attempt {}/{} of video \"{}\" failed, retrying", attempt, MaxExtractionAttempts, videoId);
+        spdlog::warn("Extraction attempt {}/{} of video \"{}\" failed, retrying", attempt, ExtractorConst::MaxAttempts, videoId);
     }
 
     int result = avformat_find_stream_info(m_formatContext, nullptr);
     if (result < 0)
     {
         avformat_close_input(&m_formatContext);
-        throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't find audio stream info");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't find audio stream info [video: \"{}\", return code: {}]",
+            videoId, result
+        ));
     }
 
     int streamIndex = av_find_best_stream(m_formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
     if (streamIndex < 0)
     {
         avformat_close_input(&m_formatContext);
-        throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't find best audio stream");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't find best audio stream [video: \"{}\", return code: {}]",
+            videoId, result
+        ));
     }
 
     m_stream = m_formatContext->streams[streamIndex];
@@ -108,14 +142,22 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     if (!decoder)
     {
         avformat_close_input(&m_formatContext);
-        throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't find audio decoder");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't find audio decoder [video: \"{}\"]",
+            videoId
+        ));
     }
 
     m_codecContext = avcodec_alloc_context3(decoder);
     if (!m_codecContext)
     {
         avformat_close_input(&m_formatContext);
-        throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't allocate codec context");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate codec context [video: \"{}\"]",
+            videoId
+        ));
     }
 
     result = avcodec_open2(m_codecContext, decoder, nullptr);
@@ -123,7 +165,11 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     {
         avcodec_free_context(&m_codecContext);
         avformat_close_input(&m_formatContext);
-        throw std::runtime_error("kc::Youtube::Extractor::Extractor(): Couldn't open audio decoder context");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't open audio decoder context [video: \"{}\", return code: {}]",
+            videoId, result
+        ));
     }
 }
 

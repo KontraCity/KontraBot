@@ -6,10 +6,16 @@ void Bot::Config::GenerateSampleFile()
 {
     std::ofstream configFile(ConfigConst::ConfigFile);
     if (!configFile)
-        throw std::runtime_error("kc::Bot::Config::GenerateSampleFile(): Couldn't create sample configuration file");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Bot::Config::GenerateSampleFile(): "
+            "Couldn't create sample configuration file \"{}\"",
+            ConfigConst::ConfigFile
+        ));
+    }
 
     json configJson;
-    configJson[ConfigConst::DiscordBotApiTokenObject] = "Enter Discord bot API token here";
+    configJson[ConfigConst::Objects::DiscordBotApiToken] = "Enter Discord bot API token here";
     configFile << configJson.dump(4) << '\n';
 }
 
@@ -17,20 +23,20 @@ Bot::Config::Config()
 {
     std::ifstream configFile(ConfigConst::ConfigFile);
     if (!configFile)
-        throw std::runtime_error("kc::Bot::Config::Config(): Couldn't open configuration file");
+        throw Error(fmt::format("Couldn't open configuration file \"{}\"", ConfigConst::ConfigFile));
 
     try
     {
         json configJson = json::parse(configFile);
-        m_discordBotApiToken = configJson[ConfigConst::DiscordBotApiTokenObject];
+        m_discordBotApiToken = configJson[ConfigConst::Objects::DiscordBotApiToken];
     }
-    catch (const json::exception&)
+    catch (const json::exception& error)
     {
-        throw std::runtime_error("kc::Bot::Config::Config(): Couldn't parse configuration file JSON");
+        throw Error(fmt::format("Couldn't parse configuration file JSON [id: {}]", error.id));
     }
 
     if (!boost::regex_match(m_discordBotApiToken, boost::regex(R"([\w]+\.[\w-]{6}\.[\w-]{38})")))
-        throw std::runtime_error("kc::Bot::Config::Config(): Configuration file Discord bot API token is invalid");
+        throw Error(fmt::format("Discord bot API token \"{}\" is invalid", m_discordBotApiToken));
 }
 
 } // namespace kc

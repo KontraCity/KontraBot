@@ -39,7 +39,7 @@ Youtube::SearchResult Youtube::Search(const std::string& query)
     if (query.find_first_not_of(' ') == std::string::npos)
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Youtube::Search(): [query]: \"{0}\": Query is empty",
+            "kc::Youtube::Search(): [query]: \"{}\": Query is empty",
             query
         ));
     }
@@ -47,7 +47,13 @@ Youtube::SearchResult Youtube::Search(const std::string& query)
     // "tv_embedded" client is used for search because it's response is the lightest.
     Curl::Response searchResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "search", { {"query", query} });
     if (searchResponse.code != 200)
-        throw std::runtime_error("kc::Youtube::Search(): Couldn't get YouTube API response");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Search(): "
+            "Couldn't get API response [query: \"{}\", client: \"tv_embedded\", response code: {}]",
+            query, searchResponse.code
+        ));
+    }
 
     try
     {
@@ -55,18 +61,22 @@ Youtube::SearchResult Youtube::Search(const std::string& query)
             ["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"];
         return { SearchResult::Type::Search, query, ParseSearchContents(contentsObject) };
     }
-    catch (const json::exception&)
+    catch (const json::exception& error)
     {
-        throw std::runtime_error("kc::Youtube::Search(): Couldn't parse YouTube API response JSON");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Search(): "
+            "Couldn't parse API response JSON [query: \"{}\", client: \"tv_embedded\", id: {}]",
+            query, error.id
+        ));
     }
 }
 
 Youtube::SearchResult Youtube::Related(const std::string& videoId)
 {
-    if (!boost::regex_match(videoId, boost::regex(Video::ValidateId)))
+    if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Youtube::Related(): [videoId]: \"{0}\": Not a valid video ID",
+            "kc::Youtube::Related(): [videoId]: \"{}\": Not a valid video ID",
             videoId
         ));
     }
@@ -74,7 +84,13 @@ Youtube::SearchResult Youtube::Related(const std::string& videoId)
     // "tv_embedded" client is used for related search because it's response is the lightest.
     Curl::Response nextResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "next", { {"videoId", videoId } });
     if (nextResponse.code != 200)
-        throw std::runtime_error("kc::Youtube::Related(): Couldn't get YouTube API response");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Related(): "
+            "Couldn't get API response [video: \"{}\", client: \"tv_embedded\", response code: {}]",
+            videoId, nextResponse.code
+        ));
+    }
 
     try
     {
@@ -82,9 +98,13 @@ Youtube::SearchResult Youtube::Related(const std::string& videoId)
             ["results"]["contents"][2]["shelfRenderer"]["content"]["horizontalListRenderer"]["items"];
         return { SearchResult::Type::Related, videoId, ParseSearchContents(contentsObject) };
     }
-    catch (const json::exception&)
+    catch (const json::exception& error)
     {
-        throw std::runtime_error("kc::Youtube::Related(): Couldn't parse YouTube API response JSON");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Related(): "
+            "Couldn't parse API response JSON [video: \"{}\", client: \"tv_embedded\", id: {}]",
+            videoId, error.id
+        ));
     }
 }
 

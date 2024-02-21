@@ -22,7 +22,7 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
         if (!newPointer)
         {
             curl_slist_free_all(oldPointer);
-            throw std::runtime_error("kc::Curl::Request(): Couldn't read request headers");
+            throw std::runtime_error("kc::Curl::Request(): Couldn't allocate request headers");
         }
         slist.reset(newPointer);
     }
@@ -30,46 +30,99 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
     Curl::Response response;
     CURLcode result = curl_easy_setopt(curl.get(), CURLOPT_URL, url.c_str());
     if (result != CURLE_OK)
-        throw std::runtime_error("kc::Curl::Request(): Couldn't configure request URL");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't configure request URL [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
 
     result = curl_easy_setopt(curl.get(), CURLOPT_HEADERDATA, &response.headers);
     if (result != CURLE_OK)
-        throw std::runtime_error("kc::Curl::Request(): Couldn't configure headers write target");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't configure headers write target [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
 
     result = curl_easy_setopt(curl.get(), CURLOPT_HEADERFUNCTION, &StringWriter);
     if (result != CURLE_OK)
-        throw std::runtime_error("kc::Curl::Request(): Couldn't configure headers write function");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't configure headers write function [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
 
     result = curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, &response.data);
     if (result != CURLE_OK)
-        throw std::runtime_error("kc::Curl::Request(): Couldn't configure data write target");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't configure data write target [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
 
     result = curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, &StringWriter);
     if (result != CURLE_OK)
-        throw std::runtime_error("kc::Curl::Request(): Couldn't configure data write function");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't configure data write function [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
 
     if (!headers.empty())
     {
         result = curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, slist.get());
         if (result != CURLE_OK)
-            throw std::runtime_error("kc::Curl::Request(): Couldn't configure request headers");
+        {
+            throw std::runtime_error(fmt::format(
+                "kc::Curl::Request(): "
+                "Couldn't configure request headers [return code: {}]",
+                static_cast<int>(result)
+            ));
+        }
     }
 
     if (!data.empty())
     {
         result = curl_easy_setopt(curl.get(), CURLOPT_POSTFIELDS, data.c_str());
         if (result != CURLE_OK)
-            throw std::runtime_error("kc::Curl::Request(): Couldn't configure request POST data");
+        {
+            throw std::runtime_error(fmt::format(
+                "kc::Curl::Request(): "
+                "Couldn't configure request POST data [return code: {}]",
+                static_cast<int>(result)
+            ));
+        }
     }
 
     result = curl_easy_perform(curl.get());
     if (result != CURLE_OK)
-        throw std::invalid_argument("kc::Curl::Request(): Couldn't perform request");
+    {
+        throw std::invalid_argument(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't perform request [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
 
     result = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response.code);
     if (result != CURLE_OK)
-        throw std::runtime_error("kc::Curl::Request(): Couldn't retrieve response code");
-
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Curl::Request(): "
+            "Couldn't retrieve response code [return code: {}]",
+            static_cast<int>(result)
+        ));
+    }
     return response;
 }
 

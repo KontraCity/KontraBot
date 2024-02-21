@@ -31,6 +31,12 @@ Bot::Timeout::~Timeout()
         m_thread.join();
 }
 
+bool Bot::Timeout::enabled() const
+{
+    std::lock_guard<std::mutex> lock(m_mutex);
+    return m_enabled;
+}
+
 void Bot::Timeout::enable()
 {
     std::lock_guard<std::mutex> lock(m_mutex);

@@ -6,6 +6,9 @@
 #include <memory>
 #include <stdexcept>
 
+// Library {fmt}
+#include <fmt/format.h>
+
 // Library Curl
 #include <curl/curl.h>
 
@@ -22,18 +25,18 @@ namespace Curl
 
     /// @brief Perform HTTP GET request
     /// @param url URL to access
-    /// @param headers HTTP headers
+    /// @param headers Request headers
     /// @throw std::runtime_error if internal error occurs
-    /// @throw std::invalid_argument if couldn't connect to server
+    /// @throw std::invalid_argument if request couldn't be performed
     /// @return Request response
     Response Get(const std::string& url, const std::vector<std::string>& headers = {});
 
     /// @brief Perform HTTP POST request
     /// @param url URL to access
-    /// @param headers HTTP headers
-    /// @param data HTTP POST data
+    /// @param headers Request headers
+    /// @param data Request POST data
     /// @throw std::runtime_error if internal error occurs
-    /// @throw std::invalid_argument if couldn't connect to server
+    /// @throw std::invalid_argument if request couldn't be performed
     /// @return Request response
     Response Post(const std::string& url, const std::vector<std::string>& headers, const std::string& data);
 }

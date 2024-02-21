@@ -26,7 +26,10 @@ namespace Bot
         // Configuration JSON file
         constexpr const char* ConfigFile = "config.json";
         
-        constexpr const char* DiscordBotApiTokenObject = "discord_bot_api_token";
+        namespace Objects
+        {
+            constexpr const char* DiscordBotApiToken = "discord_bot_api_token";
+        }
     }
 
     class Config
@@ -35,9 +38,16 @@ namespace Bot
         // Config instance pointer
         using Pointer = std::shared_ptr<Config>;
 
+        // Config error
+        class Error : public std::logic_error
+        {
+        public:
+            using logic_error::logic_error;
+        };
+
     public:
-        /// @brief Generate sample configuration file for user to fill in
-        /// @throw std::runtime_error if internal error occurs
+        /// @brief Generate sample configuration file for user to fill out
+        /// @throw std::runtime_error if file couldn't be created
         static void GenerateSampleFile();
 
     private:
@@ -45,7 +55,7 @@ namespace Bot
 
     public:
         /// @brief Read and parse configuration file
-        /// @throw std::runtime_error if reading/parsing error occurs
+        /// @throw kc::Bot::Config::Error if reading/parsing error occurs
         Config();
 
         /// @brief Get Discord bot API token

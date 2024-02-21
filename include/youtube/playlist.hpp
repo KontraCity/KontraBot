@@ -33,13 +33,18 @@ namespace pt = boost::posix_time;
 
 namespace Youtube
 {
+    namespace PlaylistConst
+    {
+        // Check if string is a valid playlist ID
+        constexpr const char* ValidateId = R"(^PL[^"&?\/\s]{16,32}$|^OLAK5uy_[^"&?\/\s]{33}$)";
+
+        // Extract playlist ID from playlist view URL
+        // [C1]: Playlist ID
+        constexpr const char* ExtractId = R"(youtube\.com\/(?:playlist\?list=|watch\?v=[^"&?\/\s]{11}&list=)(PL[^"&?\/\s]{16,32}|OLAK5uy_[^"&?\/\s]{33}))";
+    }
+
     class Playlist
     {
-    public:
-        static constexpr const char* ValidateId = R"(^PL[^"&?\/\s]{16,32}$|^OLAK5uy_[^"&?\/\s]{33}$)";
-
-        static constexpr const char* ExtractId = R"(youtube\.com\/(?:playlist\?list=|watch\?v=[^"&?\/\s]{11}&list=)(PL[^"&?\/\s]{16,32}|OLAK5uy_[^"&?\/\s]{33}))";
-
     public:
         class Iterator
         {
@@ -141,8 +146,8 @@ namespace Youtube
                 return previousIterator;
             }
 
-            /// @brief Check if playlist is valid
-            /// @return True if playlist is valid, false otherwise
+            /// @brief Check if iterator is valid
+            /// @return True if iterator is valid
             inline operator bool() const
             {
                 return static_cast<bool>(m_video);
@@ -151,7 +156,7 @@ namespace Youtube
             /// @brief Check if two iterators are equal
             /// @param left First iterator
             /// @param right Second iterator
-            /// @return True if iterators are equal, false otherwise
+            /// @return True if iterators are equal
             friend inline bool operator==(const Iterator& left, const Iterator& right)
             {
                 return (left.m_video == right.m_video);
@@ -160,7 +165,7 @@ namespace Youtube
             /// @brief Check if two iterators are not equal
             /// @param left First iterator
             /// @param right Second iterator
-            /// @return True if iterators are not equal, false otherwise
+            /// @return True if iterators are not equal
             friend inline bool operator!=(const Iterator& left, const Iterator& right)
             {
                 return (left.m_video != right.m_video);
@@ -176,7 +181,7 @@ namespace Youtube
 
         bool m_optionalKnown = false;
         uint64_t m_viewCount = 0;
-        bool m_videosHidden = false;    // Unavailable videos are hidden by YouTube?
+        bool m_videosHidden = false;
 
         std::vector<Video> m_videos;
         std::string m_continuationToken;
@@ -197,7 +202,7 @@ namespace Youtube
 
         /// @brief Parse API response playlist videos
         /// @param videoContentsObject JSON video contents object
-        /// @throw kc::Youtube::Error if all playlist videos are not supported
+        /// @throw kc::Youtube::LocalError if all playlist videos are unplayable
         void parseVideos(const json& videoContentsObject);
 
         /// @brief Parse API response video count
@@ -207,8 +212,19 @@ namespace Youtube
         /// @brief Discover playlist video
         /// @param index Video index
         /// @throw std::runtime_error if internal error occurs
-        /// @return Discovered video pointer or nullptr if there is nothing to discover
+        /// @return Discovered video pointer: nullptr if there is nothing to discover
         Iterator::pointer discoverVideo(int index);
+
+        /// @brief Download playlist info
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kc::Youtube::YoutubeError if YouTube playlist error occurs
+        /// @throw kc::Youtube::LocalError if playlist is not supported
+        void downloadInfo();
+
+        /// @brief Check optional fields availability
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        void checkOptional() const;
 
     public:
         /// @brief Get playlist info
@@ -216,23 +232,12 @@ namespace Youtube
         /// @throw std::invalid_argument if [idUrl] is not a valid playlist ID or view URL
         /// @throw std::runtime_error if internal error occurs
         /// @throw kc::Youtube::YoutubeError if YouTube playlist error occurs
-        /// @throw kc::Youtube::Error if playlist is not supported
+        /// @throw kc::Youtube::LocalError if playlist is not supported
         Playlist(const std::string& idUrl);
 
         /// @brief Parse playlist info
         /// @param playlistInfoObject JSON playlist info object
         Playlist(const json& playlistInfoObject);
-
-        /// @brief Download playlist info
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube playlist error occurs
-        /// @throw kc::Youtube::Error if playlist is not supported
-        void downloadInfo();
-
-        /// @brief Check optional fields availability
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        void checkOptional() const;
 
         /// @brief Get playlist ID
         /// @return Playlist ID
@@ -241,8 +246,8 @@ namespace Youtube
             return m_id;
         }
 
-        /// @brief Get YouTube playlist view URL
-        /// @return YouTube playlist view URL
+        /// @brief Get playlist view URL
+        /// @return Playlist view URL
         inline std::string viewUrl() const
         {
             return ("https://www.youtube.com/playlist?list=" + m_id);

@@ -35,16 +35,19 @@ using nlohmann::json;
 
 namespace Youtube
 {
+    namespace ExtractorConst
+    {
+        // Count of maximum request and extraction attempts
+        constexpr int MaxAttempts = 5;
+    }
+
     class Extractor
     {
-    private:
-        static constexpr int MaxExtractionAttempts = 5;
-
     public:
         struct Frame
         {
             std::vector<uint8_t> data;  // Frame data
-            size_t timestamp;           // Frame timestamp from audio start in milliseconds
+            uint64_t timestamp;         // Frame timestamp from start in milliseconds
         };
 
     public:
@@ -69,7 +72,7 @@ namespace Youtube
         void seekTo(uint64_t timestamp);
 
         /// @brief Extract next audio frame
-        /// @return Audio frame: empty if all audio was extracted
+        /// @return Audio frame: empty if all frames were extracted
         Frame extractFrame();
     };
 }

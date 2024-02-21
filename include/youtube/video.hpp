@@ -29,13 +29,18 @@ namespace pt = boost::posix_time;
 
 namespace Youtube
 {
+    namespace VideoConst
+    {
+        // Check if string is a valid video ID
+        constexpr const char* ValidateId = R"(^[^"&?\/\s]{11}$)";
+
+        // Extract video ID from video watch URL
+        // [C1]: Video ID
+        constexpr const char* ExtractId = R"(youtu(?:be\.com|\.be)\/(?:(?:watch(?:_popup)?\?v=)|(?:embed\/)|(?:live\/)|(?:shorts\/))?([^"&?\/\s]{11}))";
+    }
+
     class Video
     {
-    public:
-        static constexpr const char* ValidateId = R"(^[^"&?\/\s]{11}$)";
-
-        static constexpr const char* ExtractId = R"(youtu(?:be\.com|\.be)\/(?:(?:watch(?:_popup)?\?v=)|(?:embed\/)|(?:live\/)|(?:shorts\/))?([^"&?\/\s]{11}))";
-
     public:
         enum class Type
         {
@@ -86,7 +91,7 @@ namespace Youtube
     private:
         /// @brief Check API response video playability status
         /// @param playabilityStatusObject JSON playability status object
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kc::Youtube::YoutubeError if YouTube error is found
         void checkPlayabilityStatus(const json& playabilityStatusObject);
 
         /// @brief Parse API response video duration
@@ -103,9 +108,19 @@ namespace Youtube
         /// @param uploadDateString Upload date string
         void parseUploadDate(std::string uploadDateString);
 
-        /// @brief Parse API response description to chapters
+        /// @brief Parse API response video description to chapters
         /// @param description Video description
         void parseChapters(const std::string& description);
+
+        /// @brief Download video info
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        void downloadInfo();
+
+        /// @brief Check optional fields availability
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        void checkOptional() const;
 
     public:
         /// @brief Get video info
@@ -119,16 +134,6 @@ namespace Youtube
         /// @param videoInfoObject JSON video info object
         Video(const json& videoInfoObject);
 
-        /// @brief Download video info
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        void downloadInfo();
-
-        /// @brief Check optional fields availability
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        void checkOptional() const;
-
         /// @brief Get video ID
         /// @return Video ID
         inline const std::string& id() const
@@ -136,8 +141,8 @@ namespace Youtube
             return m_id;
         }
 
-        /// @brief Get YouTube video watch URL
-        /// @return YouTube video watch URL
+        /// @brief Get video watch URL
+        /// @return Video watch URL
         inline std::string watchUrl() const
         {
             return ("https://www.youtube.com/watch?v=" + m_id);

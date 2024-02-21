@@ -52,7 +52,13 @@ void Youtube::Playlist::parseAuthor(const json& playlistHeaderRendererObject)
     m_author = Utility::ExtractString(playlistHeaderRendererObject["subtitle"]);
     boost::smatch matches;
     if (!boost::regex_match(m_author, matches, boost::regex(R"(^([\s\S]+) .+ Album$)")))
-        throw std::runtime_error("kc::Youtube::Playlist::parseAuthor(): Couldn't parse author string: " + m_author);
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Playlist::parseAuthor(): "
+            "Couldn't extract author from author string [playlist: \"{}\", author string: \"{}\"]",
+            m_id, m_author
+        ));
+    }
     m_author = matches.str(1);
 }
 
@@ -77,15 +83,15 @@ void Youtube::Playlist::parseVideos(const json& videoContentsObject)
 
         const json& playlistVideoRendererObject = videoContentObject["playlistVideoRenderer"];
         std::string videoTitle = Utility::ExtractString(playlistVideoRendererObject["title"]);
-
-        /*
-        *   Some playlist videos returned by YouTube API are private or deleted.
-        *   They cannot be played and are not shown in YouTube client, so user is not even aware that they are there.
-        *   Can be ignored.
-        */
         if (videoTitle == "[Private video]" || videoTitle == "[Deleted video]")
+        {
+            /*
+            *   Some playlist videos returned by YouTube API are private or deleted.
+            *   They cannot be played and are not shown in YouTube client, so user is not even aware that they are there.
+            *   Can be ignored.
+            */
             continue;
-
+        }
         m_videos.emplace_back(playlistVideoRendererObject);
     }
     m_videos.shrink_to_fit();
@@ -147,7 +153,13 @@ Youtube::Playlist::Iterator::pointer Youtube::Playlist::discoverVideo(int index)
 
     Curl::Response browseResponse = Client::Instance->requestApi(Client::Type::Web, "browse", { {"continuation", m_continuationToken} });
     if (browseResponse.code != 200)
-        throw std::runtime_error("kc::Youtube::Playlist::discoverVideo(): Couldn't get YouTube API response");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Playlist::discoverVideo(): "
+            "Couldn't get API response [playlist: \"{}\", client: \"web\", response code: {}]",
+            m_id, browseResponse.code
+        ));
+    }
     m_continuationToken.clear();
 
     try
@@ -157,39 +169,14 @@ Youtube::Playlist::Iterator::pointer Youtube::Playlist::discoverVideo(int index)
             ["appendContinuationItemsAction"]["continuationItems"]);
         return (m_videos.data() + index);
     }
-    catch (const json::exception&)
+    catch (const json::exception& error)
     {
-        throw std::runtime_error("kc::Youtube::Playlist::discoverVideo(): Couldn't parse YouTube API response JSON");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Playlist::discoverVideo(): "
+            "Couldn't parse API response JSON [playlist: \"{}\", client: \"web\", id: {}]",
+            m_id, error.id
+        ));
     }
-}
-
-Youtube::Playlist::Playlist(const std::string& idUrl)
-    : m_id(idUrl)
-{
-    if (!boost::regex_match(m_id, boost::regex(ValidateId)))
-    {
-        boost::smatch matches;
-        if (!boost::regex_search(m_id, matches, boost::regex(ExtractId)))
-        {
-            throw std::invalid_argument(fmt::format(
-                "kc::Youtube::Playlist::Playlist(std::string): [idUrl]: \"{0}\": "
-                "Not a valid playlist ID or view URL",
-                m_id
-            ));
-        }
-        m_id = matches[1].str();
-    }
-
-    downloadInfo();
-}
-
-Youtube::Playlist::Playlist(const json& playlistInfoObject)
-{
-    m_id = playlistInfoObject["playlistId"];
-    m_title = Utility::ExtractString(playlistInfoObject["title"]);
-    m_author = Utility::ExtractString(playlistInfoObject["shortBylineText"]);
-    m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistInfoObject["thumbnail"]["thumbnails"]);
-    parseVideoCount(playlistInfoObject["videoCountShortText"]);
 }
 
 void Youtube::Playlist::downloadInfo()
@@ -199,7 +186,13 @@ void Youtube::Playlist::downloadInfo()
 
     Curl::Response browseResponse = Client::Instance->requestApi(Client::Type::Web, "browse", { {"browseId", "VL" + m_id} });
     if (browseResponse.code != 200)
-        throw std::runtime_error("kc::Youtube::Playlist::downloadInfo(): Couldn't get YouTube API response");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Playlist::downloadInfo(): "
+            "Couldn't get API response [playlist: \"{}\", client: \"web\", response code: {}]",
+            m_id, browseResponse.code
+        ));
+    }
 
     try
     {
@@ -229,9 +222,13 @@ void Youtube::Playlist::downloadInfo()
             throw LocalError(LocalError::Type::EmptyPlaylist, m_id);
         parseVideos(contentsObject["playlistVideoListRenderer"]["contents"]);
     }
-    catch (const json::exception&)
+    catch (const json::exception& error)
     {
-        throw std::runtime_error("kc::Youtube::Playlist::downloadInfo(): Couldn't parse YouTube API response JSON");
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Playlist::downloadInfo(): "
+            "Couldn't parse API response JSON [playlist: \"{}\", client: \"web\", id: {}]",
+            m_id, error.id
+        ));
     }
 }
 
@@ -246,6 +243,35 @@ void Youtube::Playlist::checkOptional() const
         Playlist* mutableThis = const_cast<Playlist*>(this);
         mutableThis->downloadInfo();
     }
+}
+
+Youtube::Playlist::Playlist(const std::string& idUrl)
+    : m_id(idUrl)
+{
+    if (!boost::regex_match(m_id, boost::regex(PlaylistConst::ValidateId)))
+    {
+        boost::smatch matches;
+        if (!boost::regex_search(m_id, matches, boost::regex(PlaylistConst::ExtractId)))
+        {
+            throw std::invalid_argument(fmt::format(
+                "kc::Youtube::Playlist::Playlist(std::string): [idUrl]: \"{}\": "
+                "Not a valid playlist ID or view URL",
+                m_id
+            ));
+        }
+        m_id = matches[1].str();
+    }
+
+    downloadInfo();
+}
+
+Youtube::Playlist::Playlist(const json& playlistInfoObject)
+{
+    m_id = playlistInfoObject["playlistId"];
+    m_title = Utility::ExtractString(playlistInfoObject["title"]);
+    m_author = Utility::ExtractString(playlistInfoObject["shortBylineText"]);
+    m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistInfoObject["thumbnail"]["thumbnails"]);
+    parseVideoCount(playlistInfoObject["videoCountShortText"]);
 }
 
 } // namespace kc

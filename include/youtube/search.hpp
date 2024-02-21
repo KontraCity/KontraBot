@@ -3,7 +3,6 @@
 // STL modules
 #include <string>
 #include <vector>
-#include <algorithm>
 #include <stdexcept>
 
 // Library nlohmann/json
@@ -17,7 +16,6 @@
 
 // Custom modules
 #include "youtube/item.hpp"
-#include "youtube/video.hpp"
 
 namespace kc {
 

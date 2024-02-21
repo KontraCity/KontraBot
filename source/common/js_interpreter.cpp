@@ -13,16 +13,15 @@ void JsInterpreter::Output(js_State* state)
             data += ' ';
     }
 
-    js_getglobal(state, JsInterpreter::InterpreterPointer);
-    JsInterpreter* interpreter = reinterpret_cast<JsInterpreter*>(std::stoull(js_tostring(state, -1)));
-    interpreter->m_lastOutput += data;
+    js_getglobal(state, JsInterpreterConst::RootPointer);
+    reinterpret_cast<JsInterpreter*>(std::stoull(js_tostring(state, -1)))->m_lastOutput += data;
 }
 
 void JsInterpreter::updatePointer()
 {
     js_dostring(m_state.get(), fmt::format(
-        "var {0} = \"{1}\"",
-        InterpreterPointer,
+        "var {} = \"{}\"",
+        JsInterpreterConst::RootPointer,
         reinterpret_cast<std::uintptr_t>(this)).c_str()
     );
 }
@@ -54,17 +53,24 @@ std::string JsInterpreter::execute(const std::string& code)
 
     int result = js_ploadstring(m_state.get(), "[stdin]", code.c_str());
     if (result != 0)
-        throw std::runtime_error("kc::JsInterpreter::execute(): Couldn't compile JavaScript code");
+    {
+        throw std::runtime_error(fmt::format(
+            "kc::JsInterpreter::execute(): "
+            "Couldn't compile JavaScript code [return code: {}]", 
+            result
+        ));
+    }
 
     js_pushundefined(m_state.get());
     result = js_pcall(m_state.get(), 0);
     js_pop(m_state.get(), 1);
     if (result != 0)
     {
-        throw std::invalid_argument(
+        throw std::invalid_argument(fmt::format(
             "kc::JsInterpreter::execute(): "
-            "Couldn't execute JavaScript code: " + std::string(js_trystring(m_state.get(), -1, "Error"))
-        );
+            "Couldn't execute JavaScript code: [return code: {}, message: {}]",
+            result, std::string(js_trystring(m_state.get(), -1, "Error"))
+        ));
     }
 
     return m_lastOutput;

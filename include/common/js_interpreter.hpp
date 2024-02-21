@@ -15,11 +15,14 @@
 
 namespace kc {
 
+namespace JsInterpreterConst
+{
+    // JavaScript interpreter root pointer variable name
+    constexpr const char* RootPointer = "_RootPointer";
+}
+
 class JsInterpreter
 {
-private:
-    static constexpr const char* InterpreterPointer = "InterpreterPointer";
-
 private:
     /// @brief Output data from JavaScript to C++
     /// @param state Interpreter state

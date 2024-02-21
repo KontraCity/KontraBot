@@ -5,7 +5,7 @@ namespace kc {
 std::string Utility::ToString(dt::date date)
 {
     return fmt::format(
-        "{0} {1} {2}",
+        "{} {} {}",
         date.day().as_number(),
         date.month().as_long_string(),
         static_cast<unsigned short>(date.year())
@@ -15,8 +15,8 @@ std::string Utility::ToString(dt::date date)
 std::string Utility::ToString(pt::time_duration duration)
 {
     if (duration.hours())
-        return fmt::format("{0}:{1:#02d}:{2:#02d}", duration.hours(), duration.minutes(), duration.seconds());
-    return fmt::format("{0}:{1:#02d}", duration.minutes(), duration.seconds());
+        return fmt::format("{}:{:#02d}:{:#02d}", duration.hours(), duration.minutes(), duration.seconds());
+    return fmt::format("{}:{:#02d}", duration.minutes(), duration.seconds());
 }
 
 std::string Utility::ToString(uint64_t number)

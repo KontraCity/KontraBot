@@ -30,18 +30,13 @@ using nlohmann::json;
 
 namespace Youtube
 {
-    class Client
+    namespace ClientConst
     {
-    private:
-        static constexpr const char* YoutubeIframeApiUrl = "https://www.youtube.com/iframe_api";
+        // JavaScript interpreter signature decrypt function name
+        constexpr const char* SignatureDecryptFunction = "SingatureDecrypt";
 
-        static constexpr const char* YoutubeApiRequestUrl = "https://www.youtube.com/youtubei/v1/{}?key={}&prettyPrint=false";
-
-        static constexpr const char* YoutubePlayerJsUrl = "https://www.youtube.com/s/player/{}/player_ias.vflset/en_US/base.js";
-
-        static constexpr const char* SignatureDecryptFunction = "SingatureDecrypt";
-
-        static constexpr const char* ClientsData =
+        // Clients API keys, headers and POST data
+        constexpr const char* ClientsData =
         {
             R"_delimeter(
 {
@@ -148,6 +143,24 @@ namespace Youtube
             )_delimeter"
         };
 
+        namespace Urls
+        {
+            // YouTube iframe API URL
+            constexpr const char* IframeApi = "https://www.youtube.com/iframe_api";
+
+            // YouTube API reqeust URL
+            // [0]: Request method
+            // [1]: API key
+            constexpr const char* ApiRequest = "https://www.youtube.com/youtubei/v1/{}?key={}&prettyPrint=false";
+
+            // YouTube player code URL
+            // [0]: Player ID
+            constexpr const char* PlayerCode = "https://www.youtube.com/s/player/{}/player_ias.vflset/en_US/base.js";
+        }
+    }
+
+    class Client
+    {
     public:
         enum class Type
         {
@@ -192,7 +205,7 @@ namespace Youtube
         bool m_initialized;
         json m_clients;
         std::string m_playerId;
-        JsInterpreter m_interpreter;
+        std::unique_ptr<JsInterpreter> m_interpreter;
 
     private:
         /// @brief Initialize YouTube client
@@ -203,8 +216,8 @@ namespace Youtube
         void update();
 
     public:
-        /// @brief Check if client successfully initialized
-        /// @return True if client successfully initialized, false otherwise
+        /// @brief Check if client initialized
+        /// @return True if client initialized
         inline bool initialized() const
         {
             return m_initialized;
