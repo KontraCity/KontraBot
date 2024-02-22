@@ -2,16 +2,22 @@
 #include <iostream>
 
 // Custom modules
-#include "bot/stats.hpp"
+#include "bot/signal.hpp"
 using namespace kc;
+
+void Test(const std::string& signalString)
+{
+    Bot::Signal signal(signalString);
+    std::cout << "Type: " << static_cast<int>(signal.type()) << '\n';
+    std::cout << "Data: " << signal.data() << '\n';
+}
 
 int main()
 {
     try
     {
-        Bot::Stats stats(0);
-        std::cout << "Locale: " << stats.locale()->LocaleName() << '\n';
-        std::cout << "Timeout duration: " << stats.timeoutDuration() << '\n';
+        Bot::Signal signal(Bot::Signal::Type::Played, "1TO48Cnl66w");
+        Test(signal);
     }
     catch (const std::runtime_error& error)
     {

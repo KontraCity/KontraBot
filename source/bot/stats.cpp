@@ -16,8 +16,8 @@ std::unique_ptr<Bot::Locale> Bot::Stats::CreateLocale(Locale::Type localeType)
 std::unique_ptr<Bot::Locale> Bot::Stats::CreateLocale(const std::string& localeName)
 {
     if (localeName == LocaleRuConst::Name)
-        return CreateLocale(Locale::Type::Russian);
-    return CreateLocale(Locale::Type::English);
+        return CreateLocale(LocaleRuConst::Type);
+    return CreateLocale(LocaleEnConst::Type);
 }
 
 void Bot::Stats::save()
