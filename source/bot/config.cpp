@@ -9,7 +9,7 @@ void Bot::Config::GenerateSampleFile()
     {
         throw std::runtime_error(fmt::format(
             "kc::Bot::Config::GenerateSampleFile(): "
-            "Couldn't create sample configuration file \"{}\"",
+            "Couldn't create sample configuration file [file: \"{}\"]",
             ConfigConst::ConfigFile
         ));
     }
@@ -23,7 +23,7 @@ Bot::Config::Config()
 {
     std::ifstream configFile(ConfigConst::ConfigFile);
     if (!configFile)
-        throw Error(fmt::format("Couldn't open configuration file \"{}\"", ConfigConst::ConfigFile));
+        throw Error(fmt::format("Couldn't open configuration file [file: \"{}\"]", ConfigConst::ConfigFile));
 
     try
     {
@@ -32,11 +32,14 @@ Bot::Config::Config()
     }
     catch (const json::exception& error)
     {
-        throw Error(fmt::format("Couldn't parse configuration file JSON [id: {}]", error.id));
+        throw Error(fmt::format(
+            "Couldn't parse configuration file JSON [file: \"{}\", id: {}]",
+            ConfigConst::ConfigFile, error.id
+        ));
     }
 
     if (!boost::regex_match(m_discordBotApiToken, boost::regex(R"([\w]+\.[\w-]{6}\.[\w-]{38})")))
-        throw Error(fmt::format("Discord bot API token \"{}\" is invalid", m_discordBotApiToken));
+        throw Error(fmt::format("Discord bot API token is invalid [token: \"{}\"]", m_discordBotApiToken));
 }
 
 } // namespace kc

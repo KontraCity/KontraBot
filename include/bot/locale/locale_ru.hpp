@@ -11,6 +11,12 @@ namespace kc {
 
 namespace Bot
 {
+    namespace LocaleRuConst
+    {
+        constexpr Locale::Type Type = Locale::Type::Russian;
+        constexpr const char* Name = "ru";
+    }
+
     class LocaleRu : public Locale
     {
     public:
@@ -37,14 +43,14 @@ namespace Bot
         /// @return Locale type
         virtual inline Locale::Type LocaleType() final
         {
-            return Locale::Type::Russian;
+            return LocaleRuConst::Type;
         }
 
         /// @brief Get locale name
         /// @return Locale name
         virtual inline const char* LocaleName() final
         {
-            return "ru";
+            return LocaleRuConst::Name;
         }
 
         /// @brief Generate "Joining voice channel" message

@@ -2,18 +2,25 @@
 #include <iostream>
 
 // Custom modules
-#include "bot/locale/locale.hpp"
-#include "bot/locale/locale_en.hpp"
-#include "bot/locale/locale_ru.hpp"
+#include "bot/stats.hpp"
 using namespace kc;
-
-static void Test(const Bot::Locale::Pointer& locale)
-{
-    std::cout << locale->SeekingTo("TIMESTAMP") << '\n';
-}
 
 int main()
 {
-    Test(std::make_unique<Bot::LocaleEn>());
-    Test(std::make_unique<Bot::LocaleRu>());
+    try
+    {
+        Bot::Stats stats(0);
+        std::cout << "Locale: " << stats.locale()->LocaleName() << '\n';
+        std::cout << "Timeout duration: " << stats.timeoutDuration() << '\n';
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::cerr << "Runtime error: " << error.what() << '\n';
+        return 1;
+    }
+    catch (const std::invalid_argument& error)
+    {
+        std::cerr << "Invalid argument: " << error.what() << '\n';
+        return 1;
+    }
 }

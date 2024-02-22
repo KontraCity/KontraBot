@@ -19,7 +19,7 @@ namespace Bot
     private:
         bool m_enabled;
         Callback m_callback;
-        unsigned int m_timeoutDuration;
+        uint32_t m_timeoutDuration;
         mutable std::mutex m_mutex;
         std::thread m_thread;
         std::condition_variable m_cv;
@@ -32,7 +32,7 @@ namespace Bot
         /// @brief Create timeout
         /// @param callback Callback function to call when timeout occurs
         /// @param timeoutDuration Timeout duration in seconds
-        Timeout(const Callback& callback, unsigned int timeoutDuration);
+        Timeout(const Callback& callback, uint32_t timeoutDuration);
 
         Timeout(const Timeout& other);
 
