@@ -8,14 +8,14 @@ std::unique_ptr<Bot::Locale> Bot::Stats::CreateLocale(Locale::Type localeType)
     {
         default:
             return std::make_unique<LocaleEn>();
-        case Locale::Type::Russian:
+        case LocaleRuConst::Type:
             return std::make_unique<LocaleRu>();
     }
 }
 
 std::unique_ptr<Bot::Locale> Bot::Stats::CreateLocale(const std::string& localeName)
 {
-    if (localeName == "ru")
+    if (localeName == LocaleRuConst::Name)
         return CreateLocale(Locale::Type::Russian);
     return CreateLocale(Locale::Type::English);
 }
