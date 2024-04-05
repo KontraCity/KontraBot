@@ -140,10 +140,10 @@ namespace Youtube
         std::string m_what;
 
     private:
-        /// @brief Convert error type to error name
+        /// @brief Convert error type to error reason
         /// @param type Error type
-        /// @return Error name
-        static const char* TypeToName(Type type);
+        /// @return Error reason
+        static const char* TypeToReason(Type type);
 
     public:
         /// @brief Create error

@@ -105,7 +105,7 @@ Curl::Response Youtube::Client::requestApi(Type clientType, const std::string& r
     if (!m_initialized)
         throw std::runtime_error("kc::Youtube::Client::requestApi(): Not initialized");
 
-    // "tv_embedded" client needs current "signatureTimestamp" field to be passed in request body
+    // TV embedded client needs current "signatureTimestamp" field to be passed in request body
     if (clientType == Type::TvEmbedded)
         update();
 

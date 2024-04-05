@@ -31,7 +31,7 @@ Youtube::YoutubeError::YoutubeError(Type type, const std::string& itemId, const 
         m_what = fmt::format("Item \"{}\": {}: {}; {}", itemId, TypeToName(type), reason, subreason);
 }
 
-const char* Youtube::LocalError::TypeToName(Type type)
+const char* Youtube::LocalError::TypeToReason(Type type)
 {
     switch (type)
     {
@@ -57,7 +57,7 @@ const char* Youtube::LocalError::TypeToName(Type type)
 Youtube::LocalError::LocalError(Type type, const std::string& itemId)
     : m_type(type)
     , m_itemId(itemId)
-    , m_what(TypeToName(type))
+    , m_what(fmt::format("Item \"{}\": {}", itemId, TypeToReason(type)))
 {}
 
 } // namespace kc

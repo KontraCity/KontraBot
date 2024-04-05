@@ -5,27 +5,36 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "youtube/client.hpp"
+#include "youtube/video.hpp"
 using namespace kc;
+
+static void PrintVideoInfo(const std::string& videoId)
+{
+    Youtube::Video video(videoId);
+    fmt::print("{:<14} {}\n", "ID:", video.id());
+    fmt::print("{:<14} {}\n", "Watch URL:", video.watchUrl());
+    fmt::print("{:<14} {}\n", "Title:", video.title());
+    fmt::print("{:<14} {}\n", "Author:", video.author());
+    fmt::print("{:<14} {}\n", "Thumbnail URL:", video.thumbnailUrl());
+    fmt::print("{:<14} {}\n", "Duration:", pt::to_simple_string(video.duration()));
+    fmt::print("{:<14} {}\n", "View count:", video.viewCount());
+    fmt::print("{:<14} {}\n", "Category:", video.category());
+    fmt::print("{:<14} {}\n", "Upload date:", dt::to_simple_string(video.uploadDate()));
+    fmt::print("{:<14} {}\n", "Chapters:", video.chapters().size());
+}
 
 int main()
 {
     try
     {
-        Curl::Response response = Youtube::Client::Instance->requestApi(
-            Youtube::Client::Type::Web,
-            "player",
-            { {"videoId", "WVOH00wVFbc"} }
-        );
-
-        std::cout << fmt::format(
-            "Response code: {}, response length: {}\n",
-            response.code,
-            response.data.length()
-        );
+        PrintVideoInfo("WVOH00wVFbc");
     }
-    catch (const std::runtime_error& error)
+    catch (const Youtube::YoutubeError& error)
     {
-        std::cout << fmt::format("Internal error: {}\n", error.what());
+        std::cout << fmt::format("YouTube error: {}\n", error.what());
+    }
+    catch (const Youtube::LocalError& error)
+    {
+        std::cout << fmt::format("Local error: {}\n", error.what());
     }
 }
