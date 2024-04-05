@@ -5,54 +5,26 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "youtube/error.hpp"
+#include "common/curl.hpp"
 using namespace kc;
 
 int main()
 {
     try
     {
-        throw Youtube::YoutubeError(
-            Youtube::YoutubeError::Type::LoginRequired,
-            "s7_qI6_mIXc",
-            "Video unavailable",
-            "This video is private"
-        );
-    }
-    catch (const Youtube::YoutubeError& error)
-    {
+        Curl::Response response = Curl::Get("https://www.google.com/");
         std::cout << fmt::format(
-            "YouTube error: {}\n"
-            "Type: {}\n"
-            "Item ID: {}\n"
-            "Reason: {}\n"
-            "Subreason: {}\n",
-            error.what(),
-            static_cast<int>(error.type()),
-            error.itemId(),
-            error.reason(),
-            error.subreason()
+            "Response code: {}, response length: {}\n",
+            response.code,
+            response.data.length()
         );
     }
-
-    std::cout << '\n';
-
-    try
+    catch (const std::runtime_error& error)
     {
-        throw Youtube::LocalError(
-            Youtube::LocalError::Type::LivestreamNotSupported,
-            "jfKfPfyJRdk"
-        );
+        std::cout << fmt::format("Internal error: {}\n", error.what());
     }
-    catch (const Youtube::LocalError& error)
+    catch (const std::invalid_argument& error)
     {
-        std::cout << fmt::format(
-            "Local error: {}\n"
-            "Type: {}\n"
-            "Item ID: {}\n",
-            error.what(),
-            static_cast<int>(error.type()),
-            error.itemId()
-        );
+        std::cout << fmt::format("Connection error: {}\n", error.what());
     }
 }
