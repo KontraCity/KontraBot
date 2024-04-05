@@ -7,6 +7,7 @@
 // Custom modules
 #include "common/utility.hpp"
 #include "youtube/item.hpp"
+#include "youtube/search.hpp"
 using namespace kc;
 
 static void PrintInfo(const Youtube::Item& item)
@@ -47,15 +48,15 @@ static void PrintInfo(const Youtube::Item& item)
             return;
         }
     }
-    
 }
 
 int main()
 {
     try
     {
-        Youtube::Playlist playlist(std::string("PLn4GvABOzCQursVQ7qMU9CkNaKz4RgrVM"));
-        PrintInfo(playlist);
+        Youtube::Results results = Youtube::Related("v2AC41dglnM");
+        if (!results.empty())
+            PrintInfo(results[0]);
     } 
     catch (const Youtube::YoutubeError& error)
     {
