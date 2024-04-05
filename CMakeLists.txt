@@ -4,10 +4,13 @@ project(KontraBot VERSION 0)
 
 ### --- C++ configuration --- ###
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 ### --- Executable configuration --- ###
-add_executable(KontraBot "source/main.cpp")
+add_executable(KontraBot "source/main.cpp"
+    # YouTube modules
+    "source/youtube/error.cpp"
+)
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Linking configuration --- ###
