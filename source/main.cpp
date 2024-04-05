@@ -1,10 +1,11 @@
-// STL modules
+﻿// STL modules
 #include <iostream>
 
 // Library {fmt}
 #include <fmt/format.h>
 
 // Custom modules
+#include "common/utility.hpp"
 #include "youtube/video.hpp"
 using namespace kc;
 
@@ -16,10 +17,10 @@ static void PrintVideoInfo(const std::string& videoId)
     fmt::print("{:<14} {}\n", "Title:", video.title());
     fmt::print("{:<14} {}\n", "Author:", video.author());
     fmt::print("{:<14} {}\n", "Thumbnail URL:", video.thumbnailUrl());
-    fmt::print("{:<14} {}\n", "Duration:", pt::to_simple_string(video.duration()));
-    fmt::print("{:<14} {}\n", "View count:", video.viewCount());
+    fmt::print("{:<14} {}\n", "Duration:", Utility::NiceString(video.duration()));
+    fmt::print("{:<14} {}\n", "View count:", Utility::NiceString(video.viewCount()));
     fmt::print("{:<14} {}\n", "Category:", video.category());
-    fmt::print("{:<14} {}\n", "Upload date:", dt::to_simple_string(video.uploadDate()));
+    fmt::print("{:<14} {}\n", "Upload date:", Utility::NiceString(video.uploadDate()));
     fmt::print("{:<14} {}\n", "Chapters:", video.chapters().size());
 }
 
@@ -28,7 +29,7 @@ int main()
     try
     {
         PrintVideoInfo("WVOH00wVFbc");
-    }
+    } 
     catch (const Youtube::YoutubeError& error)
     {
         std::cout << fmt::format("YouTube error: {}\n", error.what());
