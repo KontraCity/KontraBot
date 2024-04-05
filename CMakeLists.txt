@@ -13,6 +13,7 @@ add_executable(KontraBot "source/main.cpp"
     "source/common/interpreter.cpp"
 
     # YouTube modules
+    "source/youtube/client.cpp"
     "source/youtube/error.cpp"
     "source/youtube/utility.cpp"
 )
