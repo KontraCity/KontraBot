@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 add_executable(KontraBot "source/main.cpp"
     # Common modules
     "source/common/curl.cpp"
+    "source/common/interpreter.cpp"
 
     # YouTube modules
     "source/youtube/error.cpp"
@@ -20,7 +21,10 @@ target_include_directories(KontraBot PRIVATE "include/")
 ### --- Linking configuration --- ###
 find_package(fmt CONFIG REQUIRED)
 find_package(CURL REQUIRED)
+find_package(PkgConfig)
+pkg_check_modules(MUJS REQUIRED IMPORTED_TARGET mujs)
 target_link_libraries(KontraBot PRIVATE
     fmt::fmt
     CURL::libcurl
+    PkgConfig::MUJS
 )

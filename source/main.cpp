@@ -5,19 +5,21 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "common/curl.hpp"
+#include "common/interpreter.hpp"
 using namespace kc;
 
 int main()
 {
     try
     {
-        Curl::Response response = Curl::Get("https://www.google.com/");
-        std::cout << fmt::format(
-            "Response code: {}, response length: {}\n",
-            response.code,
-            response.data.length()
-        );
+        Interpreter interpreter;
+        interpreter.execute("var a = 9;");
+        interpreter.execute("var b = 10");
+        interpreter.execute("var result = a + b;");
+        std::cout << fmt::format("Execution result: {}\n", interpreter.execute("console.log(result);"));
+
+        interpreter.reset();
+        interpreter.execute("console.log(result);");
     }
     catch (const std::runtime_error& error)
     {
@@ -25,6 +27,6 @@ int main()
     }
     catch (const std::invalid_argument& error)
     {
-        std::cout << fmt::format("Connection error: {}\n", error.what());
+        std::cout << fmt::format("Code execution error: {}\n", error.what());
     }
 }
