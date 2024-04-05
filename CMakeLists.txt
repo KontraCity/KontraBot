@@ -17,6 +17,7 @@ add_executable(KontraBot "source/main.cpp"
     # YouTube modules
     "source/youtube/client.cpp"
     "source/youtube/error.cpp"
+    "source/youtube/extractor.cpp"
     "source/youtube/playlist.cpp"
     "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
@@ -34,3 +35,13 @@ target_link_libraries(KontraBot PRIVATE
     CURL::libcurl
     PkgConfig::MUJS
 )
+
+### --- Platform dependent linking configuration --- ###
+if (WIN32)
+    find_package(FFMPEG REQUIRED)
+    target_include_directories(KontraBot PRIVATE ${FFMPEG_INCLUDE_DIRS})
+    target_link_directories(KontraBot PRIVATE ${FFMPEG_LIBRARY_DIRS})
+    target_link_libraries(KontraBot PRIVATE ${FFMPEG_LIBRARIES})
+elseif (UNIX)
+    target_link_libraries(KontraBot PRIVATE "avcodec" "avformat" "avutil")
+endif()
