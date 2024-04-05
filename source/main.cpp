@@ -5,6 +5,7 @@
 #include <fmt/format.h>
 
 // Custom modules
+#include "common/stopwatch.hpp"
 #include "common/utility.hpp"
 #include "youtube/item.hpp"
 #include "youtube/search.hpp"
@@ -54,9 +55,12 @@ int main()
 {
     try
     {
-        Youtube::Results results = Youtube::Related("v2AC41dglnM");
-        if (!results.empty())
-            PrintInfo(results[0]);
+        for (int iteration = 0; iteration < 15; ++iteration)
+        {
+            Stopwatch stopwatch;
+            Youtube::Results results = Youtube::Search("music");
+            fmt::print("Iteration {}: {} results, {} ms\n", iteration, results.size(), stopwatch.elapsed<Stopwatch::Milliseconds>());
+        }
     } 
     catch (const Youtube::YoutubeError& error)
     {

@@ -11,15 +11,17 @@ add_executable(KontraBot "source/main.cpp"
     # Common modules
     "source/common/curl.cpp"
     "source/common/interpreter.cpp"
+    "source/common/stopwatch.cpp"
     "source/common/utility.cpp"
 
     # YouTube modules
     "source/youtube/client.cpp"
     "source/youtube/error.cpp"
     "source/youtube/playlist.cpp"
+    "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
- "source/youtube/search.cpp")
+)
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Linking configuration --- ###

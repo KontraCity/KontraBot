@@ -54,7 +54,7 @@ Youtube::Results Youtube::Search(const std::string& query)
     }
 
     // TV embedded client is used for search because its response is the lightest.
-    Curl::Response searchResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "search", { {"query", query} });
+    Curl::Response searchResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "search", { {"query", query} }, true);
     if (searchResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
@@ -91,7 +91,7 @@ Youtube::Results Youtube::Related(const std::string& videoId)
     }
 
     // TV embedded client is used for related search because its response is the lightest.
-    Curl::Response nextResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "next", { {"videoId", videoId } });
+    Curl::Response nextResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "next", { {"videoId", videoId } }, true);
     if (nextResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(

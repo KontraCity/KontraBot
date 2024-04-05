@@ -100,13 +100,13 @@ void Youtube::Client::update()
     m_logger.info("Updated to player \"{}\"", m_playerId);
 }
 
-Curl::Response Youtube::Client::requestApi(Type clientType, const std::string& requestMethod, json additionalData)
+Curl::Response Youtube::Client::requestApi(Type clientType, const std::string& requestMethod, json additionalData, bool updateNeedless)
 {
     if (!m_initialized)
         throw std::runtime_error("kc::Youtube::Client::requestApi(): Not initialized");
 
     // TV embedded client needs current "signatureTimestamp" field to be passed in request body
-    if (clientType == Type::TvEmbedded)
+    if (clientType == Type::TvEmbedded && !updateNeedless)
         update();
 
     const char* clientName = TypeToName(clientType);

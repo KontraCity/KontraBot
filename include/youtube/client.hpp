@@ -227,8 +227,9 @@ namespace Youtube
         /// @param clientType Client type to use
         /// @param requestMethod Request method name
         /// @param additionalData Additional data to include in request body
+        /// @param updateNeedless Whether or not client update is needless
         /// @return API response
-        Curl::Response requestApi(Type clientType, const std::string& requestMethod, json additionalData = {});
+        Curl::Response requestApi(Type clientType, const std::string& requestMethod, json additionalData = {}, bool updateNeedless = false);
 
         /// @brief Decrypt signature cipher string to URL
         /// @param signatureCipher Signature cipher string
