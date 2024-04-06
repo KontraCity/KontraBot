@@ -9,8 +9,11 @@
 #include <fmt/format.h>
 
 // Custom modules
+#include "bot/locale/locale_en.hpp"
+#include "bot/locale/locale_ru.hpp"
 #include "bot/config.hpp"
 using namespace kc;
+
 
 /// @brief Initialize config
 /// @return Initialized config
@@ -28,12 +31,18 @@ static Bot::Config::Pointer Init()
     }
 }
 
+static void PrintLocaleInfo(const Bot::Locale::Pointer& locale)
+{
+    fmt::print("Locale type: {}\n", static_cast<int>(locale->type()));
+    fmt::print("Locale name: {}\n", locale->name());
+    fmt::print("Locale long name: {}\n\n", locale->longName());
+}
+
 int main()
 {
     Bot::Config::Pointer config = Init();
     if (!config)
         return 1;
-
-    std::cout << fmt::format("Discord bot API token: \"{}\"\n", config->discordBotApiToken());
-    return 0;
+    PrintLocaleInfo(std::make_unique<Bot::LocaleEn>());
+    PrintLocaleInfo(std::make_unique<Bot::LocaleRu>());
 }

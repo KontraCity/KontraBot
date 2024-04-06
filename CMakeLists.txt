@@ -10,6 +10,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 add_executable(KontraBot "source/main.cpp"
     # Bot modules
     "source/bot/config.cpp"
+    "source/bot/locale.cpp"
 
     # Common modules
     "source/common/curl.cpp"
@@ -30,12 +31,18 @@ target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Linking configuration --- ###
 find_package(fmt CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 find_package(CURL REQUIRED)
+find_package(dpp CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 find_package(PkgConfig)
 pkg_check_modules(MUJS REQUIRED IMPORTED_TARGET mujs)
 target_link_libraries(KontraBot PRIVATE
     fmt::fmt
+    nlohmann_json::nlohmann_json
     CURL::libcurl
+    dpp::dpp
+    spdlog::spdlog
     PkgConfig::MUJS
 )
 
