@@ -9,13 +9,11 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "bot/locale/locale_en.hpp"
-#include "bot/locale/locale_ru.hpp"
 #include "bot/config.hpp"
+#include "bot/timeout.hpp"
 using namespace kc;
 
-
-/// @brief Initialize config
+/// @brief Initialize con fig
 /// @return Initialized config
 static Bot::Config::Pointer Init()
 {
@@ -31,18 +29,29 @@ static Bot::Config::Pointer Init()
     }
 }
 
-static void PrintLocaleInfo(const Bot::Locale::Pointer& locale)
-{
-    fmt::print("Locale type: {}\n", static_cast<int>(locale->type()));
-    fmt::print("Locale name: {}\n", locale->name());
-    fmt::print("Locale long name: {}\n\n", locale->longName());
-}
-
 int main()
 {
     Bot::Config::Pointer config = Init();
     if (!config)
         return 1;
-    PrintLocaleInfo(std::make_unique<Bot::LocaleEn>());
-    PrintLocaleInfo(std::make_unique<Bot::LocaleRu>());
+
+    Bot::Timeout timeout([]() { std::cout << "Timeout!\n"; }, 5);
+    while (true)
+    {
+        char input;
+        std::cin >> input;
+        switch (input)
+        {
+            case 'e':
+                timeout.enable();
+                break;
+            case 'd':
+                timeout.disable();
+                break;
+            case 'r':
+                timeout.reset();
+                break;
+        }
+        std::cout << (timeout.enabled() ? "Enabled" : "Disabled") << '\n';
+    }
 }
