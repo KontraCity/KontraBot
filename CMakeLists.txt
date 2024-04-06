@@ -27,7 +27,7 @@ add_executable(KontraBot "source/main.cpp"
     "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
-)
+ "source/bot/signal.cpp")
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Linking configuration --- ###

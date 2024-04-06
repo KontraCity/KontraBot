@@ -10,7 +10,7 @@
 
 // Custom modules
 #include "bot/config.hpp"
-#include "bot/timeout.hpp"
+#include "bot/signal.hpp"
 using namespace kc;
 
 /// @brief Initialize con fig
@@ -29,29 +29,19 @@ static Bot::Config::Pointer Init()
     }
 }
 
+static void PrintSignalInfo(const std::string& signalString)
+{
+    Bot::Signal signal(signalString);
+    fmt::print("Signal type: {}\n", static_cast<int>(signal.type()));
+    fmt::print("Signal data: {}\n", signal.data());
+}
+
 int main()
 {
     Bot::Config::Pointer config = Init();
     if (!config)
         return 1;
 
-    Bot::Timeout timeout([]() { std::cout << "Timeout!\n"; }, 5);
-    while (true)
-    {
-        char input;
-        std::cin >> input;
-        switch (input)
-        {
-            case 'e':
-                timeout.enable();
-                break;
-            case 'd':
-                timeout.disable();
-                break;
-            case 'r':
-                timeout.reset();
-                break;
-        }
-        std::cout << (timeout.enabled() ? "Enabled" : "Disabled") << '\n';
-    }
+    Bot::Signal signal(Bot::Signal::Type::Played, "WVOH00wVFbc");
+    PrintSignalInfo(signal);
 }
