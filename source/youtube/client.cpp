@@ -54,7 +54,6 @@ Youtube::Client::Client()
     {
         m_clients = json::parse(ClientsData);
         m_interpreter = std::make_unique<Interpreter>();
-        m_logger.info("Successfully initialized");
     }
     catch (...)
     {
@@ -74,7 +73,7 @@ void Youtube::Client::update()
         return;
     m_playerId = currentPlayerId;
 
-    const Curl::Response playerCodeResponse = Curl::Get(fmt::format(ClientConst::Urls::PlayerCode, m_playerId));
+    const Curl::Response playerCodeResponse = Curl::Get(fmt::format(Urls::PlayerCode, m_playerId));
     if (playerCodeResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
@@ -112,7 +111,7 @@ Curl::Response Youtube::Client::requestApi(Type clientType, const std::string& r
     const char* clientName = TypeToName(clientType);
     additionalData.update(m_clients[clientName]["data"]);
     return Curl::Post(
-        fmt::format(ClientConst::Urls::ApiRequest, requestMethod, m_clients[clientName]["api_key"].get<std::string>()),
+        fmt::format(Urls::ApiRequest, requestMethod, m_clients[clientName]["api_key"].get<std::string>()),
         m_clients[clientName]["headers"],
         additionalData.dump()
     );

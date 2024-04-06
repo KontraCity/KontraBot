@@ -8,6 +8,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 
 ### --- Executable configuration --- ###
 add_executable(KontraBot "source/main.cpp"
+    # Bot modules
+    "source/bot/config.cpp"
+
     # Common modules
     "source/common/curl.cpp"
     "source/common/interpreter.cpp"

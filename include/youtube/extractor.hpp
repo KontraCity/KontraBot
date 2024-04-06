@@ -19,6 +19,7 @@ extern "C" {
 
 // Library spdlog
 #include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 // Library {fmt}
 #include <fmt/format.h>

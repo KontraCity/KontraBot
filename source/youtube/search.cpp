@@ -7,6 +7,11 @@ Youtube::Results::Results(Type type, const std::string& query)
     , m_query(query)
 {}
 
+/// @brief Parse API response JSON contents object to results list
+/// @param contentsObject API response JSON contents object
+/// @param type Results list type
+/// @param query Results list query
+/// @return Results list
 static Youtube::Results ParseSearchContents(const json& contentsObject, Youtube::Results::Type type, const std::string& query)
 {
     Youtube::Results results(type, query);
