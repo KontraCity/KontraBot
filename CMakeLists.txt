@@ -10,7 +10,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 add_executable(KontraBot "source/main.cpp"
     # Bot modules
     "source/bot/config.cpp"
+    "source/bot/info.cpp"
     "source/bot/locale.cpp"
+    "source/bot/signal.cpp"
     "source/bot/timeout.cpp"
 
     # Common modules
@@ -27,7 +29,7 @@ add_executable(KontraBot "source/main.cpp"
     "source/youtube/search.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
- "source/bot/signal.cpp")
+)
 target_include_directories(KontraBot PRIVATE "include/")
 
 ### --- Linking configuration --- ###

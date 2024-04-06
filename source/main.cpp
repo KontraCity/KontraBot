@@ -9,8 +9,8 @@
 #include <fmt/format.h>
 
 // Custom modules
+#include "bot/info.hpp"
 #include "bot/config.hpp"
-#include "bot/signal.hpp"
 using namespace kc;
 
 /// @brief Initialize con fig
@@ -29,11 +29,16 @@ static Bot::Config::Pointer Init()
     }
 }
 
-static void PrintSignalInfo(const std::string& signalString)
+static void PrintGuildInfo(dpp::snowflake guildId)
 {
-    Bot::Signal signal(signalString);
-    fmt::print("Signal type: {}\n", static_cast<int>(signal.type()));
-    fmt::print("Signal data: {}\n", signal.data());
+    Bot::Info info(guildId);
+    const Bot::Settings& settings = info.settings();
+    fmt::print("Locale: {}\n", settings.locale->longName());
+    fmt::print("Timeout duration: {} seconds\n", settings.timeoutMinutes);
+
+    const Bot::Stats& stats = info.stats();
+    fmt::print("Sessions count: {}\n", stats.sessionsCount);
+    fmt::print("Tracks played: {}\n", stats.tracksPlayed);
 }
 
 int main()
@@ -42,6 +47,5 @@ int main()
     if (!config)
         return 1;
 
-    Bot::Signal signal(Bot::Signal::Type::Played, "WVOH00wVFbc");
-    PrintSignalInfo(signal);
+    PrintGuildInfo(0);
 }
