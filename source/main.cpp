@@ -9,7 +9,7 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "bot/info.hpp"
+#include "bot/bot.hpp"
 #include "bot/config.hpp"
 using namespace kc;
 
@@ -29,23 +29,19 @@ static Bot::Config::Pointer Init()
     }
 }
 
-static void PrintGuildInfo(dpp::snowflake guildId)
-{
-    Bot::Info info(guildId);
-    const Bot::Settings& settings = info.settings();
-    fmt::print("Locale: {}\n", settings.locale->longName());
-    fmt::print("Timeout duration: {} seconds\n", settings.timeoutMinutes);
-
-    const Bot::Stats& stats = info.stats();
-    fmt::print("Sessions count: {}\n", stats.sessionsCount);
-    fmt::print("Tracks played: {}\n", stats.tracksPlayed);
-}
-
 int main()
 {
     Bot::Config::Pointer config = Init();
     if (!config)
         return 1;
 
-    PrintGuildInfo(0);
+    bool registerCommands = false;
+    if (registerCommands)
+    {
+        Bot::Bot bot(config, true);
+        return 0;
+    }
+
+    Bot::Bot bot(config);
+    bot.start(false);
 }

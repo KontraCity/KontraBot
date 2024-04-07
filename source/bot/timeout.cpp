@@ -12,7 +12,7 @@ void Bot::Timeout::threadFunction()
         m_callback();
 }
 
-Bot::Timeout::Timeout(const Callback& callback, uint32_t timeoutDuration)
+Bot::Timeout::Timeout(const Callback& callback, uint64_t timeoutDuration)
     : m_enabled(true)
     , m_callback(callback)
     , m_timeoutDuration(timeoutDuration)

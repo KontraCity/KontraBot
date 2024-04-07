@@ -52,6 +52,16 @@ namespace Bot
             Russian,
         };
 
+        enum class EndReason
+        {
+            None,
+            JoiningOther,
+            Timeout,
+            EverybodyLeft,
+            Kicked,
+            Moved,
+        };
+
     public:
         /// @brief Get locale type
         /// @return Locale type

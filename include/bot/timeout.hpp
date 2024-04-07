@@ -13,14 +13,14 @@ namespace Bot
     class Timeout
     {
     public:
-        // Callback function called when timeout occurs
+        // Function called when timeout occurs
         using Callback = std::function<void()>;
 
     private:
         mutable std::mutex m_mutex;
         std::thread m_thread;
         std::condition_variable m_cv;
-        uint32_t m_timeoutDuration;
+        uint64_t m_timeoutDuration;
         bool m_enabled;
         Callback m_callback;
 
@@ -32,7 +32,7 @@ namespace Bot
         /// @brief Create timeout
         /// @param callback Callback function to call when timeout occurs
         /// @param timeoutDuration Timeout duration in seconds
-        Timeout(const Callback& callback, uint32_t timeoutDuration);
+        Timeout(const Callback& callback, uint64_t timeoutDuration);
 
         Timeout(const Timeout& other);
 
