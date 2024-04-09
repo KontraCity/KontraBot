@@ -32,7 +32,7 @@ namespace Youtube
     namespace VideoConst
     {
         // Check if a string is a valid YouTube video ID
-        constexpr const char* ValidateId = R"(^[^"&?\/\s]{11}$)";
+        constexpr const char* ValidateId = R"(^([^"&?\/\s]{11})$)";
 
         // Extract YouTube video ID from video watch URL
         // [C1]: Video ID
@@ -42,6 +42,32 @@ namespace Youtube
     class Video
     {
     public:
+        enum class Type
+        {
+            /*
+            *       Normal YouTube video that can be a:
+            *           - Traditional video;
+            *           - YouTube shorts video;
+            *           - Livestream recording.
+            *       All info fields are available and audio can be extracted.
+            */
+            Normal,
+
+            /*
+            *       YouTube livestream.
+            *       It is not supported and can't be played.
+            */
+            Livestream,
+
+            /*
+            *       Premiered YouTube video that has a reveal date and will be:
+            *           -> Revealed as a livestream;
+            *           -> Converted to normal YouTube video after the reveal.
+            *       It is not supported and can't be played.
+            */
+            Premiere,
+        };
+
         struct Chapter
         {
             std::string name;
@@ -55,6 +81,7 @@ namespace Youtube
         std::string m_thumbnailUrl;
         pt::time_duration m_duration;
         uint64_t m_viewCount = 0;
+        Type m_type = Type::Normal;
 
         bool m_optionalKnown = false;
         std::string m_category;
@@ -88,7 +115,6 @@ namespace Youtube
         /// @brief Download video info
         /// @throw std::runtime_error if internal error occurs
         /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        /// @throw kc::Youtube::LocalError if the video is livestream or premiere
         void downloadInfo();
 
         /// @brief Check optional fields availability
@@ -102,12 +128,10 @@ namespace Youtube
         /// @throw std::invalid_argument if [idUrl] is not a valid video ID or watch URL
         /// @throw std::runtime_error if internal error occurs
         /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        /// @throw kc::Youtube::LocalError if the video is livestream or premiere
         Video(const std::string& idUrl);
 
         /// @brief Parse video info
         /// @param videoInfoObject API response JSON video info object
-        /// @throw kc::Youtube::LocalError if the video is livestream or premiere
         Video(const json& videoInfoObject);
 
         /// @brief Get video ID
@@ -122,6 +146,18 @@ namespace Youtube
         inline std::string watchUrl() const
         {
             return "https://www.youtube.com/watch?v=" + m_id;
+        }
+
+        /// @brief Get video watch URL with timestamp
+        /// @param timestamp Timestamp to include in the URL
+        /// @return Video watch URL with timestamp
+        inline std::string watchUrl(pt::time_duration timestamp) const
+        {
+            return fmt::format(
+                "https://www.youtube.com/watch?v={}&t={}",
+                m_id,
+                timestamp.total_seconds()
+            );
         }
 
         /// @brief Get video title
@@ -157,6 +193,13 @@ namespace Youtube
         inline uint64_t viewCount() const
         {
             return m_viewCount;
+        }
+
+        /// @brief Get video type
+        /// @return Video type
+        inline Type type() const
+        {
+            return m_type;
         }
 
         /// @brief Get video category: optional info may be downloaded

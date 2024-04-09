@@ -7,11 +7,11 @@ Youtube::Playlist::Iterator::Iterator()
     invalidate();
 }
 
-Youtube::Playlist::Iterator::Iterator(Playlist* root)
+Youtube::Playlist::Iterator::Iterator(Playlist* root, size_t index)
     : m_root(root)
-    , m_index(0)
+    , m_index(index)
 {
-    m_video = m_root->discoverVideo(0);
+    m_video = m_root->discoverVideo(m_index);
 }
 
 void Youtube::Playlist::Iterator::invalidate()
@@ -92,18 +92,7 @@ void Youtube::Playlist::parseVideos(const json& videoContentsObject)
             */
             continue;
         }
-
-        try
-        {
-            m_videos.emplace_back(playlistVideoRendererObject);
-        }
-        catch (const Youtube::LocalError&)
-        {
-            /*
-            *   The video is an unsupported item.
-            *   Can be ignored.
-            */
-        }
+        m_videos.emplace_back(playlistVideoRendererObject);
     }
     m_videos.shrink_to_fit();
 
@@ -115,7 +104,12 @@ void Youtube::Playlist::parseVideos(const json& videoContentsObject)
     if (firstPage)
     {
         firstPage = false;
-        if (m_videos.empty())
+        bool allVideosNotSupported = std::all_of(
+            m_videos.begin(),
+            m_videos.end(),
+            [](const Youtube::Video& video) { return video.type() != Video::Type::Normal; }
+        );
+        if (allVideosNotSupported)
             throw LocalError(LocalError::Type::PlaylistItemsNotSupported, m_id);
     }
 
@@ -141,7 +135,7 @@ void Youtube::Playlist::parseVideoCount(const json& videoCountObject)
     m_videoCount = (videoCountString == "No videos" ? 0 : std::stoi(videoCountString));
 }
 
-Youtube::Playlist::Iterator::pointer Youtube::Playlist::discoverVideo(int index)
+Youtube::Playlist::Iterator::pointer Youtube::Playlist::discoverVideo(size_t index)
 {
     if (!m_optionalKnown)
         downloadInfo();

@@ -1,6 +1,20 @@
-#include "bot/player.hpp"
+#include "bot/player/player.hpp"
 
 namespace kc {
+
+std::vector<Youtube::Video::Chapter>::const_iterator Bot::Player::DeduceChapter(const std::vector<Youtube::Video::Chapter>& chapters, pt::time_duration timestamp)
+{
+    auto chapterEntry = std::lower_bound(
+        chapters.begin(),
+        chapters.end(),
+        timestamp,
+        [](const Youtube::Video::Chapter& chapter, pt::time_duration timestamp) { return chapter.timestamp <= timestamp; }
+    );
+
+    if (chapterEntry != chapters.begin())
+        chapterEntry -= 1;
+    return chapterEntry;
+}
 
 void Bot::Player::extractNextVideo()
 {
@@ -15,7 +29,9 @@ void Bot::Player::extractNextVideo()
     {
         if (m_session.playingPlaylist->iterator)
         {
-            m_session.playingVideo.emplace(*(m_session.playingPlaylist->iterator++));
+            m_session.playingVideo.emplace(Session::PlayingVideo{ *(m_session.playingPlaylist->iterator++) });
+            if (!m_session.playingVideo->video.chapters().empty())
+                chapterReached(m_session.playingVideo->chapter = m_session.playingVideo->video.chapters()[0]);
             return;
         }
 
@@ -29,12 +45,16 @@ void Bot::Player::extractNextVideo()
     switch (nextItem.item.type())
     {
         case Youtube::Item::Type::Video:
-            m_session.playingVideo.emplace(std::move(std::get<Youtube::Video>(nextItem.item)));
+            m_session.playingVideo.emplace(Session::PlayingVideo{ std::move(std::get<Youtube::Video>(nextItem.item)) });
+            if (!m_session.playingVideo->video.chapters().empty())
+                chapterReached(m_session.playingVideo->chapter = m_session.playingVideo->video.chapters()[0]);
             break;
         case Youtube::Item::Type::Playlist:
             m_session.playingPlaylist.emplace(Session::PlayingPlaylist{ std::move(std::get<Youtube::Playlist>(nextItem.item)), {} });
             m_session.playingPlaylist->iterator = m_session.playingPlaylist->playlist.begin();
-            m_session.playingVideo.emplace(*(m_session.playingPlaylist->iterator++));
+            m_session.playingVideo.emplace(Session::PlayingVideo{ *(m_session.playingPlaylist->iterator++) });
+            if (!m_session.playingVideo->video.chapters().empty())
+                chapterReached(m_session.playingVideo->chapter = m_session.playingVideo->video.chapters()[0]);
             break;
     }
     m_session.queue.pop_front();
@@ -42,9 +62,18 @@ void Bot::Player::extractNextVideo()
 
 void Bot::Player::incrementPlayedTracks()
 {
-    Info info(m_session.guildId);
-    ++info.stats().tracksPlayed;
+    //Info info(m_session.guildId);
+    //++info.stats().tracksPlayed;
     ++m_session.tracksPlayed;
+}
+
+void Bot::Player::chapterReached(const Youtube::Video::Chapter& chapter)
+{
+    if (m_session.playingVideo->chapter.timestamp == chapter.timestamp)
+        return;
+
+    m_session.playingVideo->chapter = chapter;
+    m_logger.critical(chapter.name);
 }
 
 void Bot::Player::checkPlayingVideo()
@@ -66,15 +95,47 @@ void Bot::Player::threadFunction()
             return;
         }
 
+        if (m_session.playingVideo->video.type() != Youtube::Video::Type::Normal)
+        {
+            dpp::guild* guild = dpp::find_guild(m_session.guildId);
+            dpp::discord_voice_client* voiceClient = getVoiceClient();
+            if (!voiceClient)
+                return;
+            Info info(m_session.guildId);
+
+            switch (m_session.playingVideo->video.type())
+            {
+                case Youtube::Video::Type::Livestream:
+                {
+                    m_root->message_create(info.settings().locale->livestreamSkipped(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
+                    voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, videoId));
+                    m_logger.info("\"{}\": Skipping livestream \"{}\"", guild->name, m_session.playingVideo->video.title());
+                    break;
+                }
+                case Youtube::Video::Type::Premiere:
+                {
+                    m_root->message_create(info.settings().locale->premiereSkipped(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
+                    voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, videoId));
+                    m_logger.info("\"{}\": Skipping premiere \"{}\"", guild->name, m_session.playingVideo->video.title());
+                    break;
+                }
+            }
+
+            m_threadStatus = ThreadStatus::Idle;
+            return;
+        }
+
         m_threadStatus = ThreadStatus::Running;
-        videoId = m_session.playingVideo->id();
+        videoId = m_session.playingVideo->video.id();
         m_timeout.disable();
     }
 
-    bool successfullyPlayed = true;
+    bool error = false;
     try
     {
         Youtube::Extractor extractor(videoId);
+        Youtube::Video::Chapter lastChapter;
+        pt::time_duration lastCheckTimestamp;
         while (true)
         {
             Youtube::Extractor::Frame frame = extractor.extractFrame();
@@ -97,21 +158,47 @@ void Bot::Player::threadFunction()
                     m_session.seekTimestamp = -1;
                 }
 
+                if (!m_session.playingVideo->video.chapters().empty())
+                {
+                    pt::time_duration currentTimestamp(0, 0, 0, frame.timestamp() * 1'000);
+                    if (std::abs((currentTimestamp - lastCheckTimestamp).total_seconds()) >= 1)
+                    {
+                        lastCheckTimestamp = currentTimestamp;
+                        auto chapterEntry = DeduceChapter(m_session.playingVideo->video.chapters(), currentTimestamp);
+                        if (chapterEntry->timestamp != lastChapter.timestamp)
+                        {
+                            lastChapter = *chapterEntry;
+                            voiceClient->insert_marker(Signal(Signal::Type::ChapterReached, chapterEntry->name));
+                        }
+                    }
+                }
+                
                 voiceClient->send_audio_opus(frame.data(), frame.size());
             }
         }
     }
     catch (...)
     {
-        successfullyPlayed = false;
+        error = true;
     }
 
     std::lock_guard lock(m_mutex);
+    dpp::guild* guild = dpp::find_guild(m_session.guildId);
     dpp::discord_voice_client* voiceClient = getVoiceClient();
     if (!voiceClient)
         return;
 
-    voiceClient->insert_marker(Signal((successfullyPlayed ? Signal::Type::Played : Signal::Type::PlayError), videoId));
+    if (error)
+    {
+        Info info(m_session.guildId);
+        m_root->message_create(info.settings().locale->playError(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
+        voiceClient->insert_marker(Signal(Signal::Type::PlayError, videoId));
+        m_logger.error("\"{}\": Couldn't play \"{}\"", guild->name, m_session.playingVideo->video.title());
+        m_threadStatus = ThreadStatus::Idle;
+        return;
+    }
+
+    voiceClient->insert_marker(Signal(Signal::Type::Played, videoId));
     m_threadStatus = ThreadStatus::Idle;
 }
 
@@ -149,16 +236,17 @@ void Bot::Player::timeoutHandler()
     disconnectThread.detach();
 }
 
-Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, Info& info)
-    : m_root(root)
+Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
+    : m_logger("player", std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    , m_root(root)
     , m_timeout([this]() { timeoutHandler(); }, info.settings().timeoutMinutes * 60)
     , m_client(client)
     , m_session({ 
         interaction.get_guild().id,
+        voiceChannelId,
         interaction.channel_id,
         ++info.stats().sessionsCount,
-        interaction.get_issuing_user(),
-        pt::second_clock::local_time()
+        interaction.get_issuing_user()
     })
 {}
 
@@ -183,16 +271,35 @@ void Bot::Player::signalReady()
     checkPlayingVideo();
 }
 
-void Bot::Player::signalMarker()
+void Bot::Player::signalMarker(const Signal& signal)
 {
     std::lock_guard lock(m_mutex);
 
+    if (signal.type() == Signal::Type::ChapterReached)
+    {
+        auto chapterEntry = std::find_if(
+            m_session.playingVideo->video.chapters().begin(),
+            m_session.playingVideo->video.chapters().end(),
+            [signal](const Youtube::Video::Chapter& chapter) { return chapter.name == signal.data(); }
+        );
+        if (chapterEntry != m_session.playingVideo->video.chapters().end())
+            chapterReached(*chapterEntry);
+        return;
+    }
+
     extractNextVideo();
-    incrementPlayedTracks();
+    if (signal.type() == Signal::Type::Played)
+        incrementPlayedTracks();
     checkPlayingVideo();
 }
 
-Bot::Player::Session Bot::Player::session()
+void Bot::Player::updateTextChannel(dpp::snowflake channelId)
+{
+    std::lock_guard lock(m_mutex);
+    m_session.textChannelId = channelId;
+}
+
+Bot::Session Bot::Player::session()
 {
     std::lock_guard lock(m_mutex);
     return m_session;
@@ -250,6 +357,12 @@ void Bot::Player::seek(uint64_t timestamp)
     dpp::discord_voice_client* voiceClient = getVoiceClient();
     if (!voiceClient)
         return;
+
+    if (!m_session.playingVideo->video.chapters().empty())
+    {
+        auto chapterEntry = DeduceChapter(m_session.playingVideo->video.chapters(), pt::time_duration(0, 0, timestamp));
+        chapterReached(*chapterEntry);
+    }
 
     m_session.seekTimestamp = timestamp;
     if (m_threadStatus != ThreadStatus::Running)
@@ -328,6 +441,9 @@ void Bot::Player::endSession(Locale::EndReason reason)
 {
     if (m_session.playingVideo)
         incrementPlayedTracks();
+
+    Info info(m_session.guildId);
+    m_root->message_create(info.settings().locale->sessionEnd(reason, m_session).set_channel_id(m_session.textChannelId));
 }
 
 } // namespace kc

@@ -22,7 +22,10 @@ namespace Bot
             PlayPlaylist,
             RelatedSearch,
             SearchSelect,
+            LivestreamSkipped,
+            PremiereSkipped,
             Played,
+            ChapterReached,
             PlayError,
             Unknown,
         };

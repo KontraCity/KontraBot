@@ -1,29 +1,7 @@
-#include "bot/info.hpp"
+#include "bot/info/info.hpp"
 using namespace kc::Bot::InfoConst;
 
 namespace kc {
-
-Bot::Settings& Bot::Settings::operator=(const Bot::Settings& other)
-{
-    if (*this == other)
-        return *this;
-
-    locale = Info::CreateLocale(other.locale->type());
-    timeoutMinutes = other.timeoutMinutes;
-    return *this;
-}
-
-bool Bot::Settings::operator==(const Settings& other)
-{
-    if (!locale || !other.locale)
-        return static_cast<bool>(locale) == static_cast<bool>(other.locale->type()) && timeoutMinutes == other.timeoutMinutes;
-    return locale->type() == other.locale->type() && timeoutMinutes == other.timeoutMinutes;
-}
-
-bool Bot::Stats::operator==(const Stats& other)
-{
-    return sessionsCount == other.sessionsCount && tracksPlayed == other.tracksPlayed;
-}
 
 std::lock_guard<std::mutex> Bot::Info::GetFileLock(dpp::snowflake guildId)
 {
@@ -35,24 +13,6 @@ std::lock_guard<std::mutex> Bot::Info::GetFileLock(dpp::snowflake guildId)
 }
 
 spdlog::logger Bot::Info::Logger("info", std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-
-Bot::Locale::Pointer Bot::Info::CreateLocale(Locale::Type localeType)
-{
-    switch (localeType)
-    {
-        default:
-            return std::make_unique<LocaleEn>();
-        case LocaleRu::Type:
-            return std::make_unique<LocaleRu>();
-    }
-}
-
-Bot::Locale::Pointer Bot::Info::CreateLocale(const std::string localeName)
-{
-    if (localeName == LocaleRu::Name)
-        return CreateLocale(LocaleRu::Type);
-    return CreateLocale(LocaleEn::Type);
-}
 
 Bot::Info::Info(dpp::snowflake guildId)
     : m_fileLock(GetFileLock(guildId))
@@ -80,7 +40,7 @@ Bot::Info::Info(dpp::snowflake guildId)
         json infoJson = json::parse(infoFile);
 
         json settingsJson = infoJson[Fields::Settings];
-        m_settings.locale = CreateLocale(settingsJson[Fields::Locale].get<std::string>());
+        m_settings.locale = Locale::Create(settingsJson[Fields::Locale].get<std::string>());
         m_settings.timeoutMinutes = settingsJson[Fields::Timeout];
 
         json statsJson = infoJson[Fields::Stats];
@@ -120,8 +80,6 @@ Bot::Info::~Info()
         Logger.error("Couldn't save info file \"{}\"", m_filePath);
         return;
     }
-
-    Logger.info("Saved info file \"{}\"", m_filePath);
     infoFile << infoJson.dump(4) << '\n';
 }
 

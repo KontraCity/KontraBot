@@ -22,15 +22,8 @@
 // Library {fmt}
 #include <fmt/format.h>
 
-/* Forward Settings and Stats structs declaration for other modules */
-namespace kc {
-    namespace Bot {
-        struct Settings;
-        struct Stats;
-    }
-}
-
 // Custom modules
+#include "bot/info/types.hpp"
 #include "bot/locale/locale_en.hpp"
 #include "bot/locale/locale_ru.hpp"
 
@@ -41,33 +34,6 @@ using nlohmann::json;
 
 namespace Bot
 {
-    struct Settings
-    {
-        Locale::Pointer locale;
-        uint64_t timeoutMinutes;
-
-        /// @brief Copy data from other settings
-        /// @param other Othe settings to copy data from
-        /// @return Reference to these settings
-        Settings& operator=(const Settings& other);
-
-        /// @brief Check if settings are equal
-        /// @param other Other settings to check against
-        /// @return True if both settings are equal
-        bool operator==(const Settings& other);
-    };
-
-    struct Stats
-    {
-        uint64_t sessionsCount;
-        uint64_t tracksPlayed;
-
-        /// @brief Check if stats are equal
-        /// @param other Other stats to check against
-        /// @return True if both stats are equal
-        bool operator==(const Stats& other);
-    };
-
     namespace InfoConst
     {
         // Guilds info directory name
@@ -87,17 +53,6 @@ namespace Bot
 
     class Info
     {
-    public:
-        /// @brief Create locale from its type
-        /// @param localeType Locale type
-        /// @return Created locale
-        static Locale::Pointer CreateLocale(Locale::Type localeType);
-
-        /// @brief Create locale from its name
-        /// @param localeName Locale name
-        /// @return Created locale
-        static Locale::Pointer CreateLocale(const std::string localeName);
-
     private:
         /// @brief Get guild info file lock
         /// @param guildId ID of guild

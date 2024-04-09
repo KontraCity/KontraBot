@@ -11,7 +11,7 @@ Bot::Signal::Signal(const std::string& signalString)
     : m_type(Type::Unknown)
 {
     boost::smatch matches;
-    if (!boost::regex_match(signalString, matches, boost::regex(R"((\d+)_(.*))")))
+    if (!boost::regex_match(signalString, matches, boost::regex(R"((\d+)_([\s\S]*))")))
         return;
     m_data = matches.str(2);
 

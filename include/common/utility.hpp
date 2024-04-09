@@ -47,6 +47,12 @@ namespace Utility
     /// @param substring String to search for
     /// @return True if string contains substring
     bool CaseInsensitiveStringContains(std::string string, std::string substring);
+
+    /// @brief Generate random number
+    /// @param min Min number value
+    /// @param max Max number value
+    /// @return Generated number
+    int64_t RandomNumber(int64_t min, int64_t max);
 }
 
 } // namespace kc

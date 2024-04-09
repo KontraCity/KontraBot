@@ -6,9 +6,9 @@ namespace kc {
 std::string Utility::NiceString(dt::date date)
 {
     return fmt::format(
-        "{} {} {}",
+        "{:#02d}.{:#02d}.{:#04d}",
         date.day().as_number(),
-        date.month().as_long_string(),
+        date.month().as_number(),
         static_cast<unsigned short>(date.year())
     );
 }
@@ -53,6 +53,13 @@ bool Utility::CaseInsensitiveStringContains(std::string string, std::string subs
     utf8lwr(string.data());
     utf8lwr(substring.data());
     return static_cast<bool>(utf8str(string.data(), substring.data()));
+}
+
+int64_t Utility::RandomNumber(int64_t min, int64_t max)
+{
+    static std::random_device randomDevice;
+    static std::mt19937_64 generator(randomDevice());
+    return std::uniform_int_distribution(min, max)(generator);
 }
 
 } // namespace kc

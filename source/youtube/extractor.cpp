@@ -49,7 +49,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             std::string responseVideoId = playerResponseJson["videoDetails"]["videoId"];
             if (responseVideoId != videoId)
             {
-                Logger.warn("Video \"{}\": API response is for wrong video (\"{}\"), trying \"tv_embedded\" client", videoId, responseVideoId);
+                Logger.warn("Video \"{}\": API response is for wrong video \"{}\", trying \"tv_embedded\" client", videoId, responseVideoId);
                 clientFallback = true;
             }
 

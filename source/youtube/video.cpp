@@ -117,8 +117,9 @@ void Youtube::Video::checkPlayabilityStatus(const json& playabilityStatusObject)
     if (playabilityStatusString == "LIVE_STREAM_OFFLINE")
     {
         /*
-        *   Video is a livestream and is not supported.
-        *   Isn't a YouTube error and can be ignored.
+        *   Video is a premiere and is not available not.
+        *   Although premieres are not supported, they are not handled as exceptions.
+        *   Can be ignored.
         */
         return;
     }
@@ -183,9 +184,13 @@ void Youtube::Video::downloadInfo()
         parseUploadDate(playerMicroformatRendererObject["uploadDate"]);
 
         if (videoDetailsObject.contains("isUpcoming") && videoDetailsObject["isUpcoming"])
-            throw LocalError(LocalError::Type::PremiereNotSupported, m_id);
+        {
+            m_type = Type::Premiere;
+            return;
+        }
+
         if (videoDetailsObject.contains("isLive") && videoDetailsObject["isLive"])
-            throw LocalError(LocalError::Type::LivestreamNotSupported, m_id);
+            m_type = Type::Livestream;
 
         m_duration = pt::time_duration(0, 0, std::stoull(videoDetailsObject["lengthSeconds"].get<std::string>()));
         m_viewCount = std::stoull(videoDetailsObject["viewCount"].get<std::string>());
@@ -243,9 +248,13 @@ Youtube::Video::Video(const json& videoInfoObject)
     m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoInfoObject["thumbnail"]["thumbnails"]);
 
     if (videoInfoObject.contains("upcomingEventData"))
-        throw LocalError(LocalError::Type::PremiereNotSupported, m_id);
+    {
+        m_type = Type::Premiere;
+        return;
+    }
+
     if (!parseDuration(videoInfoObject))
-        throw LocalError(LocalError::Type::LivestreamNotSupported, m_id);
+        m_type = Type::Livestream;
     parseViewCount(videoInfoObject);
 }
 

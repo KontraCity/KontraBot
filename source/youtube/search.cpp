@@ -21,19 +21,9 @@ static Youtube::Results ParseSearchContents(const json& contentsObject, Youtube:
     {
         if (contentObject.contains("compactVideoRenderer"))
         {
-            try
-            {
-                Youtube::Video video(contentObject["compactVideoRenderer"]);
+            Youtube::Video video(contentObject["compactVideoRenderer"]);
+            if (video.type() == Youtube::Video::Type::Normal)
                 results.emplace_back(std::in_place_type<Youtube::Video>, std::move(video));
-            }
-            catch (const Youtube::LocalError&)
-            {
-                /*
-                *   The video is an unsupported item.
-                *   Can be ignored.
-                */
-            }
-
             continue;
         }
 

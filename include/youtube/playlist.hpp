@@ -36,7 +36,7 @@ namespace Youtube
     namespace PlaylistConst
     {
         // Check if a string is a valid YouTube playlist ID
-        constexpr const char* ValidateId = R"(^PL[^"&?\/\s]{16,32}$|^OLAK5uy_[^"&?\/\s]{33}$)";
+        constexpr const char* ValidateId = R"(^(PL[^"&?\/\s]{16,32}$|^OLAK5uy_[^"&?\/\s]{33})$)";
 
         // Extract YouTube playlist ID from playlist view URL
         // [C1]: Playlist ID
@@ -58,7 +58,7 @@ namespace Youtube
         private:
             Playlist* m_root;
             pointer m_video;
-            int m_index;
+            size_t m_index;
 
         public:
             /// @brief Create invalid playlist iterator
@@ -66,7 +66,8 @@ namespace Youtube
 
             /// @brief Create playlist iterator
             /// @param root Playlist to iterate
-            Iterator(Playlist* root);
+            /// @param index Index of video to initialize iterator for
+            Iterator(Playlist* root, size_t index = 0);
 
             /// @brief Make iterator invalid
             void invalidate();
@@ -101,7 +102,7 @@ namespace Youtube
 
             /// @brief Get current video index
             /// @return Current video index
-            inline int index() const
+            inline size_t index() const
             {
                 if (!m_video)
                     throw std::invalid_argument("kc::Playlist::Iterator::index(): Iterator is invalid");
@@ -213,7 +214,7 @@ namespace Youtube
         /// @param index Video index
         /// @throw std::runtime_error if internal error occurs
         /// @return Discovered video pointer: nullptr if there is nothing to discover
-        Iterator::pointer discoverVideo(int index);
+        Iterator::pointer discoverVideo(size_t index);
 
         /// @brief Download playlist info
         /// @throw std::runtime_error if internal error occurs
@@ -309,6 +310,16 @@ namespace Youtube
         {
             Playlist* mutableThis = const_cast<Playlist*>(this);
             return Iterator(mutableThis);
+        }
+
+        /// @brief Get playlist iterator to last discovered video
+        /// @return Playlist iterator to last discovered video
+        inline Iterator last() const
+        {
+            if (m_videos.empty())
+                return {};
+            Playlist* mutableThis = const_cast<Playlist*>(this);
+            return Iterator(mutableThis, m_videos.size() - 1);
         }
 
         /// @brief Get playlist end iterator

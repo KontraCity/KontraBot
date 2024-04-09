@@ -86,18 +86,6 @@ namespace Youtube
         enum class Type
         {
             /*
-            *   The item is a YouTube livestream.
-            *   It is not supported and cannot be played.
-            */
-            LivestreamNotSupported,
-
-            /*
-            *   The item is a YouTube premiere.
-            *   It is not supported and cannot be played.
-            */
-            PremiereNotSupported,
-
-            /*
             *   The item is a YouTube #Shorts playlist. [Example: https://www.youtube.com/playlist?list=PLnN2bBxGARv7fRxsCcWaxvGE6sn5Ypp1H]
             *   It is not supported and cannot be played.
             */

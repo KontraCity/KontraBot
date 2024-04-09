@@ -35,9 +35,6 @@ const char* Youtube::LocalError::TypeToReason(Type type)
 {
     switch (type)
     {
-        case Type::LivestreamNotSupported:
-            return "Livestream is not supported";
-        case Type::PremiereNotSupported:
             return "Premiere is not supported";
         case Type::PlaylistNotSupported:
             return "Playlist is not supported";
