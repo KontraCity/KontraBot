@@ -356,6 +356,15 @@ namespace Bot
             ));
         }
         
+        /// @brief Create "Duration of video <video> is only <duration>!" message
+        /// @param videoTitle Title of the video in question
+        /// @param videoDuration Duration of the video in question
+        /// @return Ephemeral message
+        virtual inline dpp::message timestampOutOfBounds(const std::string& videoTitle, pt::time_duration videoDuration)
+        {
+            return ProblemMessage(fmt::format("Duration of video **{}** is only `{}`!", videoTitle, Utility::NiceString(videoDuration)));
+        }
+
         /// @brief Create "Seeking <video> to <timestamp>" message
         /// @param videoTitle Seeking video title
         /// @param timestamp Seek timestamp
@@ -539,7 +548,7 @@ namespace Bot
             strings.sessionInfo = "{}'s session #{} ended";
             strings.userRequested = "User asked me to leave";
             strings.timeout = "I was inactive";
-            strings.everybodyLeft = "Everybody left voice channel";
+            strings.everybodyLeft = "I was left alone in the voice channel";
             strings.kicked = "Somebody kicked me!";
             strings.moved = "Somebody moved me!";
             strings.lasted = "Lasted";

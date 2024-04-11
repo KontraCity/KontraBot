@@ -622,6 +622,13 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                         std::stoi(matches.str(3)), 0
                     );
 
+                    if (timestamp > session.playingVideo->video.duration())
+                    {
+                        event.reply(info.settings().locale->timestampOutOfBounds(session.playingVideo->video.title(), session.playingVideo->video.duration()));
+                        m_logger.info(logMessage("Seek timestamp is out of bounds"));
+                        return;
+                    }
+
                     playerEntry->second.seek(timestamp.total_seconds(), info);
                     event.reply(info.settings().locale->seeking(session.playingVideo->video.title(), timestamp, playerEntry->second.paused()));
                     m_logger.info(logMessage(fmt::format("Seeking \"{}\" to {}", session.playingVideo->video.title(), Utility::NiceString(timestamp))));

@@ -363,6 +363,15 @@ namespace Bot
             ));
         }
 
+        /// @brief Create "Duration of video <video> is only <duration>!" message
+        /// @param videoTitle Title of the video in question
+        /// @param videoDuration Duration of the video in question
+        /// @return Ephemeral message
+        virtual inline dpp::message timestampOutOfBounds(const std::string& videoTitle, pt::time_duration videoDuration)
+        {
+            return ProblemMessage(fmt::format(u8"Продолжительность видео **{}** - только `{}`!", videoTitle, Utility::NiceString(videoDuration)));
+        }
+
         /// @brief Create "Seeking <video> to <timestamp>" message
         /// @param videoTitle Seeking video title
         /// @param timestamp Seek timestamp

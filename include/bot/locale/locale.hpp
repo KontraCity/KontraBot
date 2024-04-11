@@ -391,6 +391,12 @@ namespace Bot
         /// @return Normal message
         virtual inline dpp::message paused(const Youtube::Video& video, bool paused) = 0;
 
+        /// @brief Create "Duration of video <video> is only <duration>!" message
+        /// @param videoTitle Title of the video in question
+        /// @param videoDuration Duration of the video in question
+        /// @return Ephemeral message
+        virtual inline dpp::message timestampOutOfBounds(const std::string& videoTitle, pt::time_duration videoDuration) = 0;
+
         /// @brief Create "Seeking <video> to <timestamp>" message
         /// @param videoTitle Seeking video title
         /// @param timestamp Seek timestamp
