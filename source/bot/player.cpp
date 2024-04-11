@@ -71,9 +71,7 @@ void Bot::Player::chapterReached(const Youtube::Video::Chapter& chapter)
 {
     if (m_session.playingVideo->chapter.timestamp == chapter.timestamp)
         return;
-
     m_session.playingVideo->chapter = chapter;
-    m_logger.critical(chapter.name);
 }
 
 void Bot::Player::checkPlayingVideo()
@@ -108,14 +106,14 @@ void Bot::Player::threadFunction()
                 case Youtube::Video::Type::Livestream:
                 {
                     m_root->message_create(info.settings().locale->livestreamSkipped(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
-                    voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, videoId));
+                    voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("\"{}\": Skipping livestream \"{}\"", guild->name, m_session.playingVideo->video.title());
                     break;
                 }
                 case Youtube::Video::Type::Premiere:
                 {
                     m_root->message_create(info.settings().locale->premiereSkipped(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
-                    voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, videoId));
+                    voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("\"{}\": Skipping premiere \"{}\"", guild->name, m_session.playingVideo->video.title());
                     break;
                 }

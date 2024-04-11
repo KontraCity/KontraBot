@@ -478,10 +478,10 @@ namespace Bot
         virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item)
         {
             ItemAutocompleteStrings strings = {};
-            strings.videoTitle = "\"{}\" - video by {}, [{}]";
-            strings.livestreamTitle = "\"{}\" - livestream by {}";
-            strings.premiereTitle = "\"{}\" - premiere by {}";
-            strings.playlistTitle = "\"{}\" - playlist by {}, [{} video{}]";
+            strings.videoDescription = " - video by {}, [{}]";
+            strings.livestreamDescription = " - livestream by {}";
+            strings.premiereDescription = " - premiere by {}";
+            strings.playlistDescription = " - playlist by {}, [{} video{}]";
             return ItemAutocompleteChoice(strings, &Cardinal, item);
         }
 

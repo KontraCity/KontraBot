@@ -87,7 +87,7 @@ namespace Bot
         namespace Pause
         {
             constexpr const char* Name = "pause";
-            constexpr const char* Description = "Pause playing video";
+            constexpr const char* Description = "Toggle player pause";
         }
 
         namespace Seek
@@ -219,7 +219,7 @@ namespace Bot
             namespace Pause
             {
                 constexpr const char* Name = u8"пауза";
-                constexpr const char* Description = u8"Поставить воспроизведение видео на паузу";
+                constexpr const char* Description = u8"Включить/выключить паузу плеера";
             }
 
             namespace Seek

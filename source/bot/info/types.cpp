@@ -15,7 +15,7 @@ Bot::Settings& Bot::Settings::operator=(const Bot::Settings& other)
 bool Bot::Settings::operator==(const Settings& other)
 {
     if (!locale || !other.locale)
-        return static_cast<bool>(locale) == static_cast<bool>(other.locale->type()) && timeoutMinutes == other.timeoutMinutes;
+        return static_cast<bool>(locale) == static_cast<bool>(other.locale) && timeoutMinutes == other.timeoutMinutes;
     return locale->type() == other.locale->type() && timeoutMinutes == other.timeoutMinutes;
 }
 

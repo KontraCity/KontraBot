@@ -35,7 +35,6 @@ const char* Youtube::LocalError::TypeToReason(Type type)
 {
     switch (type)
     {
-            return "Premiere is not supported";
         case Type::PlaylistNotSupported:
             return "Playlist is not supported";
         case Type::PlaylistItemsNotSupported:

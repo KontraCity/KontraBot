@@ -9,6 +9,9 @@
 // Library DPP
 #include <dpp/dpp.h>
 
+// Library utf8.h
+#include "external/utf8.h"
+
 /* Forward Locale class declaration for other modules */
 namespace kc {
     namespace Bot {
@@ -52,8 +55,6 @@ namespace Bot
             constexpr const char* Problem = u8"❌";
             constexpr const char* Error = u8"💀";
             constexpr const char* Boring = u8"🥱";
-            constexpr const char* Playing = u8"🎵";
-            constexpr const char* Chapter = u8"🎶";
             constexpr const char* Play = u8"▶️";
             constexpr const char* Playlist = u8"🔢";
             constexpr const char* Search = u8"🔍";
@@ -160,10 +161,10 @@ namespace Bot
 
         struct ItemAutocompleteStrings
         {
-            const char* videoTitle;             // ""{}" - video by {}, [{}]" string
-            const char* livestreamTitle;        // ""{}" - livestream by {}" string
-            const char* premiereTitle;          // ""{}" - premiere by {}" string
-            const char* playlistTitle;          // ""{}" - playlist by {}, [{} video{}]" string
+            const char* videoDescription;       // " - video by {}, [{}]" string
+            const char* livestreamDescription;  // " - livestream by {}" string
+            const char* premiereDescription;    // " - premiere by {}" string
+            const char* playlistDescription;    // " - playlist by {}, [{} video{}]" string
         };
 
         struct EndStrings

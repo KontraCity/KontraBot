@@ -70,6 +70,7 @@ namespace Youtube
 
         struct Chapter
         {
+            uint64_t number;
             std::string name;
             pt::time_duration timestamp;
         };

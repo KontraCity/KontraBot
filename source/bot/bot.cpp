@@ -805,13 +805,13 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 dpp::interaction_response response(dpp::ir_autocomplete_reply);
                 for (size_t index = 0, size = session.playingVideo->video.chapters().size(); index < size && index < 25; ++index)
                 {
-                    const Youtube::Video::Chapter& currentChapter = session.playingVideo->video.chapters()[index];
+                    const Youtube::Video::Chapter& chapter = session.playingVideo->video.chapters()[index];
                     response.add_autocomplete_choice(dpp::command_option_choice(fmt::format(
-                        "{}: \"{}\" [{}]",
-                        index + 1,
-                        currentChapter.name,
-                        Utility::NiceString(currentChapter.timestamp)
-                    ), currentChapter.name));
+                        "{}: {} [{}]",
+                        chapter.number,
+                        chapter.name,
+                        Utility::NiceString(chapter.timestamp)
+                    ), chapter.name));
                 }
 
                 interaction_response_create(event.command.id, event.command.token, response);

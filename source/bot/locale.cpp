@@ -71,23 +71,24 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
     size_t itemsShown = 0;
     if (!session.playingPlaylist)
     {
+        /*
         embed.set_author(fmt::format(
             strings.videoRequestedBy,
             session.playingRequester->format_username()
         ), "", session.playingRequester->get_avatar_url());
+        */
 
         std::string oldDescription = embed.description;
         embed.description = fmt::format(
-            "***[{} {}]({})***\n",
-            Emojis::Playing,
+            "***[{}]({})***\n",
             session.playingVideo->video.title(),
             session.playingVideo->video.watchUrl()
         );
         if (!session.playingVideo->chapter.name.empty())
         {
             embed.description += fmt::format(
-                "*[{} {}]({})*\n",
-                Emojis::Chapter,
+                "*[{}. {}]({})*\n",
+                session.playingVideo->chapter.number,
                 session.playingVideo->chapter.name,
                 session.playingVideo->video.watchUrl(session.playingVideo->chapter.timestamp)
             );
@@ -96,10 +97,12 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
     }
     else
     {
+        /*
         embed.set_author(fmt::format(
             strings.playlistRequestedBy,
             session.playingRequester->format_username()
         ), "", session.playingRequester->get_avatar_url());
+        */
 
         Youtube::Playlist::Iterator iterator = session.playingPlaylist->iterator;
         if (!iterator)
@@ -108,8 +111,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (session.playingVideo->chapter.name.empty())
             {
                 embed.description = fmt::format(
-                    "***[{} {}. {}]({})***\n",
-                    Emojis::Playing,
+                    "***[{}. {}]({})***\n",
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl()
@@ -125,14 +127,14 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             else
             {
                 embed.description = fmt::format(
-                    "***[{} {}. {}\n"
-                    "{} {}]({})***\n",
-                    Emojis::Playing,
+                    "***[{}. {}]({})***\n"
+                    "*[{}. {}]({})*\n",
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
-                    Emojis::Chapter,
+                    iterator.watchUrl(),
+                    session.playingVideo->chapter.number,
                     session.playingVideo->chapter.name,
-                    iterator.watchUrl()
+                    iterator->watchUrl(session.playingVideo->chapter.timestamp)
                 ) + embed.description + fmt::format(
                     ">>> ***[{}]({})***\n",
                     session.playingPlaylist->playlist.title(),
@@ -148,8 +150,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             --iterator;
             std::string oldDescription = embed.description;
             embed.description = fmt::format(
-                "{} ***[{}. {}]({})***\n",
-                Emojis::Playing,
+                "***[{}. {}]({})***\n",
                 Utility::NiceString(iterator.index() + 1),
                 iterator->title(),
                 iterator.watchUrl()
@@ -157,8 +158,8 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (!session.playingVideo->chapter.name.empty())
             {
                 embed.description += fmt::format(
-                    "*[{} {}]({})*\n",
-                    Emojis::Chapter,
+                    "*[{}. {}]({})*\n",
+                    session.playingVideo->chapter.number,
                     session.playingVideo->chapter.name,
                     session.playingVideo->video.watchUrl(session.playingVideo->chapter.timestamp)
                 );
@@ -501,63 +502,59 @@ dpp::command_option_choice Bot::Locale::ItemAutocompleteChoice(const ItemAutocom
             {
                 default:
                 {
-                    return dpp::command_option_choice(
-                        Utility::Truncate(fmt::format(
-                            strings.videoTitle,
-                            video.title(),
-                            video.author(),
-                            Utility::NiceString(video.duration())
-                        ), 100),
-                        video.watchUrl()
+                    std::string itemDescription = fmt::format(
+                        strings.videoDescription,
+                        video.author(),
+                        Utility::NiceString(video.duration())
                     );
+                    return dpp::command_option_choice(fmt::format(
+                        "\"{}\"{}",
+                        Utility::Truncate(video.title(), 98 - utf8len(itemDescription.c_str())),
+                        itemDescription
+                    ), video.watchUrl());
                 }
                 case Youtube::Video::Type::Livestream:
                 {
-                    return dpp::command_option_choice(
-                        Utility::Truncate(fmt::format(
-                            strings.livestreamTitle,
-                            video.title(),
-                            video.author()
-                        ), 100),
-                        video.watchUrl()
+                    std::string itemDescription = fmt::format(
+                        strings.livestreamDescription,
+                        video.author(),
+                        Utility::NiceString(video.duration())
                     );
+                    return dpp::command_option_choice(fmt::format(
+                        "\"{}\"{}",
+                        Utility::Truncate(video.title(), 98 - utf8len(itemDescription.c_str())),
+                        itemDescription
+                    ), video.watchUrl());
                 }
                 case Youtube::Video::Type::Premiere:
                 {
-                    return dpp::command_option_choice(
-                        Utility::Truncate(fmt::format(
-                            strings.premiereTitle,
-                            video.title(),
-                            video.author(),
-                            Utility::NiceString(video.duration())
-                        ), 100),
-                        video.watchUrl()
+                    std::string itemDescription = fmt::format(
+                        strings.premiereDescription,
+                        video.author(),
+                        Utility::NiceString(video.duration())
                     );
+                    return dpp::command_option_choice(fmt::format(
+                        "\"{}\"{}",
+                        Utility::Truncate(video.title(), 98 - utf8len(itemDescription.c_str())),
+                        itemDescription
+                    ), video.watchUrl());
                 }
             }
-            return dpp::command_option_choice(
-                Utility::Truncate(fmt::format(
-                    strings.videoTitle,
-                    video.title(),
-                    video.author(),
-                    Utility::NiceString(video.duration())
-                ), 100),
-                video.watchUrl()
-            );
         }
         case Youtube::Item::Type::Playlist:
         {
             const Youtube::Playlist& playlist = std::get<Youtube::Playlist>(item);
-            return dpp::command_option_choice(
-                Utility::Truncate(fmt::format(
-                    strings.playlistTitle,
-                    playlist.title(),
-                    playlist.author(),
-                    Utility::NiceString(playlist.videoCount()),
-                    cardinalFunction(playlist.videoCount())
-                ), 100),
-                playlist.viewUrl()
+            std::string itemDescription = fmt::format(
+                strings.playlistDescription,
+                playlist.author(),
+                Utility::NiceString(playlist.videoCount()),
+                cardinalFunction(playlist.videoCount())
             );
+            return dpp::command_option_choice(fmt::format(
+                "\"{}\"{}",
+                Utility::Truncate(playlist.title(), 98 - utf8len(itemDescription.c_str())),
+                itemDescription
+            ), playlist.viewUrl());
         }
     }
 
