@@ -155,13 +155,14 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 {
     using namespace Commands;
 
-    on_log([this](const dpp::log_t& event)
+    on_log([this, registerCommands](const dpp::log_t& event)
     {
         static spdlog::logger logger("dpp", std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
         switch (event.severity)
         {
             case dpp::ll_warning:
-                logger.warn(event.message);
+                if (!registerCommands)
+                    logger.warn(event.message);
                 break;
             case dpp::ll_error:
                 logger.error(event.message);

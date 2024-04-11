@@ -144,7 +144,7 @@ namespace Bot
         /// @return Normal message
         virtual inline dpp::message soBeIt()
         {
-            switch (Utility::RandomNumber(0, 2))
+            switch (Utility::RandomNumber(0, 3))
             {
                 default:
                     return SuccessMessage("So be it");
@@ -152,6 +152,8 @@ namespace Bot
                     return SuccessMessage("Whatever you want");
                 case 2:
                     return SuccessMessage("Alright");
+                case 4:
+                    return SuccessMessage("Carefully recorded");
             }
         }
 

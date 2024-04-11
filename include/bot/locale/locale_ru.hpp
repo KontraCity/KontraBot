@@ -152,7 +152,7 @@ namespace Bot
         /// @return Normal message
         virtual inline dpp::message soBeIt()
         {
-            switch (Utility::RandomNumber(0, 1))
+            switch (Utility::RandomNumber(0, 3))
             {
                 default:
                     return SuccessMessage(u8"Да будет так");
@@ -160,6 +160,8 @@ namespace Bot
                     return SuccessMessage(u8"Как хочешь");
                 case 2:
                     return SuccessMessage(u8"Хорошо");
+                case 3:
+                    return SuccessMessage(u8"Внимательно запоминаю");
             }
         }
 
@@ -555,7 +557,7 @@ namespace Bot
             strings.sessionInfo = u8"Сессия #{1} пользователя {0} закончилась";
             strings.userRequested = u8"Пользователь попросил меня выйти";
             strings.timeout = u8"Я ничего не делал";
-            strings.everybodyLeft = u8"Все вышли из голосового канала";
+            strings.everybodyLeft = u8"Я остался один в голосовом канале";
             strings.kicked = u8"Кто-то меня кикнул!";
             strings.moved = u8"Кто-то меня передвинул!";
             strings.lasted = u8"Продлилась";
