@@ -308,9 +308,10 @@ dpp::message Bot::Locale::SettingsMessage(const SettingsStrings& strings, const 
 {
     dpp::embed embed;
     embed.color = Colors::Success;
-    embed.description = fmt::format("{} {}\n\n", Emojis::Success, strings.hereAreTheSettings);
+    embed.description = fmt::format("{} {}:\n\n", Emojis::Success, strings.hereAreTheSettings);
     embed.description += fmt::format("{}: `{}`\n", strings.language, settings.locale->longName());
-    embed.description += fmt::format("{}: `{}`", strings.timeoutDuration, Utility::NiceString(pt::time_duration(0, settings.timeoutMinutes, 0)));
+    embed.description += fmt::format("{}: `{}`\n", strings.timeoutDuration, Utility::NiceString(pt::time_duration(0, settings.timeoutMinutes, 0)));
+    embed.description += fmt::format("{}? `{}`", strings.changeStatus, settings.changeStatus ? strings.yes : strings.no);
     return dpp::message().add_embed(embed);
 }
 

@@ -44,6 +44,7 @@ namespace Bot
         const dpp::user starter;
         pt::ptime startTimestamp;
         uint64_t tracksPlayed = 0;
+        std::string voiceChannelStatus;
 
         std::optional<PlayingVideo> playingVideo;
         std::optional<PlayingPlaylist> playingPlaylist;

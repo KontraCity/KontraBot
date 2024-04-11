@@ -22,6 +22,7 @@ Bot::Info::Info(dpp::snowflake guildId)
     {
         m_settings.locale = std::make_unique<LocaleEn>();
         m_settings.timeoutMinutes = 60;
+        m_settings.changeStatus = true;
 
         m_stats.sessionsCount = 0;
         m_stats.tracksPlayed = 0;
@@ -42,6 +43,7 @@ Bot::Info::Info(dpp::snowflake guildId)
         json settingsJson = infoJson[Fields::Settings];
         m_settings.locale = Locale::Create(settingsJson[Fields::Locale].get<std::string>());
         m_settings.timeoutMinutes = settingsJson[Fields::Timeout];
+        m_settings.changeStatus = settingsJson[Fields::ChangeStatus];
 
         json statsJson = infoJson[Fields::Stats];
         m_stats.sessionsCount = statsJson[Fields::SessionsCount];
@@ -65,6 +67,7 @@ Bot::Info::~Info()
     json settingsJson;
     settingsJson[Fields::Locale] = m_settings.locale->name();
     settingsJson[Fields::Timeout] = m_settings.timeoutMinutes;
+    settingsJson[Fields::ChangeStatus] = m_settings.changeStatus;
 
     json statsJson;
     statsJson[Fields::SessionsCount] = m_stats.sessionsCount;

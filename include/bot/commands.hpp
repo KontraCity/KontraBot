@@ -53,6 +53,18 @@ namespace Bot
                     constexpr const char* Description = "What inactivity timeout duration to set? (in minutes)";
                 }
             }
+
+            namespace ChangeStatus
+            {
+                constexpr const char* Name = "change-status";
+                constexpr const char* Description = "Tell me if I'm allowed to change voice channel status when I'm playing";
+
+                namespace Change
+                {
+                    constexpr const char* Name = "change";
+                    constexpr const char* Description = "Am I allowed to modify voice channel status or not?";
+                }
+            }
         }
         
         /*
@@ -188,6 +200,18 @@ namespace Bot
                     {
                         constexpr const char* Name = u8"продолжительность";
                         constexpr const char* Description = u8"Какую продолжительность тайм-аута бездействия установить? (в минутах)";
+                    }
+                }
+
+                namespace ChangeStatus
+                {
+                    constexpr const char* Name = u8"изменение-статуса";
+                    constexpr const char* Description = u8"Скажи мне, можно ли мне менять статус голосового канала, когда я играю?";
+
+                    namespace Change
+                    {
+                        constexpr const char* Name = u8"изменять";
+                        constexpr const char* Description = u8"Можно ли мне изменять статус голосового канала или нет?";
                     }
                 }
             }

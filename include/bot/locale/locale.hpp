@@ -119,9 +119,12 @@ namespace Bot
 
         struct SettingsStrings
         {
-            const char* hereAreTheSettings;     // "Here are this guild's settings:" string
+            const char* hereAreTheSettings;     // "Here are this guild's settings" string
             const char* language;               // "Language" string
             const char* timeoutDuration;        // "Timeout duration" string
+            const char* changeStatus;           // "Allowed to change voice channel status" string
+            const char* yes;                    // "Yes" string
+            const char* no;                     // "No" string
         };
 
         struct StatsStrings
@@ -480,6 +483,14 @@ namespace Bot
         /// @param session Player session
         /// @return Normal message
         virtual inline dpp::message sessionEnd(EndReason reason, Session session) = 0;
+
+        /// @brief Create "Not playing" string
+        /// @return "Not playing" string
+        virtual inline const char* notPlaying() = 0;
+
+        /// @brief Create "[Paused]" string
+        /// @return "[Paused]" string
+        virtual inline const char* paused() = 0;
     };
 }
 

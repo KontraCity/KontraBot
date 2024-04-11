@@ -44,6 +44,7 @@ namespace Bot
             constexpr const char* Settings = "settings";
             constexpr const char* Locale = "locale";
             constexpr const char* Timeout = "timeout";
+            constexpr const char* ChangeStatus = "change_status";
 
             constexpr const char* Stats = "stats";
             constexpr const char* SessionsCount = "sessions_count";

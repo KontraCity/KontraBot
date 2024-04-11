@@ -82,17 +82,28 @@ namespace Bot
 
     private:
         /// @brief Extract next video from queue or playlist iterator
-        void extractNextVideo();
+        /// @param info Guild's info
+        void extractNextVideo(const Info& info);
 
         /// @brief Increment count of played tracks
-        void incrementPlayedTracks();
+        /// @param info Guild's info
+        void incrementPlayedTracks(Info& info);
 
         /// @brief Update playing chapter
         /// @param chapter The reached chapter
-        void chapterReached(const Youtube::Video::Chapter& chapter);
+        /// @param info Guild's info
+        void chapterReached(const Youtube::Video::Chapter& chapter, const Info& info);
 
         /// @brief Start send thread if there is a playing video or enable timeout
         void checkPlayingVideo();
+
+        /// @brief Set voice channel status
+        /// @param status Status to set
+        void setStatus(const std::string& status);
+
+        /// @brief Update voice channel status
+        /// @param info Guild's info
+        void updateStatus(const Info& info);
 
         /// @brief Send thread implementation
         void threadFunction();
@@ -123,15 +134,21 @@ namespace Bot
         ~Player();
 
         /// @brief Tell player that voice client is ready
-        void signalReady();
+        /// @param info Guild's info
+        void signalReady(const Info& info);
 
         /// @brief Tell player that voice marker was passed
         /// @param signalType Marker signal
-        void signalMarker(const Signal& signal);
+        /// @param info Guild's info
+        void signalMarker(const Signal& signal, Info& info);
 
         /// @brief Update player's text channel
         /// @param channelId Text channel ID
         void updateTextChannel(dpp::snowflake channelId);
+
+        /// @brief Update voice channel status
+        /// @param info Guild's info
+        void updateVoiceStatus(const Info& info);
 
         /// @brief Get player session
         /// @return Player session
@@ -140,37 +157,48 @@ namespace Bot
         /// @brief Add item to player's queue
         /// @param item Item to add
         /// @param requester User that requested the item to be added
-        void addItem(const Youtube::Item& item, const dpp::user& requester);
+        /// @param info Guild's info
+        void addItem(const Youtube::Item& item, const dpp::user& requester, const Info& info);
 
         /// @brief Check if player is paused
         /// @return True if player is paused
         bool paused();
 
         /// @brief Pause or resume audio playback
-        bool pauseResume();
+        /// @param info Guild's info
+        bool pauseResume(const Info& info);
 
         /// @brief Seek playing video
         /// @param timestamp Timestamp to seek to
-        void seek(uint64_t timestamp);
+        /// @param info Guild's info
+        void seek(uint64_t timestamp, const Info& info);
 
         /// @brief Shuffle items in queue
         void shuffle();
 
         /// @brief Skip playing video
-        void skipVideo();
+        /// @param info Guild's info
+        void skipVideo(Info& info);
 
         /// @brief Skip playing playlist
-        void skipPlaylist();
+        /// @param info Guild's info
+        void skipPlaylist(Info& info);
 
         /// @brief Clear queue
         void clear();
 
         /// @brief Stop audio playback and clear queue
-        void stop();
+        /// @param info Guild's info
+        void stop(Info& info);
 
-        /// @brief End session message
-        /// @param reason Session end reason reason
-        void endSession(Locale::EndReason reason);
+        /// @brief End player session
+        /// @param info Guild's info
+        void endSession(Info& info);
+
+        /// @brief End player session
+        /// @param info Guild's info
+        /// @param reason Session end reason
+        void endSession(Info& info, Locale::EndReason reason);
     };
 }
 

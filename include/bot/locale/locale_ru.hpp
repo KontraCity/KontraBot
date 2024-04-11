@@ -117,9 +117,12 @@ namespace Bot
         virtual inline dpp::message settings(const Settings& settings)
         {
             SettingsStrings strings = {};
-            strings.hereAreTheSettings = u8"Вот настройки этого сервера:";
+            strings.hereAreTheSettings = u8"Вот настройки этого сервера";
             strings.language = u8"Язык";
             strings.timeoutDuration = u8"Продолжительность тайм-аута";
+            strings.changeStatus = u8"Разрешено менять статус голосового канала";
+            strings.yes = u8"Да";
+            strings.no = u8"Нет";
             return SettingsMessage(strings, settings);
         }
 
@@ -546,6 +549,20 @@ namespace Bot
             strings.lasted = u8"Продлилась";
             strings.tracksPlayed = u8"Треков проиграно";
             return EndMessage(strings, reason, session);
+        }
+
+        /// @brief Create "Not playing" string
+        /// @return "Not playing" string
+        virtual inline const char* notPlaying()
+        {
+            return u8"Ничего не играет";
+        }
+
+        /// @brief Create "[Paused]" string
+        /// @return "[Paused]" string
+        virtual inline const char* paused()
+        {
+            return u8"[Пауза]";
         }
     };
 }

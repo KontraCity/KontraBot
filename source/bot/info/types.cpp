@@ -9,14 +9,15 @@ Bot::Settings& Bot::Settings::operator=(const Bot::Settings& other)
 
     locale = Locale::Create(other.locale->type());
     timeoutMinutes = other.timeoutMinutes;
+    changeStatus = other.changeStatus;
     return *this;
 }
 
 bool Bot::Settings::operator==(const Settings& other)
 {
     if (!locale || !other.locale)
-        return static_cast<bool>(locale) == static_cast<bool>(other.locale) && timeoutMinutes == other.timeoutMinutes;
-    return locale->type() == other.locale->type() && timeoutMinutes == other.timeoutMinutes;
+        return static_cast<bool>(locale) == static_cast<bool>(other.locale) && timeoutMinutes == other.timeoutMinutes && changeStatus == other.changeStatus;
+    return locale->type() == other.locale->type() && timeoutMinutes == other.timeoutMinutes && changeStatus == other.changeStatus;
 }
 
 bool Bot::Stats::operator==(const Stats& other)

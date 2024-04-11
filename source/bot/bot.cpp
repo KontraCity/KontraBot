@@ -62,7 +62,7 @@ Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const 
         std::forward_as_tuple(this, client, interaction, userVoice->id, info)
     );
     if (item)
-        emplacedPlayerEntry.first->second.addItem(item, user);
+        emplacedPlayerEntry.first->second.addItem(item, user, info);
     return { JoinStatus::Result::Joined, userVoice };
 }
 
@@ -92,7 +92,7 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             switch (joinStatus.result)
             {
                 case JoinStatus::Result::AlreadyJoined:
-                    playerEntry->second.addItem(video, requester);
+                    playerEntry->second.addItem(video, requester, info);
                     break;
                 case JoinStatus::Result::UserNotInVoiceChannel:
                     m_logger.info(logMessage("User not in voice channel"));
@@ -117,7 +117,7 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
         switch (joinStatus.result)
         {
             case JoinStatus::Result::AlreadyJoined:
-                playerEntry->second.addItem(playlist, requester);
+                playerEntry->second.addItem(playlist, requester, info);
                 break;
             case JoinStatus::Result::CantJoin:
                 m_logger.info(logMessage("Can't join"));
@@ -181,6 +181,36 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 using namespace Commands;
                 std::vector<dpp::slashcommand> commands;
 
+                /* /session */
+                commands.push_back(dpp::slashcommand(Commands::Session::Name, Commands::Session::Description, me.id)
+                    .add_localization(Russian::LocaleName, Russian::Session::Name, Russian::Session::Description));
+
+                /* /settings */
+                commands.push_back(dpp::slashcommand(Commands::Settings::Name, Commands::Settings::Description, me.id)
+                    .add_localization(Russian::LocaleName, Russian::Settings::Name, Russian::Settings::Description));
+
+                /* /stats */
+                commands.push_back(dpp::slashcommand(Commands::Stats::Name, Commands::Stats::Description, me.id)
+                    .add_localization(Russian::LocaleName, Russian::Stats::Name, Russian::Stats::Description));
+
+                /* /set language, /set timeout, /set change-status */
+                commands.push_back(dpp::slashcommand(Set::Name, "-", me.id)
+                    .add_localization(Russian::LocaleName, Russian::Set::Name, "-")
+                    .add_option(dpp::command_option(dpp::co_sub_command, Set::Language::Name, Set::Language::Description)
+                        .add_localization(Russian::LocaleName, Russian::Set::Language::Name, Russian::Set::Language::Description)
+                        .add_option(dpp::command_option(dpp::co_string, Set::Language::Language::Name, Set::Language::Language::Description, true)
+                            .add_localization(Russian::LocaleName, Russian::Set::Language::Language::Name, Russian::Set::Language::Language::Description)
+                            .add_choice(dpp::command_option_choice(Set::Language::Language::Label, std::string(Set::Language::Language::Id)))
+                            .add_choice(dpp::command_option_choice(Russian::Set::Language::Language::Label, std::string(Russian::Set::Language::Language::Id)))))
+                    .add_option(dpp::command_option(dpp::co_sub_command, Set::Timeout::Name, Set::Timeout::Description)
+                        .add_localization(Russian::LocaleName, Russian::Set::Timeout::Name, Russian::Set::Timeout::Description)
+                        .add_option(dpp::command_option(dpp::co_integer, Set::Timeout::Duration::Name, Set::Timeout::Duration::Description, true)
+                            .add_localization(Russian::LocaleName, Russian::Set::Timeout::Duration::Name, Russian::Set::Timeout::Duration::Description)))
+                    .add_option(dpp::command_option(dpp::co_sub_command, Set::ChangeStatus::Name, Set::ChangeStatus::Description)
+                       .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Name, Russian::Set::ChangeStatus::Description)
+                       .add_option(dpp::command_option(dpp::co_boolean, Set::ChangeStatus::Change::Name, Set::ChangeStatus::Change::Description, true)
+                           .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Change::Name, Russian::Set::ChangeStatus::Change::Description))));
+
                 /* /join */
                 commands.push_back(dpp::slashcommand(Join::Name, Join::Description, me.id)
                     .add_localization(Russian::LocaleName, Russian::Join::Name, Russian::Join::Description));
@@ -188,10 +218,6 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 /* /leave */
                 commands.push_back(dpp::slashcommand(Leave::Name, Leave::Description, me.id)
                     .add_localization(Russian::LocaleName, Russian::Leave::Name, Russian::Leave::Description));
-
-                /* /session */
-                commands.push_back(dpp::slashcommand(Commands::Session::Name, Commands::Session::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Session::Name, Russian::Session::Description));
 
                 /* /play <what> */
                 commands.push_back(dpp::slashcommand(Play::Name, Play::Description, me.id)
@@ -230,28 +256,6 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 /* /stop */
                 commands.push_back(dpp::slashcommand(Stop::Name, Stop::Description, me.id)
                     .add_localization(Russian::LocaleName, Russian::Stop::Name, Russian::Stop::Description));
-
-                /* /settings */
-                commands.push_back(dpp::slashcommand(Commands::Settings::Name, Commands::Settings::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Settings::Name, Russian::Settings::Description));
-
-                /* /stats */
-                commands.push_back(dpp::slashcommand(Commands::Stats::Name, Commands::Stats::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Stats::Name, Russian::Stats::Description));
-
-                /* /set language, /set timeout */
-                commands.push_back(dpp::slashcommand(Set::Name, "-", me.id)
-                    .add_localization(Russian::LocaleName, Russian::Set::Name, "-")
-                    .add_option(dpp::command_option(dpp::co_sub_command, Set::Language::Name, Set::Language::Description)
-                        .add_localization(Russian::LocaleName, Russian::Set::Language::Name, Russian::Set::Language::Description)
-                        .add_option(dpp::command_option(dpp::co_string, Set::Language::Language::Name, Set::Language::Language::Description, true)
-                            .add_localization(Russian::LocaleName, Russian::Set::Language::Language::Name, Russian::Set::Language::Language::Description)
-                            .add_choice(dpp::command_option_choice(Set::Language::Language::Label, std::string(Set::Language::Language::Id)))
-                            .add_choice(dpp::command_option_choice(Russian::Set::Language::Language::Label, std::string(Russian::Set::Language::Language::Id)))))
-                    .add_option(dpp::command_option(dpp::co_sub_command, Set::Timeout::Name, Set::Timeout::Description)
-                        .add_localization(Russian::LocaleName, Russian::Set::Timeout::Name, Russian::Set::Timeout::Description)
-                        .add_option(dpp::command_option(dpp::co_integer, Set::Timeout::Duration::Name, Set::Timeout::Duration::Description, true)
-                            .add_localization(Russian::LocaleName, Russian::Set::Timeout::Duration::Name, Russian::Set::Timeout::Duration::Description))));
 
                 m_logger.info("Registering {} slashcommand{}...", commands.size(), LocaleEn::Cardinal(commands.size()));
                 global_bulk_command_create(commands);
@@ -359,6 +363,19 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                             message
                         );
                     }
+
+                    if (interaction.options[0].options[0].name == Set::ChangeStatus::Change::Name)
+                    {
+                        return fmt::format(
+                            "\"{}\" / \"{}\": /{} {} {}: {}",
+                            guild.name,
+                            event.command.usr.format_username(),
+                            interaction.name,
+                            interaction.options[0].name,
+                            std::get<bool>(interaction.options[0].options[0].value),
+                            message
+                        );
+                    }
                 }
             }
 
@@ -402,15 +419,17 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         if (interaction.name == Set::Name)
         {
             const std::string& subcommand = interaction.options[0].name;
-            if (subcommand == Commands::Set::Language::Name)
+            if (subcommand == Set::Language::Name)
             {
                 info.settings().locale = Locale::Create(std::get<std::string>(interaction.options[0].options[0].value));
+                if (playerEntry != m_players.end())
+                    playerEntry->second.updateVoiceStatus(info);
                 event.reply(info.settings().locale->soBeIt());
                 m_logger.info(logMessage(fmt::format("Locale set to \"{}\"", info.settings().locale->name())));
                 return;
             }
 
-            if (subcommand == Commands::Set::Timeout::Name)
+            if (subcommand == Set::Timeout::Name)
             {
                 int64_t timeoutDuration = std::get<int64_t>(interaction.options[0].options[0].value);
                 if (timeoutDuration < 1)
@@ -430,6 +449,16 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 info.settings().timeoutMinutes = timeoutDuration;
                 event.reply(info.settings().locale->timeoutDurationSet(timeoutDuration));
                 m_logger.info(logMessage(fmt::format("Timeout duration is set to {}", Utility::NiceString(pt::time_duration(0, timeoutDuration, 0)))));
+                return;
+            }
+
+            if (subcommand == Set::ChangeStatus::Name)
+            {
+                info.settings().changeStatus = std::get<bool>(interaction.options[0].options[0].value);
+                if (playerEntry != m_players.end())
+                    playerEntry->second.updateVoiceStatus(info);
+                event.reply(info.settings().locale->soBeIt());
+                m_logger.info(logMessage(fmt::format("Change status set to {}", info.settings().changeStatus)));
                 return;
             }
 
@@ -473,9 +502,12 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         {
             std::optional<kc::Bot::Session> session;
             if (playerEntry != m_players.end())
+            {
+                playerEntry->second.endSession(info);
                 session.emplace(playerEntry->second.session());
+            }
 
-            LeaveStatus leaveStatus = leaveVoice(event.from, guild);
+            LeaveStatus leaveStatus = leaveVoice(event.from, guild, info);
             switch (leaveStatus.result)
             {
                 case LeaveStatus::Result::Left:
@@ -547,7 +579,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 return;
             }
 
-            bool paused = playerEntry->second.pauseResume();
+            bool paused = playerEntry->second.pauseResume(info);
             event.reply(info.settings().locale->paused(session.playingVideo->video, paused));
             m_logger.info(logMessage(fmt::format(
                 "{} \"{}\" [{}]",
@@ -589,7 +621,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                         std::stoi(matches.str(3)), 0
                     );
 
-                    playerEntry->second.seek(timestamp.total_seconds());
+                    playerEntry->second.seek(timestamp.total_seconds(), info);
                     event.reply(info.settings().locale->seeking(session.playingVideo->video.title(), timestamp, playerEntry->second.paused()));
                     m_logger.info(logMessage(fmt::format("Seeking \"{}\" to {}", session.playingVideo->video.title(), Utility::NiceString(timestamp))));
                     return;
@@ -614,7 +646,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             {
                 if (timestampChapterOption == chapter.name)
                 {
-                    playerEntry->second.seek(chapter.timestamp.total_seconds());
+                    playerEntry->second.seek(chapter.timestamp.total_seconds(), info);
                     event.reply(info.settings().locale->seeking(
                         playerEntry->second.session().playingVideo->video.title(),
                         chapter.name,
@@ -677,15 +709,15 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             }
 
             const std::string& subcommand = interaction.options[0].name;
-            if (subcommand == Commands::Skip::Video::Name)
+            if (subcommand == Skip::Video::Name)
             {
-                playerEntry->second.skipVideo();
+                playerEntry->second.skipVideo(info);
                 event.reply(info.settings().locale->skipped(session.playingVideo->video, playerEntry->second.paused()));
                 m_logger.info(logMessage(fmt::format("Skipped video \"{}\"", session.playingVideo->video.title())));
                 return;
             }
 
-            if (subcommand == Commands::Skip::Playlist::Name)
+            if (subcommand == Skip::Playlist::Name)
             {
                 if (!session.playingPlaylist)
                 {
@@ -694,7 +726,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                     return;
                 }
 
-                playerEntry->second.skipPlaylist();
+                playerEntry->second.skipPlaylist(info);
                 event.reply(info.settings().locale->skipped(session.playingPlaylist->playlist, playerEntry->second.paused()));
                 m_logger.info(logMessage(fmt::format("Skipped playlist \"{}\"", session.playingPlaylist->playlist.title())));
                 return;
@@ -745,7 +777,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 return;
             }
 
-            playerEntry->second.stop();
+            playerEntry->second.stop(info);
             event.reply(info.settings().locale->stopped());
             m_logger.info(logMessage("Stopped"));
             return;
@@ -1049,7 +1081,8 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
     on_voice_ready([this](const dpp::voice_ready_t& event)
     {
-        m_players.find(event.voice_client->server_id)->second.signalReady();
+        Info info(event.voice_client->server_id);
+        m_players.find(event.voice_client->server_id)->second.signalReady(info);
         m_logger.info("\"{}\": Voice client is ready", dpp::find_guild(event.voice_client->server_id)->name);
     });
 
@@ -1068,7 +1101,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             case Signal::Type::Played:
             case Signal::Type::ChapterReached:
             {
-                playerEntry->second.signalMarker(signal);
+                playerEntry->second.signalMarker(signal, info);
                 return;
             }
             default:
@@ -1083,17 +1116,18 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
     {
         dpp::guild* guild = dpp::find_guild(event.state.guild_id);
         dpp::voiceconn* botVoice = event.from->get_voice(event.state.guild_id);
+        Info info(guild->id);
 
         if (event.state.user_id != me.id)
         {
             if (botVoice && CountVoiceMembers(*guild, botVoice->channel_id) == 1)
-                leaveVoice(event.from, *guild, Locale::EndReason::EverybodyLeft);
+                leaveVoice(event.from, *guild, info, Locale::EndReason::EverybodyLeft);
             return;
         }
 
         if (botVoice && botVoice->channel_id != event.state.channel_id)
         {
-            leaveVoice(event.from, *guild, Locale::EndReason::Moved);
+            leaveVoice(event.from, *guild, info, Locale::EndReason::Moved);
             return;
         }
 
@@ -1107,13 +1141,13 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         PlayerEntry playerEntry = m_players.find(event.state.guild_id);
         if (playerEntry != m_players.end())
         {
-            playerEntry->second.endSession(Locale::EndReason::Kicked);
+            playerEntry->second.endSession(info, Locale::EndReason::Kicked);
             m_players.erase(event.state.guild_id);
         }
     });
 }
 
-Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dpp::guild& guild, Locale::EndReason reason)
+Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dpp::guild& guild, Info& info, Locale::EndReason reason)
 {
     dpp::voiceconn* botVoice = client->get_voice(guild.id);
     if (!botVoice)
@@ -1121,7 +1155,7 @@ Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dp
 
     const dpp::channel* disconnectedChannel = dpp::find_channel(botVoice->channel_id);
     if (reason != Locale::EndReason::UserRequested)
-        m_players.find(guild.id)->second.endSession(reason);
+        m_players.find(guild.id)->second.endSession(info, reason);
     m_players.erase(guild.id);
     client->disconnect_voice(guild.id);
     return { LeaveStatus::Result::Left, disconnectedChannel };

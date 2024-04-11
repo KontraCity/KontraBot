@@ -22,6 +22,7 @@ namespace Bot
     {
         std::unique_ptr<Locale> locale;
         uint64_t timeoutMinutes;
+        bool changeStatus;
 
         /// @brief Copy data from other settings
         /// @param other Othe settings to copy data from
