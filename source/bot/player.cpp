@@ -68,7 +68,7 @@ void Bot::Player::incrementPlayedTracks(Info& info)
 
 void Bot::Player::chapterReached(const Youtube::Video::Chapter& chapter, const Info& info)
 {
-    if (m_session.playingVideo->chapter.timestamp == chapter.timestamp)
+    if (m_session.playingVideo->chapter.name == chapter.name)
         return;
 
     m_session.playingVideo->chapter = chapter;
@@ -83,8 +83,9 @@ void Bot::Player::checkPlayingVideo()
         m_timeout.enable();
 }
 
-void Bot::Player::setStatus(const std::string& status)
+void Bot::Player::setStatus(std::string status)
 {
+    status = Utility::Truncate(status, 500);
     if (m_session.voiceChannelStatus == status)
         return;
 
@@ -113,19 +114,33 @@ void Bot::Player::updateStatus(const Info& info)
 
     if (!m_session.playingVideo->chapter.name.empty())
     {
-        setStatus(prefix + fmt::format("{}: {}", m_session.playingVideo->chapter.number, m_session.playingVideo->chapter.name));
+        setStatus(prefix + fmt::format(
+            "{}: {} [{}]",
+            m_session.playingVideo->chapter.number,
+            m_session.playingVideo->chapter.name,
+            Utility::NiceString(m_session.playingVideo->chapter.duration)
+        ));
         return;
     }
 
     if (!m_session.playingPlaylist)
     {
-        setStatus(prefix + m_session.playingVideo->video.title());
+        setStatus(prefix + fmt::format(
+            "{} [{}]",
+            m_session.playingVideo->video.title(),
+            Utility::NiceString(m_session.playingVideo->video.duration())
+        ));
         return;
     }
 
     Youtube::Playlist::Iterator iterator = m_session.playingPlaylist->iterator;
     --iterator;
-    setStatus(prefix + fmt::format("{}. {}", iterator.index() + 1, iterator->title()));
+    setStatus(prefix + fmt::format(
+        "{}. {} [{}]",
+        iterator.index() + 1,
+        iterator->title(),
+        Utility::NiceString(iterator->duration())
+    ));
 }
 
 void Bot::Player::threadFunction()

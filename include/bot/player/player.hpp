@@ -99,7 +99,7 @@ namespace Bot
 
         /// @brief Set voice channel status
         /// @param status Status to set
-        void setStatus(const std::string& status);
+        void setStatus(std::string status);
 
         /// @brief Update voice channel status
         /// @param info Guild's info

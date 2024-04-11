@@ -97,6 +97,19 @@ void Youtube::Video::parseChapters(const std::string& description)
             line.replace(matches.position(), matches.str(0).length(), "");
         m_chapters.push_back({ m_chapters.size() + 1, line, timestamp });
     }
+
+    if (m_chapters.empty())
+        return;
+
+    if (m_chapters[0].timestamp.total_seconds() != 0 || !std::all_of(m_chapters.begin(), m_chapters.end(), [](const Chapter& chapter) { return !chapter.name.empty(); }))
+    {
+        m_chapters.clear();
+        return;
+    }
+
+    for (size_t index = 0, size = m_chapters.size(); index < size - 1; ++index)
+        m_chapters[index].duration = m_chapters[index + 1].timestamp - m_chapters[index].timestamp;
+    m_chapters[m_chapters.size() - 1].duration = m_duration - m_chapters[m_chapters.size() - 1].timestamp;
 }
 
 void Youtube::Video::checkPlayabilityStatus(const json& playabilityStatusObject)

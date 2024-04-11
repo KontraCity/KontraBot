@@ -3,6 +3,7 @@
 // STL modules
 #include <string>
 #include <sstream>
+#include <algorithm>
 #include <stdexcept>
 
 // Library nlohmann/json
@@ -73,6 +74,7 @@ namespace Youtube
             uint64_t number;
             std::string name;
             pt::time_duration timestamp;
+            pt::time_duration duration;
         };
 
     private:

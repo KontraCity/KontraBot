@@ -87,9 +87,10 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
         if (!session.playingVideo->chapter.name.empty())
         {
             embed.description += fmt::format(
-                "*[{}. {}]({})*\n",
+                "*[{}. {} [{}]]({})*\n",
                 session.playingVideo->chapter.number,
                 session.playingVideo->chapter.name,
+                Utility::NiceString(session.playingVideo->chapter.duration),
                 session.playingVideo->video.watchUrl(session.playingVideo->chapter.timestamp)
             );
         }
@@ -128,12 +129,13 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             {
                 embed.description = fmt::format(
                     "***[{}. {}]({})***\n"
-                    "*[{}. {}]({})*\n",
+                    "*[{}. {} [{}]]({})*\n",
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl(),
                     session.playingVideo->chapter.number,
                     session.playingVideo->chapter.name,
+                    Utility::NiceString(session.playingVideo->chapter.duration),
                     iterator->watchUrl(session.playingVideo->chapter.timestamp)
                 ) + embed.description + fmt::format(
                     ">>> ***[{}]({})***\n",
@@ -158,9 +160,10 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (!session.playingVideo->chapter.name.empty())
             {
                 embed.description += fmt::format(
-                    "*[{}. {}]({})*\n",
+                    "*[{}. {} [{}]]({})*\n",
                     session.playingVideo->chapter.number,
                     session.playingVideo->chapter.name,
+                    Utility::NiceString(session.playingVideo->chapter.duration),
                     session.playingVideo->video.watchUrl(session.playingVideo->chapter.timestamp)
                 );
             }
