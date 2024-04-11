@@ -22,7 +22,11 @@ bool Bot::Settings::operator==(const Settings& other)
 
 bool Bot::Stats::operator==(const Stats& other)
 {
-    return sessionsCount == other.sessionsCount && tracksPlayed == other.tracksPlayed;
+    return interactionsProcessed == other.interactionsProcessed
+        && sessionsCount == other.sessionsCount
+        && tracksPlayed == other.tracksPlayed
+        && timesKicked == other.timesKicked
+        && timesMoved == other.timesMoved;
 }
 
 } // namespace kc

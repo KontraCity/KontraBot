@@ -125,8 +125,11 @@ namespace Bot
         {
             StatsStrings strings = {};
             strings.hereAreTheStats = "Here are this guild's stats:";
+            strings.interactionsProcessed = "Commands/buttons/options processed";
             strings.sessionsCount = "Sessions count";
             strings.tracksPlayed = "Tracks played";
+            strings.timesKicked = "Times kicked";
+            strings.timesMoved = "Times moved";
             return StatsMessage(strings, stats);
         }
 

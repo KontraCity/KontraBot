@@ -130,8 +130,11 @@ namespace Bot
         struct StatsStrings
         {
             const char* hereAreTheStats;        // "Here are this guild's stats:" string
+            const char* interactionsProcessed;  // "Commands/buttons/options processed" string
             const char* sessionsCount;          // "Sessions count" string
             const char* tracksPlayed;           // "Tracks played" string
+            const char* timesKicked;            // "Times kicked" string
+            const char* timesMoved;             // "Times moved" string
         };
 
         struct AmbigousPlayStrings

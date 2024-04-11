@@ -21,8 +21,8 @@ namespace Bot
     struct Settings
     {
         std::unique_ptr<Locale> locale;
-        uint64_t timeoutMinutes;
-        bool changeStatus;
+        uint64_t timeoutMinutes = 60;
+        bool changeStatus = true;
 
         /// @brief Copy data from other settings
         /// @param other Othe settings to copy data from
@@ -37,8 +37,11 @@ namespace Bot
 
     struct Stats
     {
-        uint64_t sessionsCount;
-        uint64_t tracksPlayed;
+        uint64_t interactionsProcessed = 0;
+        uint64_t sessionsCount = 0;
+        uint64_t tracksPlayed = 0;
+        uint64_t timesKicked = 0;
+        uint64_t timesMoved = 0;
 
         /// @brief Check if stats are equal
         /// @param other Other stats to check against

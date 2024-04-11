@@ -20,13 +20,7 @@ Bot::Info::Info(dpp::snowflake guildId)
 {
     if (!std::filesystem::is_regular_file(m_filePath))
     {
-        m_settings.locale = std::make_unique<LocaleEn>();
-        m_settings.timeoutMinutes = 60;
-        m_settings.changeStatus = true;
-
-        m_stats.sessionsCount = 0;
-        m_stats.tracksPlayed = 0;
-
+        m_settings.locale = Locale::Create(LocaleEn::Type);
         m_previousSettings = m_settings;
         m_previousStats = m_stats;
         return;
@@ -46,8 +40,11 @@ Bot::Info::Info(dpp::snowflake guildId)
         m_settings.changeStatus = settingsJson[Fields::ChangeStatus];
 
         json statsJson = infoJson[Fields::Stats];
+        m_stats.interactionsProcessed = statsJson[Fields::InteractionsProcessed];
         m_stats.sessionsCount = statsJson[Fields::SessionsCount];
         m_stats.tracksPlayed = statsJson[Fields::TracksPlayed];
+        m_stats.timesKicked = statsJson[Fields::TimesKicked];
+        m_stats.timesMoved = statsJson[Fields::TimesMoved];
 
         m_previousSettings = m_settings;
         m_previousStats = m_stats;
@@ -70,8 +67,11 @@ Bot::Info::~Info()
     settingsJson[Fields::ChangeStatus] = m_settings.changeStatus;
 
     json statsJson;
+    statsJson[Fields::InteractionsProcessed] = m_stats.interactionsProcessed;
     statsJson[Fields::SessionsCount] = m_stats.sessionsCount;
     statsJson[Fields::TracksPlayed] = m_stats.tracksPlayed;
+    statsJson[Fields::TimesKicked] = m_stats.timesKicked;
+    statsJson[Fields::TimesMoved] = m_stats.timesMoved;
 
     json infoJson;
     infoJson[Fields::Settings] = settingsJson;

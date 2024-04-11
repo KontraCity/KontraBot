@@ -44,7 +44,7 @@ Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const 
     const dpp::user& user = interaction.get_issuing_user();
     auto userVoiceEntry = guild->voice_members.find(user.id);
     if (userVoiceEntry == guild->voice_members.end())
-        return { JoinStatus::Result::CantJoin };
+        return { JoinStatus::Result::UserNotInVoiceChannel };
 
     dpp::voiceconn* botVoice = client->get_voice(guild->id);
     dpp::channel* userVoice = dpp::find_channel(userVoiceEntry->second.channel_id);
@@ -307,6 +307,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         const dpp::guild& guild = event.command.get_guild();
         PlayerEntry playerEntry = updatePlayerTextChannelId(guild.id, event.command.channel_id);
         Info info(guild.id);
+        ++info.stats().interactionsProcessed;
 
         const LogMessageFunction logMessage = [event, interaction, guild](const std::string& message)
         {
@@ -964,6 +965,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         const dpp::guild& guild = event.command.get_guild();
         updatePlayerTextChannelId(guild.id, event.command.channel_id);
         Info info(guild.id);
+        ++info.stats().interactionsProcessed;
 
         const LogMessageFunction logMessage = [&event, &guild](const std::string& message)
         {
@@ -1028,6 +1030,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
     {
         const dpp::guild& guild = event.command.get_guild();
         Info info(guild.id);
+        ++info.stats().interactionsProcessed;
 
         const LogMessageFunction logMessage = [&event, &guild](const std::string& message)
         {
@@ -1127,6 +1130,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
         if (botVoice && botVoice->channel_id != event.state.channel_id)
         {
+            ++info.stats().timesMoved;
             leaveVoice(event.from, *guild, info, Locale::EndReason::Moved);
             return;
         }
@@ -1141,6 +1145,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         PlayerEntry playerEntry = m_players.find(event.state.guild_id);
         if (playerEntry != m_players.end())
         {
+            ++info.stats().timesKicked;
             playerEntry->second.endSession(info, Locale::EndReason::Kicked);
             m_players.erase(event.state.guild_id);
         }

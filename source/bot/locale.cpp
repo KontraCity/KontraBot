@@ -320,8 +320,13 @@ dpp::message Bot::Locale::StatsMessage(const StatsStrings& strings, const Stats&
     dpp::embed embed;
     embed.color = Colors::Success;
     embed.description = fmt::format("{} {}\n\n", Emojis::Success, strings.hereAreTheStats);
+    embed.description += fmt::format("{}: `{}`\n", strings.interactionsProcessed, Utility::NiceString(stats.interactionsProcessed));
     embed.description += fmt::format("{}: `{}`\n", strings.sessionsCount, Utility::NiceString(stats.sessionsCount));
     embed.description += fmt::format("{}: `{}`", strings.tracksPlayed, Utility::NiceString(stats.tracksPlayed));
+    if (stats.timesKicked)
+        embed.description += fmt::format("\n{}: `{}`", strings.timesKicked, Utility::NiceString(stats.timesKicked));
+    if (stats.timesMoved)
+        embed.description += fmt::format("\n{}: `{}`", strings.timesMoved, Utility::NiceString(stats.timesMoved));
     return dpp::message().add_embed(embed);
 }
 

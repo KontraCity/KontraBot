@@ -133,8 +133,11 @@ namespace Bot
         {
             StatsStrings strings = {};
             strings.hereAreTheStats = u8"Вот статистика этого сервера:";
+            strings.interactionsProcessed = u8"Команд/кнопок/выборов обработано";
             strings.sessionsCount = u8"Количество сессий";
             strings.tracksPlayed = u8"Треков проиграно";
+            strings.timesKicked = u8"Сколько раз был кикнут";
+            strings.timesMoved = u8"Сколько раз был передвинут";
             return StatsMessage(strings, stats);
         }
 
