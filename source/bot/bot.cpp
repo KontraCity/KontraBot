@@ -847,11 +847,13 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 for (size_t index = 0, size = session.playingVideo->video.chapters().size(); index < size && index < 25; ++index)
                 {
                     const Youtube::Video::Chapter& chapter = session.playingVideo->video.chapters()[index];
+                    std::string firstPart = fmt::format("{}: ", chapter.number);
+                    std::string secondPart = fmt::format(" [{}]", Utility::NiceString(chapter.timestamp));
                     response.add_autocomplete_choice(dpp::command_option_choice(fmt::format(
-                        "{}: {} [{}]",
-                        chapter.number,
-                        chapter.name,
-                        Utility::NiceString(chapter.timestamp)
+                        "{}\"{}\"{}",
+                        firstPart,
+                        Utility::Truncate(chapter.name, 100 - 2 - firstPart.length() - secondPart.length()),
+                        secondPart
                     ), chapter.name));
                 }
 
@@ -863,15 +865,17 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             dpp::interaction_response response(dpp::ir_autocomplete_reply);
             for (size_t index = 0, size = session.playingVideo->video.chapters().size(); index < size && response.autocomplete_choices.size() < 25; ++index)
             {
-                const Youtube::Video::Chapter& currentChapter = session.playingVideo->video.chapters()[index];
-                if (Utility::CaseInsensitiveStringContains(currentChapter.name, value))
+                const Youtube::Video::Chapter& chapter = session.playingVideo->video.chapters()[index];
+                if (Utility::CaseInsensitiveStringContains(chapter.name, value))
                 {
+                    std::string firstPart = fmt::format("{}: ", chapter.number);
+                    std::string secondPart = fmt::format(" [{}]", Utility::NiceString(chapter.timestamp));
                     response.add_autocomplete_choice(dpp::command_option_choice(fmt::format(
-                        "{}: \"{}\" [{}]",
-                        index + 1,
-                        currentChapter.name,
-                        Utility::NiceString(currentChapter.timestamp)
-                    ), currentChapter.name));
+                        "{}\"{}\"{}",
+                        firstPart,
+                        Utility::Truncate(chapter.name, 100 - 2 - firstPart.length() - secondPart.length()),
+                        secondPart
+                    ), chapter.name));
                 }
             }
 
@@ -977,7 +981,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
         const LogMessageFunction logMessage = [&event, &guild](const std::string& message)
         {
-            return fmt::format("\"{}\" / \"{}\": [{}]: {}", event.command.usr.format_username(), guild.name, event.custom_id, message);
+            return fmt::format("\"{}\" / \"{}\": [{}]: {}", guild.name, event.command.usr.format_username(), event.custom_id, message);
         };
 
         Signal signal(event.custom_id);
@@ -1067,7 +1071,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 break;
             default:
                 event.reply(info.settings().locale->unknownOption());
-                m_logger.error(logMessage(fmt::format("Unknown select option: {}", event.values[0])));
+                m_logger.error(logMessage("Unknown select option"));
                 break;
         }
 

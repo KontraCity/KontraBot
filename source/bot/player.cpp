@@ -381,7 +381,8 @@ void Bot::Player::signalReady(const Info& info)
         return;
     }
 
-    extractNextVideo(info);
+    for (int index = 0; index < 95; ++index)
+        extractNextVideo(info);
     checkPlayingVideo();
     updateStatus(info);
 }

@@ -157,7 +157,7 @@ namespace Bot
 
             namespace Session
             {
-                constexpr const char* Name = Commands::Join::Name;
+                constexpr const char* Name = Commands::Session::Name;
                 constexpr const char* Description = u8"Показать информацию о сессии, включая играющее видео/плейлист и очередь";
             }
 
