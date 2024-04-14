@@ -15,6 +15,7 @@ extern "C" {
     // FFmpeg libraries
     #include <libavformat/avformat.h>
     #include <libavcodec/avcodec.h>
+    #include <libswresample/swresample.h>
 }
 
 // Library spdlog
@@ -39,13 +40,14 @@ namespace Youtube
     class Extractor
     {
     private:
-        // Count of maximum extraction attempts
         static constexpr int MaxAttempts = 5;
+        static constexpr int FrameSize = 11520;
 
     public:
         class Frame : public std::vector<uint8_t>
         {
         private:
+            bool m_timestampSet;
             uint64_t m_timestamp;
 
         public:
@@ -56,11 +58,28 @@ namespace Youtube
             /// @param timestamp Frame timestamp
             Frame(double timestamp);
 
+            /// @brief Clear frame
+            void clear();
+
+            /// @brief Check if frame's timestamp is set
+            /// @return True if frame's timestamp is set
+            inline bool timestampSet() const
+            {
+                return m_timestampSet;
+            }
+
             /// @brief Get frame timestamp in milliseconds
             /// @return Frame timestamp in milliseconds
             inline uint64_t timestamp() const
             {
                 return m_timestamp;
+            }
+
+            /// @brief Set frame timestamp in milliseconds
+            /// @param timestamp The timestamp to set
+            inline void setTimestamp(uint64_t timestamp)
+            {
+                m_timestamp = timestamp;
             }
         };
 
@@ -68,11 +87,14 @@ namespace Youtube
         static spdlog::logger Logger;
 
     public:
-        AVFormatContext* m_formatContext;
+        std::string m_videoId;
+        AVFormatContext* m_format;
         AVStream* m_stream;
-        AVCodecContext* m_codecContext;
+        AVCodecContext* m_codec;
+        SwrContext* m_resampler;
         int m_unitsPerSecond;
         uint64_t m_seekPosition;
+        Frame m_overflowFrame;
 
     public:
         /// @brief Initialize audio extractor
@@ -90,6 +112,7 @@ namespace Youtube
         void seekTo(uint64_t timestamp);
 
         /// @brief Extract next audio frame
+        /// @throw std::runtime_error if internal error occurs
         /// @return Audio frame: empty if all frames were extracted
         Frame extractFrame();
     };

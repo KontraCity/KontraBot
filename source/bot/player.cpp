@@ -145,7 +145,9 @@ void Bot::Player::updateStatus(const Info& info)
 
 void Bot::Player::threadFunction()
 {
+    dpp::guild* guild = dpp::find_guild(m_session.guildId);
     std::string videoId;
+
     {
         std::lock_guard lock(m_mutex);
         if (!m_session.playingVideo)
@@ -156,7 +158,6 @@ void Bot::Player::threadFunction()
 
         if (m_session.playingVideo->video.type() != Youtube::Video::Type::Normal)
         {
-            dpp::guild* guild = dpp::find_guild(m_session.guildId);
             dpp::discord_voice_client* voiceClient = getVoiceClient();
             if (!voiceClient)
                 return;
@@ -189,7 +190,7 @@ void Bot::Player::threadFunction()
         m_timeout.disable();
     }
 
-    bool error = false;
+    bool errorOccured = false;
     try
     {
         Youtube::Extractor extractor(videoId);
@@ -232,22 +233,66 @@ void Bot::Player::threadFunction()
                     }
                 }
                 
-                voiceClient->send_audio_opus(frame.data(), frame.size());
+                voiceClient->send_audio_raw(reinterpret_cast<uint16_t*>(frame.data()), frame.size());
             }
         }
     }
+    catch (const Youtube::YoutubeError& error)
+    {
+        m_logger.error(
+            "\"{}\": Couldn't play \"{}\": YouTube error: {}",
+            guild->name,
+            m_session.playingVideo->video.id(),
+            error.what()
+        );
+        errorOccured = true;
+    }
+    catch (const Youtube::LocalError& error)
+    {
+        m_logger.error(
+            "\"{}\": Couldn't play \"{}\": Local error: {}",
+            guild->name,
+            m_session.playingVideo->video.id(),
+            error.what()
+        );
+        errorOccured = true;
+    }
+    catch (const std::runtime_error& error)
+    {
+        m_logger.error(
+            "\"{}\": Couldn't play \"{}\": Runtime error: {}",
+            guild->name,
+            m_session.playingVideo->video.id(),
+            error.what()
+        );
+        errorOccured = true;
+    }
+    catch (const std::exception& error)
+    {
+        m_logger.error(
+            "\"{}\": Couldn't play \"{}\": Unknown error: {}",
+            guild->name,
+            m_session.playingVideo->video.id(),
+            error.what()
+        );
+        errorOccured = true;
+    }
     catch (...)
     {
-        error = true;
+        m_logger.error(
+            "\"{}\": Couldn't play \"{}\": Unknown error",
+            guild->name,
+            m_session.playingVideo->video.id()
+        );
+        errorOccured = true;
     }
 
     std::lock_guard lock(m_mutex);
-    dpp::guild* guild = dpp::find_guild(m_session.guildId);
     dpp::discord_voice_client* voiceClient = getVoiceClient();
     if (!voiceClient)
         return;
 
-    if (error)
+    if (errorOccured)
     {
         Info info(m_session.guildId);
         m_root->message_create(info.settings().locale->playError(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
@@ -325,8 +370,6 @@ Bot::Player::~Player()
 void Bot::Player::signalReady(const Info& info)
 {
     std::lock_guard lock(m_mutex);
-
-    getVoiceClient()->set_send_audio_type(dpp::discord_voice_client::satype_overlap_audio);
     m_session.startTimestamp = pt::second_clock::local_time();
     if (m_timeout.enabled())
         m_timeout.reset();

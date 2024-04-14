@@ -43,5 +43,5 @@ target_link_libraries(KontraBot PRIVATE
     "spdlog"
     "mujs"
     "boost_regex"
-    "avcodec" "avformat" "avutil"
+    "avcodec" "avformat" "avutil" "swresample"
 )
