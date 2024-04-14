@@ -103,7 +103,7 @@ namespace Bot
             const char* nothingIsPlaying;       // "Nothing is playing. Go ahead and add something to queue!" string
             const char* videoRequestedBy;       // "Video requested by {}:" string
             const char* playlistRequestedBy;    // "Playlist requested by {}:" string
-            const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" string
+            const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" <newline> "Requested by {}" string
             const char* lastVideoPlaylistInfo;  // "Playlist by {}" <newline> "Last video is playing" string
             const char* playlistInfo;           // "Playlist by {}" <newline> "{} video{} left" string
             const char* morePlaylistVideos;     // "... {} more video{}" string

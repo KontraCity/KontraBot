@@ -69,7 +69,8 @@ namespace Bot
             strings.playlistRequestedBy = "Playlist requested by {}:";
             strings.videoInfo = {
                 "by {}, [{}]\n"
-                "{}, {} view{}"
+                "{}, {} view{}\n"
+                "Requested by **{}**"
             };
             strings.lastVideoPlaylistInfo = {
                 "Playlist by {}\n"
@@ -94,11 +95,11 @@ namespace Bot
             strings.moreQueueItems = "... {} more item{}";
             strings.queueVideoInfo = {
                 "Video by {}, [{}]\n"
-                "Requested by {}"
+                "Requested by **{}**"
             };
             strings.queuePlaylistInfo = {
                 "Playlist by {}, [{} video{}]\n"
-                "Requested by {}"
+                "Requested by **{}**"
             };
             return SessionMessage(strings, &Cardinal, session);
         }

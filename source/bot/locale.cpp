@@ -71,23 +71,16 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
     size_t itemsShown = 0;
     if (!session.playingPlaylist)
     {
-        /*
-        embed.set_author(fmt::format(
-            strings.videoRequestedBy,
-            session.playingRequester->format_username()
-        ), "", session.playingRequester->get_avatar_url());
-        */
-
         std::string oldDescription = embed.description;
         embed.description = fmt::format(
-            "***[{}]({})***\n",
+            "**[{}]({})**\n",
             session.playingVideo->video.title(),
             session.playingVideo->video.watchUrl()
         );
         if (!session.playingVideo->chapter.name.empty())
         {
             embed.description += fmt::format(
-                "*[{}. {} [{}]]({})*\n",
+                "[{}. {} [{}]]({})\n",
                 session.playingVideo->chapter.number,
                 session.playingVideo->chapter.name,
                 Utility::NiceString(session.playingVideo->chapter.duration),
@@ -98,13 +91,6 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
     }
     else
     {
-        /*
-        embed.set_author(fmt::format(
-            strings.playlistRequestedBy,
-            session.playingRequester->format_username()
-        ), "", session.playingRequester->get_avatar_url());
-        */
-
         Youtube::Playlist::Iterator iterator = session.playingPlaylist->iterator;
         if (!iterator)
         {
@@ -112,12 +98,12 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (session.playingVideo->chapter.name.empty())
             {
                 embed.description = fmt::format(
-                    "***[{}. {}]({})***\n",
+                    "**[{}. {}]({})**\n",
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl()
                 ) + embed.description + fmt::format(
-                    ">>> ***[{}]({})***\n",
+                    ">>> **[{}]({})**\n",
                     session.playingPlaylist->playlist.title(),
                     session.playingPlaylist->playlist.viewUrl()
                 ) + fmt::format(
@@ -128,8 +114,8 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             else
             {
                 embed.description = fmt::format(
-                    "***[{}. {}]({})***\n"
-                    "*[{}. {} [{}]]({})*\n",
+                    "**[{}. {}]({})**\n"
+                    "[{}. {} [{}]]({})\n",
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl(),
@@ -138,7 +124,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
                     Utility::NiceString(session.playingVideo->chapter.duration),
                     iterator->watchUrl(session.playingVideo->chapter.timestamp)
                 ) + embed.description + fmt::format(
-                    ">>> ***[{}]({})***\n",
+                    ">>> **[{}]({})**\n",
                     session.playingPlaylist->playlist.title(),
                     session.playingPlaylist->playlist.viewUrl()
                 ) + fmt::format(
@@ -152,7 +138,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             --iterator;
             std::string oldDescription = embed.description;
             embed.description = fmt::format(
-                "***[{}. {}]({})***\n",
+                "**[{}. {}]({})**\n",
                 Utility::NiceString(iterator.index() + 1),
                 iterator->title(),
                 iterator.watchUrl()
@@ -160,7 +146,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (!session.playingVideo->chapter.name.empty())
             {
                 embed.description += fmt::format(
-                    "*[{}. {} [{}]]({})*\n",
+                    "[{}. {} [{}]]({})\n",
                     session.playingVideo->chapter.number,
                     session.playingVideo->chapter.name,
                     Utility::NiceString(session.playingVideo->chapter.duration),
@@ -172,7 +158,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
 
             size_t videosLeft = session.playingPlaylist->playlist.videoCount() - iterator.index();
             embed.description += fmt::format(
-                ">>> ***[{}]({})***\n",
+                ">>> **[{}]({})**\n",
                 session.playingPlaylist->playlist.title(),
                 session.playingPlaylist->playlist.viewUrl()
             ) + fmt::format(
