@@ -604,7 +604,7 @@ dpp::message Bot::Locale::EndMessage(const EndStrings& strings, EndReason reason
     embed.description += fmt::format(
         "{} `{}`\n",
         strings.lasted,
-        Utility::NiceString(pt::second_clock::local_time() - session.startTimestamp)
+        Utility::NiceString(session.startTimestamp.is_not_a_date_time() ? pt::time_duration() : pt::second_clock::local_time() - session.startTimestamp)
     );
     embed.description += fmt::format(
         "{}: `{}`\n",

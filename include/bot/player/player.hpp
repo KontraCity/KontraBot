@@ -119,8 +119,9 @@ namespace Bot
         /// @param lock Acquired mutex lock
         void stopThread(std::unique_lock<std::mutex>& lock);
 
-        /// @brief Timeout handler
-        void timeoutHandler();
+        /// @brief Signal bot to disconnect from voice channel
+        /// @param reason Session end reason
+        void signalDisconnect(Locale::EndReason reason);
 
     public:
         /// @brief Initialize player

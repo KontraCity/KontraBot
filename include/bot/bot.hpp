@@ -83,7 +83,7 @@ namespace Bot
             Youtube::Item item;
         };
 
-    private:
+    public:
         /// @brief Count voice members in voice channel
         /// @param guild Voice channel guild
         /// @param channelId ID of voice channel

@@ -101,7 +101,7 @@ void Bot::Player::updateStatus(const Info& info)
         return;
     }
 
-    if (!m_session.playingVideo)
+    if (!m_session.playingVideo || m_session.playingVideo->video.type() != Youtube::Video::Type::Normal)
     {
         setStatus(info.settings().locale->notPlaying());
         return;
@@ -334,13 +334,13 @@ void Bot::Player::stopThread(std::unique_lock<std::mutex>& lock)
     lock.lock();
 }
 
-void Bot::Player::timeoutHandler()
+void Bot::Player::signalDisconnect(Locale::EndReason reason)
 {
-    std::thread disconnectThread([this]()
+    std::thread disconnectThread([this, reason]()
     {
         dpp::guild* guild = dpp::find_guild(m_session.guildId);
         Info info(guild->id);
-        m_root->leaveVoice(m_client, *guild, info, Locale::EndReason::Timeout);
+        m_root->leaveVoice(m_client, *guild, info, reason);
     });
     disconnectThread.detach();
 }
@@ -348,7 +348,7 @@ void Bot::Player::timeoutHandler()
 Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
     : m_logger("player", std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
     , m_root(root)
-    , m_timeout([this]() { timeoutHandler(); }, info.settings().timeoutMinutes * 60)
+    , m_timeout([this]() { signalDisconnect(Locale::EndReason::Timeout); }, info.settings().timeoutMinutes * 60)
     , m_client(client)
     , m_session({ 
         interaction.get_guild().id,
@@ -373,6 +373,13 @@ void Bot::Player::signalReady(const Info& info)
     m_session.startTimestamp = pt::second_clock::local_time();
     if (m_timeout.enabled())
         m_timeout.reset();
+
+    dpp::guild* guild = dpp::find_guild(m_session.guildId);
+    if (Bot::CountVoiceMembers(*guild, m_session.voiceChannelId) == 1)
+    {
+        signalDisconnect(Locale::EndReason::EverybodyLeft);
+        return;
+    }
 
     extractNextVideo(info);
     checkPlayingVideo();

@@ -381,15 +381,65 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 ));
             }
 
-            // The audio channels should be interleaved in frame buffer
-            rawFrame.reserve(rawFrame.size() + bytesAllocated);
-            for (int sampleIndex = 0; sampleIndex < frame->nb_samples; ++sampleIndex)
+            int bytesConverted = av_samples_get_buffer_size(nullptr, 2, samplesConverted, AV_SAMPLE_FMT_S16P, 0);
+            if (bytesConverted < 0)
+            {
+                av_freep(&buffer);
+                av_frame_free(&frame);
+                av_packet_unref(&packet);
+                throw std::runtime_error(fmt::format(
+                    "kc::Youtube::Extractor::extractFrame(): "
+                    "Couldn't get converted bytes count [video: \"{}\", return code: {}]",
+                    m_videoId, bytesConverted
+                ));
+            }
+
+            rawFrame.reserve(rawFrame.size() + bytesConverted);
+            for (int sampleIndex = 0; sampleIndex < samplesConverted; ++sampleIndex)
             {
                 uint8_t* leftChannelSample = buffer + sampleIndex * 2;
                 rawFrame.insert(rawFrame.end(), leftChannelSample, leftChannelSample + 2);
-                uint8_t* rightChannelSample = leftChannelSample + (bytesAllocated / 2);
+                uint8_t* rightChannelSample = leftChannelSample + (bytesConverted / 2);
                 rawFrame.insert(rawFrame.end(), rightChannelSample, rightChannelSample + 2);
             }
+
+            samplesConverted = swr_convert(m_resampler, &buffer, frame->nb_samples, nullptr, 0);
+            if (samplesConverted < 0)
+            {
+                av_freep(&buffer);
+                av_frame_free(&frame);
+                av_packet_unref(&packet);
+                throw std::runtime_error(fmt::format(
+                    "kc::Youtube::Extractor::extractFrame(): "
+                    "Couldn't flush resampler [video: \"{}\", return code: {}]",
+                    m_videoId, samplesConverted
+                ));
+            }
+            else if (samplesConverted != 0)
+            {
+                bytesConverted = av_samples_get_buffer_size(nullptr, 2, samplesConverted, AV_SAMPLE_FMT_S16P, 0);
+                if (bytesConverted < 0)
+                {
+                    av_freep(&buffer);
+                    av_frame_free(&frame);
+                    av_packet_unref(&packet);
+                    throw std::runtime_error(fmt::format(
+                        "kc::Youtube::Extractor::extractFrame(): "
+                        "Couldn't get flushed bytes count [video: \"{}\", return code: {}]",
+                        m_videoId, bytesConverted
+                    ));
+                }
+
+                rawFrame.reserve(rawFrame.size() + bytesConverted);
+                for (int sampleIndex = 0; sampleIndex < samplesConverted; ++sampleIndex)
+                {
+                    uint8_t* leftChannelSample = buffer + sampleIndex * 2;
+                    rawFrame.insert(rawFrame.end(), leftChannelSample, leftChannelSample + 2);
+                    uint8_t* rightChannelSample = leftChannelSample + (bytesConverted / 2);
+                    rawFrame.insert(rawFrame.end(), rightChannelSample, rightChannelSample + 2);
+                }
+            }
+
             av_freep(&buffer);
         }
 
