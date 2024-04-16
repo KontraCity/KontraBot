@@ -555,18 +555,47 @@ void Bot::Player::stop(Info& info)
     updateStatus(info);
 }
 
-void Bot::Player::endSession(Info& info)
+void Bot::Player::endSession(Info& info, bool dontClearVoiceStatus)
 {
     std::lock_guard lock(m_mutex);
     if (m_session.playingVideo)
         incrementPlayedTracks(info);
-    setStatus("");
+    if (!dontClearVoiceStatus)
+        setStatus("");
 }
 
 void Bot::Player::endSession(Info& info, Locale::EndReason reason)
 {
-    endSession(info);
-    m_root->message_create(info.settings().locale->sessionEnd(reason, m_session).set_channel_id(m_session.textChannelId));
+    switch (reason)
+    {
+        case Locale::EndReason::UserRequested:
+        case Locale::EndReason::Timeout:
+        {
+            endSession(info);
+            break;
+        }
+        case Locale::EndReason::EverybodyLeft:
+        {
+            /*
+            *   Bot is the last user to leave voice channel.
+            *   Discord clears voice status automatically when there is no one left.
+            */
+            endSession(info, true);
+            break;
+        }
+        case Locale::EndReason::Kicked:
+        case Locale::EndReason::Moved:
+        {
+            /*
+            *   Bot is already not in voice channel.
+            *   Voice status can only be modified when bot is in the voice.
+            */
+            endSession(info, true);
+            break;
+        }
+    }
+
+    m_root->message_create(info.settings().locale->sessionEnd(info.settings(), reason, m_session).set_channel_id(m_session.textChannelId));
 }
 
 } // namespace kc

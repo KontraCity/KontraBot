@@ -5,6 +5,7 @@
 
 // Custom modules
 #include "bot/locale/locale.hpp"
+#include "bot/commands.hpp"
 
 namespace kc {
 
@@ -542,21 +543,32 @@ namespace Bot
         }
 
         /// @brief Create session end message
+        /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
         /// @return Normal message
-        virtual inline dpp::message sessionEnd(EndReason reason, Session session)
+        virtual inline dpp::message sessionEnd(const Settings& settings, EndReason reason, Session session)
         {
             EndStrings strings = {};
             strings.sessionInfo = "{}'s session #{} ended";
             strings.userRequested = "User asked me to leave";
             strings.timeout = "I was inactive";
+            strings.timeoutCanBeChanged = fmt::format(
+                "Timeout duration can be changed with **/{} {}**",
+                Commands::Set::Name,
+                Commands::Set::Timeout::Name
+            );
             strings.everybodyLeft = "I was left alone in the voice channel";
             strings.kicked = "Somebody kicked me!";
+            strings.voiceStatusNotCleared = {
+                "Unfortunately, I was unable to clear voice channel status.\n"
+                "Discord allows it to be modified only when I'm in the channel."
+            };
             strings.moved = "Somebody moved me!";
+            strings.sessionStats = "Session stats";
             strings.lasted = "Lasted";
             strings.tracksPlayed = "Tracks played";
-            return EndMessage(strings, reason, session);
+            return EndMessage(strings, settings, reason, session);
         }
 
         /// @brief Create "Not playing" string

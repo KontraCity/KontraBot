@@ -5,6 +5,7 @@
 
 // Custom modules
 #include "bot/locale/locale.hpp"
+#include "bot/commands.hpp"
 
 namespace kc {
 
@@ -549,21 +550,32 @@ namespace Bot
         }
 
         /// @brief Create session end message
+        /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
         /// @return Normal message
-        virtual inline dpp::message sessionEnd(EndReason reason, Session session)
+        virtual inline dpp::message sessionEnd(const Settings& settings, EndReason reason, Session session)
         {
             EndStrings strings = {};
             strings.sessionInfo = u8"Сессия #{1} пользователя {0} закончилась";
             strings.userRequested = u8"Пользователь попросил меня выйти";
             strings.timeout = u8"Я ничего не делал";
+            strings.timeoutCanBeChanged = fmt::format(
+                u8"Продолжительность тайм-аута может быть изменена с помощью **/{} {}**",
+                Commands::Russian::Set::Name,
+                Commands::Russian::Set::Timeout::Name
+            );
             strings.everybodyLeft = u8"Я остался один в голосовом канале";
             strings.kicked = u8"Кто-то меня кикнул!";
+            strings.voiceStatusNotCleared = {
+                u8"К сожалению, я не смог очистить статус голосового канала.\n"
+                u8"Discord позволяет делать это только тогда, когда я сижу в нём."
+            };
             strings.moved = u8"Кто-то меня передвинул!";
+            strings.sessionStats = u8"Статистика сессии";
             strings.lasted = u8"Продлилась";
             strings.tracksPlayed = u8"Треков проиграно";
-            return EndMessage(strings, reason, session);
+            return EndMessage(strings, settings, reason, session);
         }
 
         /// @brief Create "Not playing" string

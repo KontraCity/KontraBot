@@ -515,7 +515,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 case LeaveStatus::Result::Left:
                 {
                     dpp::message message = info.settings().locale->left(leaveStatus.channel->id);
-                    message.add_embed(info.settings().locale->sessionEnd(Locale::EndReason::UserRequested, *session).embeds[0]);
+                    message.add_embed(info.settings().locale->sessionEnd(info.settings(), Locale::EndReason::UserRequested, *session).embeds[0]);
                     event.reply(message);
                     m_logger.info(logMessage(fmt::format("Left #{}", leaveStatus.channel->name)));
                     return;

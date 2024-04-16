@@ -556,10 +556,9 @@ dpp::command_option_choice Bot::Locale::ItemAutocompleteChoice(const ItemAutocom
     throw std::invalid_argument("kc::Bot::Locale::ItemAutocompleteChoice(): Item is empty");
 }
 
-dpp::message Bot::Locale::EndMessage(const EndStrings& strings, EndReason reason, Session session)
+dpp::message Bot::Locale::EndMessage(const EndStrings& strings, const Settings& settings, EndReason reason, Session session)
 {
     dpp::embed embed;
-    embed.color = Colors::Success;
     embed.set_author(fmt::format(
         strings.sessionInfo,
         session.starter.format_username(),
@@ -569,35 +568,57 @@ dpp::message Bot::Locale::EndMessage(const EndStrings& strings, EndReason reason
     switch (reason)
     {
         case EndReason::UserRequested:
+        {
+            embed.color = Colors::End;
             embed.title = strings.userRequested;
             break;
+        }
         case EndReason::Timeout:
+        {
+            embed.color = Colors::End;
             embed.title = strings.timeout;
+            embed.description = strings.timeoutCanBeChanged;
             break;
+        }
         case EndReason::EverybodyLeft:
+        {
+            embed.color = Colors::End;
             embed.title = strings.everybodyLeft;
             break;
+        }
         case EndReason::Kicked:
+        {
+            embed.color = Colors::BadEnd;
             embed.title = strings.kicked;
+            if (settings.changeStatus)
+                embed.description = strings.voiceStatusNotCleared;
             break;
+        }
         case EndReason::Moved:
+        {
+            embed.color = Colors::BadEnd;
             embed.title = strings.moved;
+            if (settings.changeStatus)
+                embed.description = strings.voiceStatusNotCleared;
             break;
+        }
         default:
+        {
             throw std::invalid_argument("kc::Bot::Locale::EndMessage(): Reason is unknown");
+        }
     }
 
-    embed.description += fmt::format(
+    embed.add_field(strings.sessionStats, "");
+    embed.fields[0].value += fmt::format(
         "{} `{}`\n",
         strings.lasted,
         Utility::NiceString(session.startTimestamp.is_not_a_date_time() ? pt::time_duration() : pt::second_clock::local_time() - session.startTimestamp)
     );
-    embed.description += fmt::format(
+    embed.fields[0].value += fmt::format(
         "{}: `{}`\n",
         strings.tracksPlayed,
         Utility::NiceString(session.tracksPlayed)
     );
-
     return dpp::message().add_embed(embed);
 }
 

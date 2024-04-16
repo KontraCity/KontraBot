@@ -194,7 +194,8 @@ namespace Bot
 
         /// @brief End player session
         /// @param info Guild's info
-        void endSession(Info& info);
+        /// @param dontClearVoiceStatus Whether or not voice status shouldn't be cleared
+        void endSession(Info& info, bool dontClearVoiceStatus = false);
 
         /// @brief End player session
         /// @param info Guild's info

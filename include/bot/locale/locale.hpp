@@ -46,6 +46,8 @@ namespace Bot
             constexpr uint32_t Question = dpp::colors::yellow;
             constexpr uint32_t Problem = dpp::colors::red;
             constexpr uint32_t Error = dpp::colors::dark_red;
+            constexpr uint32_t End = dpp::colors::purple_amethyst;
+            constexpr uint32_t BadEnd = dpp::colors::yellow;
         }
 
         namespace Emojis
@@ -178,9 +180,12 @@ namespace Bot
             const char* sessionInfo;            // "{}'s session #{} ended" string
             const char* userRequested;          // "User asked me to leave" string
             const char* timeout;                // "I was inactive" string
+            std::string timeoutCanBeChanged;    // "Timeout duration can be changed with /<set> <timeout>" string
             const char* everybodyLeft;          // "Everybody left voice channel" string
             const char* kicked;                 // "Somebody kicked me!" string
+            const char* voiceStatusNotCleared;  // "Unfortunately, I was unable to clear voice status." <newline> "Discord only allows it to be modified when I'm in the voice channel." string
             const char* moved;                  // "Somebody moved me!" string
+            const char* sessionStats;           // "Session stats" string
             const char* lasted;                 // "Lasted" string
             const char* tracksPlayed;           // "Tracks played" string
         };
@@ -253,11 +258,12 @@ namespace Bot
 
         /// @brief Create session end message
         /// @param strings Locale's session end strings
+        /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
         /// @throw std::invalid_argument if reason is unknown
         /// @return Normal message
-        static dpp::message EndMessage(const EndStrings& strings, EndReason reason, Session session);
+        static dpp::message EndMessage(const EndStrings& strings, const Settings& settings, EndReason reason, Session session);
 
     public:
         /// @brief Get locale type
@@ -488,10 +494,11 @@ namespace Bot
         virtual inline dpp::message playError(const std::string& videoTitle) = 0;
 
         /// @brief Create session end message
+        /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
         /// @return Normal message
-        virtual inline dpp::message sessionEnd(EndReason reason, Session session) = 0;
+        virtual inline dpp::message sessionEnd(const Settings& settings, EndReason reason, Session session) = 0;
 
         /// @brief Create "Not playing" string
         /// @return "Not playing" string
