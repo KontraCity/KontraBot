@@ -415,6 +415,15 @@ void Bot::Player::updateTextChannel(dpp::snowflake channelId)
     m_session.textChannelId = channelId;
 }
 
+
+void Bot::Player::updateTimeout(const Info& info)
+{
+    std::lock_guard lock(m_mutex);
+    m_timeout.setTimeoutDuration(info.settings().timeoutMinutes * 60);
+    if (m_timeout.enabled())
+        m_timeout.reset();
+}
+
 void Bot::Player::updateVoiceStatus(const Info& info)
 {
     std::lock_guard lock(m_mutex);

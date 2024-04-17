@@ -105,7 +105,8 @@ namespace Bot
             const char* nothingIsPlaying;       // "Nothing is playing. Go ahead and add something to queue!" string
             const char* videoRequestedBy;       // "Video requested by {}:" string
             const char* playlistRequestedBy;    // "Playlist requested by {}:" string
-            const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" <newline> "Requested by {}" string
+            const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" string
+            const char* requestedBy;            // "Requested by {}" string
             const char* lastVideoPlaylistInfo;  // "Playlist by {}" <newline> "Last video is playing" string
             const char* playlistInfo;           // "Playlist by {}" <newline> "{} video{} left" string
             const char* morePlaylistVideos;     // "... {} more video{}" string
@@ -115,8 +116,8 @@ namespace Bot
             const char* queueIsEmpty;           // "Queue is empty" string
             const char* queueInfo;              // "Queue: {} item{}" string
             const char* moreQueueItems;         // "... {} more item{}" string
-            const char* queueVideoInfo;         // "Video by {}, [{}]" <newline> "Requested by {}" string
-            const char* queuePlaylistInfo;      // "Playlist by {}, [{} video{}]" <newline> "Requested by {}" string
+            const char* queueVideoInfo;         // "Video by {}, [{}]" string
+            const char* queuePlaylistInfo;      // "Playlist by {}, [{} video{}]" string
         };
 
         struct SettingsStrings

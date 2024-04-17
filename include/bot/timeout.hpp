@@ -38,6 +38,10 @@ namespace Bot
 
         ~Timeout();
 
+        /// @brief Set new timeout duration
+        /// @param Timeout duration in seconds
+        void setTimeoutDuration(uint64_t timeoutDuration);
+
         /// @brief Check if timeout is enabled
         /// @return True if enabled
         bool enabled() const;

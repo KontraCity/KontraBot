@@ -64,14 +64,17 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
         Utility::NiceString(session.playingVideo->video.duration()),
         Utility::NiceString(session.playingVideo->video.uploadDate()),
         Utility::NiceString(session.playingVideo->video.viewCount()),
-        cardinalFunction(session.playingVideo->video.viewCount()),
-        session.playingRequester->format_username()
-    ) + "\n\n";
+        cardinalFunction(session.playingVideo->video.viewCount())
+    );
 
     size_t itemsShown = 0;
     if (!session.playingPlaylist)
     {
-        std::string oldDescription = embed.description;
+        std::string oldDescription = fmt::format(
+            "{}\n{}\n\n",
+            embed.description,
+            fmt::format(strings.requestedBy, session.playingRequester->format_username())
+        );
         embed.description = fmt::format(
             "**[{}]({})**\n",
             session.playingVideo->video.title(),
@@ -103,7 +106,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
                     iterator->title(),
                     iterator.watchUrl()
                 ) + embed.description + fmt::format(
-                    ">>> **[{}]({})**\n",
+                    "\n\n>>> **[{}]({})**\n",
                     session.playingPlaylist->playlist.title(),
                     session.playingPlaylist->playlist.viewUrl()
                 ) + fmt::format(
@@ -130,7 +133,10 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
                 ) + fmt::format(
                     strings.lastVideoPlaylistInfo,
                     session.playingPlaylist->playlist.author()
-                ) + '\n';
+                ) + fmt::format(
+                    "\n{}\n",
+                    fmt::format(strings.requestedBy, session.playingRequester->format_username())
+                );
             }
         }
         else
@@ -158,7 +164,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
 
             size_t videosLeft = session.playingPlaylist->playlist.videoCount() - iterator.index();
             embed.description += fmt::format(
-                ">>> **[{}]({})**\n",
+                "\n\n>>> **[{}]({})**\n",
                 session.playingPlaylist->playlist.title(),
                 session.playingPlaylist->playlist.viewUrl()
             ) + fmt::format(
@@ -166,7 +172,10 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
                 session.playingPlaylist->playlist.author(),
                 Utility::NiceString(videosLeft),
                 cardinalFunction(videosLeft)
-            ) + '\n';
+            ) + fmt::format(
+                "\n{}\n",
+                fmt::format(strings.requestedBy, session.playingRequester->format_username())
+            );
 
             for (; iterator; ++iterator, ++itemsShown)
             {
@@ -265,7 +274,9 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
                     ), fmt::format(
                         strings.queueVideoInfo,
                         video.author(),
-                        Utility::NiceString(video.duration()),
+                        Utility::NiceString(video.duration())
+                    ) + '\n' + fmt::format(
+                        strings.requestedBy,
                         item.requester.format_username()
                     ));
                     break;
@@ -281,7 +292,9 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
                         strings.queuePlaylistInfo,
                         playlist.author(),
                         Utility::NiceString(playlist.videoCount()),
-                        cardinalFunction(playlist.videoCount()),
+                        cardinalFunction(playlist.videoCount())
+                    ) + '\n' + fmt::format(
+                        strings.requestedBy,
                         item.requester.format_username()
                     ));
                     break;

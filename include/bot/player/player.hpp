@@ -147,6 +147,10 @@ namespace Bot
         /// @param channelId Text channel ID
         void updateTextChannel(dpp::snowflake channelId);
 
+        /// @brief Update player's timeout
+        /// @param info Guild's info
+        void updateTimeout(const Info& info);
+
         /// @brief Update voice channel status
         /// @param info Guild's info
         void updateVoiceStatus(const Info& info);

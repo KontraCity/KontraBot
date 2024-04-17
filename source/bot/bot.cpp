@@ -449,6 +449,8 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 }
 
                 info.settings().timeoutMinutes = timeoutDuration;
+                if (playerEntry != m_players.end())
+                    playerEntry->second.updateTimeout(info);
                 event.reply(info.settings().locale->timeoutDurationSet(timeoutDuration));
                 m_logger.info(logMessage(fmt::format("Timeout duration is set to {}", Utility::NiceString(pt::time_duration(0, timeoutDuration, 0)))));
                 return;
@@ -760,6 +762,13 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             {
                 event.reply(info.settings().locale->nothingIsPlaying());
                 m_logger.info(logMessage("Nothing is playing"));
+                return;
+            }
+
+            if (session.queue.empty())
+            {
+                event.reply(info.settings().locale->queueIsEmpty());
+                m_logger.info(logMessage("Queue is empty"));
                 return;
             }
 

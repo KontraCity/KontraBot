@@ -78,9 +78,9 @@ namespace Bot
             strings.playlistRequestedBy = u8"Плейлист запрошен пользователем {}:";
             strings.videoInfo = {
                 u8"от {}, [{}]\n"
-                u8"{}, {} просмотр{}\n"
-                u8"Запросил **{}**"
+                u8"{}, {} просмотр{}"
             };
+            strings.requestedBy = u8"Запросил **{}**";
             strings.lastVideoPlaylistInfo = {
                 u8"Плейлист от {}\n"
                 u8"Играет последнее видео"
@@ -102,14 +102,8 @@ namespace Bot
             strings.queueIsEmpty = u8"Очередь пуста";
             strings.queueInfo = u8"Очередь: {} видео/плейлист{}";
             strings.moreQueueItems = u8"... Ещё {} видео/плейлист{}";
-            strings.queueVideoInfo = {
-                u8"Видео от {}, [{}]\n"
-                u8"Запросил **{}**"
-            };
-            strings.queuePlaylistInfo = {
-                u8"Плейлист от {}, [{} видео{:.0}]\n"
-                u8"Запросил **{}**"
-            };
+            strings.queueVideoInfo = u8"Видео от {}, [{}]";
+            strings.queuePlaylistInfo = u8"Плейлист от {}, [{} видео{:.0}]";
             return SessionMessage(strings, &Cardinal, session);
         }
 
