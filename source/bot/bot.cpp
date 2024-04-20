@@ -142,6 +142,11 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
         m_logger.error(logMessage(fmt::format("Runtime error: {}", error.what())));
         return info.settings().locale->unknownError();
     }
+    catch (const std::exception& error)
+    {
+        m_logger.error(logMessage(fmt::format("Unknown error: {}", error.what())));
+        return info.settings().locale->unknownError();
+    }
     catch (...)
     {
         m_logger.error(logMessage("Unknown error"));
@@ -153,7 +158,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
     : cluster(config->discordBotApiToken())
     , m_logger("bot", std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
 {
-    using namespace Commands;
+    using namespace CommandsConst;
 
     on_log([this, registerCommands](const dpp::log_t& event)
     {
@@ -161,15 +166,32 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         switch (event.severity)
         {
             case dpp::ll_warning:
-                if (!registerCommands)
-                    logger.warn(event.message);
+            {
+                /* Filtering needless warnings */
+                if (event.message.find("You have attached an event to cluster::on_message_create()") != std::string::npos)
+                    break;
+                if (registerCommands && event.message.find("Shard terminating due to cluster shutdown") != std::string::npos)
+                    break;
+                if (event.message.find("Remote site requested reconnection") != std::string::npos)
+                    break;
+                if (event.message.find("Terminating voice connection") != std::string::npos)
+                    break;
+                if (event.message.find("Success") != std::string::npos)
+                    break;
+
+                logger.warn(event.message);
                 break;
+            }
             case dpp::ll_error:
+            {
                 logger.error(event.message);
                 break;
+            }
             case dpp::ll_critical:
+            {
                 logger.critical(event.message);
                 break;
+            }
         }
     });
 
@@ -179,85 +201,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         {
             if (dpp::run_once<struct RegisterCommands>())
             {
-                using namespace Commands;
-                std::vector<dpp::slashcommand> commands;
-
-                /* /session */
-                commands.push_back(dpp::slashcommand(Commands::Session::Name, Commands::Session::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Session::Name, Russian::Session::Description));
-
-                /* /settings */
-                commands.push_back(dpp::slashcommand(Commands::Settings::Name, Commands::Settings::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Settings::Name, Russian::Settings::Description));
-
-                /* /stats */
-                commands.push_back(dpp::slashcommand(Commands::Stats::Name, Commands::Stats::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Stats::Name, Russian::Stats::Description));
-
-                /* /set language, /set timeout, /set change-status */
-                commands.push_back(dpp::slashcommand(Set::Name, "-", me.id)
-                    .add_localization(Russian::LocaleName, Russian::Set::Name, "-")
-                    .add_option(dpp::command_option(dpp::co_sub_command, Set::Language::Name, Set::Language::Description)
-                        .add_localization(Russian::LocaleName, Russian::Set::Language::Name, Russian::Set::Language::Description)
-                        .add_option(dpp::command_option(dpp::co_string, Set::Language::Language::Name, Set::Language::Language::Description, true)
-                            .add_localization(Russian::LocaleName, Russian::Set::Language::Language::Name, Russian::Set::Language::Language::Description)
-                            .add_choice(dpp::command_option_choice(Set::Language::Language::Label, std::string(Set::Language::Language::Id)))
-                            .add_choice(dpp::command_option_choice(Russian::Set::Language::Language::Label, std::string(Russian::Set::Language::Language::Id)))))
-                    .add_option(dpp::command_option(dpp::co_sub_command, Set::Timeout::Name, Set::Timeout::Description)
-                        .add_localization(Russian::LocaleName, Russian::Set::Timeout::Name, Russian::Set::Timeout::Description)
-                        .add_option(dpp::command_option(dpp::co_integer, Set::Timeout::Duration::Name, Set::Timeout::Duration::Description, true)
-                            .add_localization(Russian::LocaleName, Russian::Set::Timeout::Duration::Name, Russian::Set::Timeout::Duration::Description)))
-                    .add_option(dpp::command_option(dpp::co_sub_command, Set::ChangeStatus::Name, Set::ChangeStatus::Description)
-                       .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Name, Russian::Set::ChangeStatus::Description)
-                       .add_option(dpp::command_option(dpp::co_boolean, Set::ChangeStatus::Change::Name, Set::ChangeStatus::Change::Description, true)
-                           .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Change::Name, Russian::Set::ChangeStatus::Change::Description))));
-
-                /* /join */
-                commands.push_back(dpp::slashcommand(Join::Name, Join::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Join::Name, Russian::Join::Description));
-
-                /* /leave */
-                commands.push_back(dpp::slashcommand(Leave::Name, Leave::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Leave::Name, Russian::Leave::Description));
-
-                /* /play <what> */
-                commands.push_back(dpp::slashcommand(Play::Name, Play::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Play::Name, Russian::Play::Description)
-                    .add_option(dpp::command_option(dpp::co_string, Play::What::Name, Play::What::Description, true)
-                        .add_localization(Russian::LocaleName, Russian::Play::What::Name, Russian::Play::What::Description)
-                        .set_auto_complete(true)));
-
-                /* /pause */
-                commands.push_back(dpp::slashcommand(Pause::Name, Pause::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Pause::Name, Russian::Pause::Description));
-
-                /* /seek <timestamp-chapter> */
-                commands.push_back(dpp::slashcommand(Seek::Name, Seek::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Seek::Name, Russian::Seek::Description)
-                    .add_option(dpp::command_option(dpp::co_string, Seek::TimestampChapter::Name, Seek::TimestampChapter::Description, true)
-                        .add_localization(Russian::LocaleName, Russian::Seek::TimestampChapter::Name, Russian::Seek::TimestampChapter::Description)
-                        .set_auto_complete(true)));
-
-                /* /shuffle */
-                commands.push_back(dpp::slashcommand(Shuffle::Name, Shuffle::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Shuffle::Name, Russian::Shuffle::Description));
-
-                /* /skip video, /skip playlist */
-                commands.push_back(dpp::slashcommand(Skip::Name, "-", me.id)
-                    .add_localization(Russian::LocaleName, Russian::Skip::Name, "-")
-                    .add_option(dpp::command_option(dpp::co_sub_command, Skip::Video::Name, Skip::Video::Description)
-                        .add_localization(Russian::LocaleName, Russian::Skip::Video::Name, Russian::Skip::Video::Description))
-                    .add_option(dpp::command_option(dpp::co_sub_command, Skip::Playlist::Name, Skip::Playlist::Description)
-                        .add_localization(Russian::LocaleName, Russian::Skip::Playlist::Name, Russian::Skip::Playlist::Description)));
-
-                /* /clear */
-                commands.push_back(dpp::slashcommand(Clear::Name, Clear::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Clear::Name, Russian::Clear::Description));
-
-                /* /stop */
-                commands.push_back(dpp::slashcommand(Stop::Name, Stop::Description, me.id)
-                    .add_localization(Russian::LocaleName, Russian::Stop::Name, Russian::Stop::Description));
-
+                std::vector<dpp::slashcommand> commands = Commands::GetCommands(me.id);
                 m_logger.info("Registering {} slashcommand{}...", commands.size(), LocaleEn::Cardinal(commands.size()));
                 global_bulk_command_create(commands);
             }
@@ -271,35 +215,71 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
     {
         if (dpp::run_once<struct ReadyMessage>())
         {
-            m_logger.info("Ready");
-            current_user_get_guilds([this](const dpp::confirmation_callback_t& event)
+            global_commands_get([this](const dpp::confirmation_callback_t& event)
             {
                 if (event.is_error())
                 {
-                    m_logger.error("Couldn't get bot guilds");
+                    m_logger.critical("Couldn't get bot commands");
                     return;
                 }
 
-                const dpp::guild_map& guilds = std::get<dpp::guild_map>(event.value);
-                switch (guilds.size())
+                try
                 {
-                    case 0:
+                    const dpp::slashcommand_map& commands = std::get<dpp::slashcommand_map>(event.value);
+                    Commands::Instance->parse(commands);
+                }
+                catch (const std::runtime_error& error)
+                {
+                    m_logger.critical("Couldn't parse bot commands: {}", error.what());
+                    return;
+                }
+
+                m_logger.info("Ready");
+                current_user_get_guilds([this](const dpp::confirmation_callback_t& event)
+                {
+                    if (event.is_error())
+                    {
+                        m_logger.error("Couldn't get bot guilds");
+                        return;
+                    }
+
+                    const dpp::guild_map& guilds = std::get<dpp::guild_map>(event.value);
+                    if (guilds.empty())
+                    {
                         m_logger.info("No guilds are served");
                         return;
-                    case 1:
+                    }
+                    else if (guilds.size() == 1)
+                    {
                         m_logger.info(
                             "Serving 1 guild: \"{}\" [{}]",
                             guilds.cbegin()->second.name,
                             static_cast<uint64_t>(guilds.cbegin()->second.id)
                         );
                         return;
-                }
+                    }
 
-                m_logger.info("Serving {} guilds:", guilds.size());
-                for (const auto& guild : guilds)
-                    m_logger.info(" \"{}\" [{}]", guild.second.name, static_cast<uint64_t>(guild.second.id));
+                    m_logger.info("Serving {} guilds:", guilds.size());
+                    for (const auto& guild : guilds)
+                        m_logger.info(" \"{}\" [{}]", guild.second.name, static_cast<uint64_t>(guild.second.id));
+                });
             });
         }
+    });
+
+    on_message_create([this](const dpp::message_create_t& event)
+    {
+        if (event.msg.content.empty() || event.msg.content.find(fmt::format("<@{}>", me.id)) == std::string::npos)
+            return;
+
+        dpp::guild* guild = dpp::find_guild(event.msg.guild_id);
+        event.reply(Info(guild->id).settings().locale->mention());
+        m_logger.info(
+            "\"{}\" / \"{}\": Message: \"{}\", replying to mention",
+            guild->name,
+            event.msg.author.format_username(),
+            event.msg.content
+        );
     });
 
     on_slashcommand([this](const dpp::slashcommand_t& event)
@@ -390,7 +370,14 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             );
         };
 
-        if (interaction.name == Commands::Session::Name)
+        if (interaction.name == CommandsConst::Help::Name)
+        {
+            event.reply(info.settings().locale->help());
+            m_logger.info(logMessage("Showing help"));
+            return;
+        }
+
+        if (interaction.name == CommandsConst::Session::Name)
         {
             if (playerEntry == m_players.end())
             {
@@ -404,14 +391,14 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             return;
         }
 
-        if (interaction.name == Commands::Settings::Name)
+        if (interaction.name == CommandsConst::Settings::Name)
         {
             event.reply(info.settings().locale->settings(info.settings()));
             m_logger.info(logMessage("Showing guild's settings"));
             return;
         }
 
-        if (interaction.name == Commands::Stats::Name)
+        if (interaction.name == CommandsConst::Stats::Name)
         {
             event.reply(info.settings().locale->stats(info.stats()));
             m_logger.info(logMessage("Showing guild's stats"));
@@ -627,13 +614,13 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
                     if (timestamp > session.playingVideo->video.duration())
                     {
-                        event.reply(info.settings().locale->timestampOutOfBounds(session.playingVideo->video.title(), session.playingVideo->video.duration()));
+                        event.reply(info.settings().locale->timestampOutOfBounds(session.playingVideo->video));
                         m_logger.info(logMessage("Seek timestamp is out of bounds"));
                         return;
                     }
 
                     playerEntry->second.seek(timestamp.total_seconds(), info);
-                    event.reply(info.settings().locale->seeking(session.playingVideo->video.title(), timestamp, playerEntry->second.paused()));
+                    event.reply(info.settings().locale->seeking(session.playingVideo->video, timestamp, playerEntry->second.paused()));
                     m_logger.info(logMessage(fmt::format("Seeking \"{}\" to {}", session.playingVideo->video.title(), Utility::NiceString(timestamp))));
                     return;
                 }
@@ -648,7 +635,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
             if (session.playingVideo->video.chapters().empty())
             {
-                event.reply(info.settings().locale->noChapters(session.playingVideo->video.title()));
+                event.reply(info.settings().locale->noChapters(session.playingVideo->video));
                 m_logger.info(logMessage(fmt::format("Video \"{}\" has no chapters", session.playingVideo->video.title())));
                 return;
             }
@@ -659,9 +646,8 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 {
                     playerEntry->second.seek(chapter.timestamp.total_seconds(), info);
                     event.reply(info.settings().locale->seeking(
-                        playerEntry->second.session().playingVideo->video.title(),
-                        chapter.name,
-                        chapter.timestamp,
+                        session.playingVideo->video,
+                        chapter,
                         playerEntry->second.paused()
                     ));
                     m_logger.info(logMessage(fmt::format("Seeking \"{}\" to {}", session.playingVideo->video.title(), Utility::NiceString(chapter.timestamp))));
@@ -669,7 +655,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 }
             }
 
-            event.reply(info.settings().locale->unknownChapter(session.playingVideo->video.title()));
+            event.reply(info.settings().locale->unknownChapter(session.playingVideo->video));
             m_logger.info(logMessage(fmt::format("Video \"{}\" doesn't have such chapter", session.playingVideo->video.title())));
             return;
         }
@@ -1079,7 +1065,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 event.reply(addItem(event.from, event.command, signal.data(), logMessage, info, true));
                 break;
             default:
-                event.reply(info.settings().locale->unknownOption());
+                event.reply(info.settings().locale->unknownButton());
                 m_logger.error(logMessage("Unknown select option"));
                 break;
         }

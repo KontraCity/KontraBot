@@ -33,9 +33,9 @@ namespace kc {
 }
 
 // Custom kc::Bot modules
-#include "bot/info/info.hpp"
-#include "bot/player/session.hpp"
 #include "bot/bot.hpp"
+#include "bot/info.hpp"
+#include "bot/session.hpp"
 #include "bot/signal.hpp"
 #include "bot/timeout.hpp"
 

@@ -19,27 +19,74 @@ Bot::Locale::Pointer Bot::Locale::Create(const std::string localeName)
     return Create(LocaleEn::Type);
 }
 
-dpp::message Bot::Locale::SuccessMessage(const std::string& string)
+dpp::message Bot::Locale::GenericMessage(uint32_t color, const char* emoji, const std::string& string, bool ephemeral)
 {
     dpp::embed embed;
-    embed.color = Colors::Success;
-    embed.description = fmt::format("{} {}", Emojis::Success, string);
-    return dpp::message().add_embed(embed);
+    embed.color = color;
+    embed.description = fmt::format("{} **{}**", emoji, string);
+    return dpp::message().add_embed(embed).set_flags(ephemeral ? dpp::m_ephemeral : 0);
+}
+
+dpp::message Bot::Locale::SuccessMessage(const std::string& string)
+{
+    return GenericMessage(Colors::Success, Emojis::Success, string, false);
+}
+
+dpp::message Bot::Locale::QuestionMessage(const std::string& string)
+{
+    return GenericMessage(Colors::Question, Emojis::Question, string, true);
 }
 
 dpp::message Bot::Locale::ProblemMessage(const std::string& string)
 {
-    dpp::embed embed;
-    embed.color = Colors::Problem;
-    embed.description = fmt::format("{} {}", Emojis::Problem, string);
-    return dpp::message().add_embed(embed).set_flags(dpp::m_ephemeral);
+    return GenericMessage(Colors::Problem, Emojis::Problem, string, true);
 }
 
 dpp::message Bot::Locale::ErrorMessage(const std::string& string)
 {
+    return GenericMessage(Colors::Error, Emojis::Error, string, true);
+}
+
+dpp::message Bot::Locale::MentionReplyMessage(const MentionReplyStrings& strings)
+{
     dpp::embed embed;
-    embed.color = Colors::Error;
-    embed.description = fmt::format("{} {}", Emojis::Error, string);
+    embed.color = Colors::Success;
+    embed.description = fmt::format(strings.ifYouNeedAnyHelp, Utility::NiceString(Commands::Instance->help()));
+    embed.add_field("", fmt::format(strings.differentLanguagesHint, Utility::NiceString(Commands::Instance->set(), Commands::Instance->set().options[0])));
+    return dpp::message().add_embed(embed);
+}
+
+dpp::message Bot::Locale::HelpMessage(const HelpStrings& strings)
+{
+    dpp::embed embed;
+    embed.color = Colors::Success;
+    embed.description = fmt::format("{} **{}**:", Emojis::Success, strings.hereAreAllOfMyCommands), "";
+    embed.add_field("", fmt::format(strings.differentLanguagesHint, Utility::NiceString(Commands::Instance->set(), Commands::Instance->set().options[0])));
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->help()), strings.helpDescription), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->session()), strings.sessionDescription), strings.sessionFaq);
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->settings()), strings.settingsDescription), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->stats()), strings.statsDescription), "");
+    embed.add_field(fmt::format(
+        "{}, {}, {}\n{}",
+        Utility::NiceString(Commands::Instance->set(), Commands::Instance->set().options[0]),
+        Utility::NiceString(Commands::Instance->set(), Commands::Instance->set().options[1]),
+        Utility::NiceString(Commands::Instance->set(), Commands::Instance->set().options[2]),
+        strings.setDescription
+    ), strings.setFaq);
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->join()), strings.joinDescription), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->leave()), strings.leaveDescription), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->play()), strings.playDescription), strings.playFaq);
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->pause()), strings.pauseDescription), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->seek()), strings.seekDescription), strings.seekFaq);
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->shuffle()), strings.shuffleDescription), "");
+    embed.add_field(fmt::format(
+        "{}, {}\n{}",
+        Utility::NiceString(Commands::Instance->skip(), Commands::Instance->skip().options[0]),
+        Utility::NiceString(Commands::Instance->skip(), Commands::Instance->skip().options[1]),
+        strings.skipDescription
+    ), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->clear()), strings.clearDescription), "");
+    embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->stop()), strings.stopDescription), "");
     return dpp::message().add_embed(embed).set_flags(dpp::m_ephemeral);
 }
 
@@ -52,8 +99,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
 
     if (!session.playingVideo)
     {
-        embed.description = fmt::format("{} **{}**", Emojis::Boring, strings.prettyQuiet);
-        embed.add_field(strings.nothingIsPlaying, "");
+        embed.add_field(fmt::format("{} **{}**", Emojis::Boring, strings.prettyQuiet), strings.nothingIsPlaying);
         return message;
     }
 
@@ -310,10 +356,10 @@ dpp::message Bot::Locale::SettingsMessage(const SettingsStrings& strings, const 
 {
     dpp::embed embed;
     embed.color = Colors::Success;
-    embed.description = fmt::format("{} {}:\n\n", Emojis::Success, strings.hereAreTheSettings);
-    embed.description += fmt::format("{}: `{}`\n", strings.language, settings.locale->longName());
-    embed.description += fmt::format("{}: `{}`\n", strings.timeoutDuration, Utility::NiceString(pt::time_duration(0, settings.timeoutMinutes, 0)));
-    embed.description += fmt::format("{}? `{}`", strings.changeStatus, settings.changeStatus ? strings.yes : strings.no);
+    embed.add_field(fmt::format("{} {}:", Emojis::Success, strings.hereAreTheSettings), "");
+    embed.fields[0].value = fmt::format("{}: **`{}`**\n", strings.language, settings.locale->longName());
+    embed.fields[0].value += fmt::format("{}: **`{}`**\n", strings.timeoutDuration, Utility::NiceString(pt::time_duration(0, settings.timeoutMinutes, 0)));
+    embed.fields[0].value += fmt::format("{}: **`{}`**", strings.changeStatus, settings.changeStatus ? strings.yes : strings.no);
     return dpp::message().add_embed(embed);
 }
 
@@ -321,23 +367,19 @@ dpp::message Bot::Locale::StatsMessage(const StatsStrings& strings, const Stats&
 {
     dpp::embed embed;
     embed.color = Colors::Success;
-    embed.description = fmt::format("{} {}\n\n", Emojis::Success, strings.hereAreTheStats);
-    embed.description += fmt::format("{}: `{}`\n", strings.interactionsProcessed, Utility::NiceString(stats.interactionsProcessed));
-    embed.description += fmt::format("{}: `{}`\n", strings.sessionsCount, Utility::NiceString(stats.sessionsCount));
-    embed.description += fmt::format("{}: `{}`", strings.tracksPlayed, Utility::NiceString(stats.tracksPlayed));
+    embed.add_field(fmt::format("{} {}:", Emojis::Success, strings.hereAreTheStats), "");
+    embed.fields[0].value = fmt::format("{}: **`{}`**\n", strings.interactionsProcessed, Utility::NiceString(stats.interactionsProcessed));
+    embed.fields[0].value += fmt::format("{}: **`{}`**\n", strings.sessionsCount, Utility::NiceString(stats.sessionsCount));
+    embed.fields[0].value += fmt::format("{}: **`{}`**", strings.tracksPlayed, Utility::NiceString(stats.tracksPlayed));
     if (stats.timesKicked)
-        embed.description += fmt::format("\n{}: `{}`", strings.timesKicked, Utility::NiceString(stats.timesKicked));
+        embed.fields[0].value += fmt::format("\n{}: **`{}`**", strings.timesKicked, Utility::NiceString(stats.timesKicked));
     if (stats.timesMoved)
-        embed.description += fmt::format("\n{}: `{}`", strings.timesMoved, Utility::NiceString(stats.timesMoved));
+        embed.fields[0].value += fmt::format("\n{}: **`{}`**", strings.timesMoved, Utility::NiceString(stats.timesMoved));
     return dpp::message().add_embed(embed);
 }
 
 dpp::message Bot::Locale::AmbiguousPlayMessage(const AmbigousPlayStrings& strings, const std::string& videoId, const std::string& playlistId)
 {
-    dpp::embed embed;
-    embed.color = Colors::Question;
-    embed.description = fmt::format("{} {}", Emojis::Question, strings.playPlaylistOrVideo);
-
     dpp::component playVideoButton;
     playVideoButton.type = dpp::cot_button;
     playVideoButton.style = dpp::cos_danger;
@@ -355,28 +397,26 @@ dpp::message Bot::Locale::AmbiguousPlayMessage(const AmbigousPlayStrings& string
     dpp::component buttonComponent;
     buttonComponent.add_component(playVideoButton);
     buttonComponent.add_component(playPlaylistButton);
-    return dpp::message().add_embed(embed).add_component(buttonComponent).set_flags(dpp::m_ephemeral);
+    return QuestionMessage(strings.playPlaylistOrVideo).add_component(buttonComponent);
 }
 
 dpp::message Bot::Locale::ItemAddedMessage(const ItemAddedStrings& strings, const Youtube::Item& item, CardinalFunction cardinalFunction, const std::optional<dpp::user>& requester)
 {
-    dpp::embed embed;
-    embed.color = Colors::Success;
-    if (requester)
-    {
-        embed.set_author(fmt::format(
-            strings.requestedBy,
-            requester->format_username()
-        ), "", requester->get_avatar_url());
-    }
-
-    dpp::component buttonComponent;
     switch (item.type())
     {
         case Youtube::Item::Type::Video:
         {
+            dpp::message message = SuccessMessage(strings.videoAdded);
+            dpp::embed& embed = message.embeds[0];
+            if (requester)
+            {
+                embed.set_author(fmt::format(
+                    strings.requestedBy,
+                    requester->format_username()
+                ), "", requester->get_avatar_url());
+            }
+
             const Youtube::Video& video = std::get<Youtube::Video>(item);
-            embed.description = fmt::format("{} {}", Emojis::Success, strings.videoAdded);
             embed.add_field(fmt::format("{} [{}]", video.title(), Utility::NiceString(video.duration())), "");
             embed.thumbnail = { video.thumbnailUrl() };
 
@@ -386,7 +426,6 @@ dpp::message Bot::Locale::ItemAddedMessage(const ItemAddedStrings& strings, cons
             playAgainButton.label = strings.playAgain;
             playAgainButton.set_emoji(Emojis::Play);
             playAgainButton.set_id(Signal(Signal::Type::PlayVideo, video.id()));
-            buttonComponent.add_component(playAgainButton);
 
             dpp::component relatedButton;
             relatedButton.type = dpp::cot_button;
@@ -394,20 +433,32 @@ dpp::message Bot::Locale::ItemAddedMessage(const ItemAddedStrings& strings, cons
             relatedButton.label = strings.related;
             relatedButton.set_emoji(Emojis::Search);
             relatedButton.set_id(Signal(Signal::Type::RelatedSearch, video.id()));
-            buttonComponent.add_component(relatedButton);
 
             dpp::component youtubeButton;
             youtubeButton.type = dpp::cot_button;
             youtubeButton.style = dpp::cos_link;
             youtubeButton.label = strings.youtube;
             youtubeButton.url = video.watchUrl();
+
+            dpp::component buttonComponent;
+            buttonComponent.add_component(playAgainButton);
+            buttonComponent.add_component(relatedButton);
             buttonComponent.add_component(youtubeButton);
-            return dpp::message().add_embed(embed).add_component(buttonComponent);
+            return message.add_component(buttonComponent);
         }
         case Youtube::Item::Type::Playlist:
         {
+            dpp::message message = SuccessMessage(strings.playlistAdded);
+            dpp::embed& embed = message.embeds[0];
+            if (requester)
+            {
+                embed.set_author(fmt::format(
+                    strings.requestedBy,
+                    requester->format_username()
+                ), "", requester->get_avatar_url());
+            }
+
             const Youtube::Playlist& playlist = std::get<Youtube::Playlist>(item);
-            embed.description = fmt::format("{} {}", Emojis::Success, strings.playlistAdded);
             embed.add_field(fmt::format(strings.playlistInfo, playlist.title(), Utility::NiceString(playlist.videoCount()), cardinalFunction(playlist.videoCount())), "");
             embed.thumbnail = { playlist.thumbnailUrl() };
 
@@ -417,19 +468,26 @@ dpp::message Bot::Locale::ItemAddedMessage(const ItemAddedStrings& strings, cons
             playAgainButton.label = strings.playAgain;
             playAgainButton.set_emoji(Emojis::Play);
             playAgainButton.set_id(Signal(Signal::Type::PlayPlaylist, playlist.id()));
-            buttonComponent.add_component(playAgainButton);
 
             dpp::component youtubeButton;
             youtubeButton.type = dpp::cot_button;
             youtubeButton.style = dpp::cos_link;
             youtubeButton.label = strings.youtube;
             youtubeButton.url = playlist.viewUrl();
+
+            dpp::component buttonComponent;
+            buttonComponent.add_component(playAgainButton);
             buttonComponent.add_component(youtubeButton);
-            return dpp::message().add_embed(embed).add_component(buttonComponent);
+            return message.add_component(buttonComponent);
+        }
+        default:
+        {
+            throw std::runtime_error(fmt::format(
+                "kc::Bot::Locale::ItemAddedMessage(): Item type is unknown [item: {}]",
+                static_cast<int>(item.type())
+            ));
         }
     }
-
-    throw std::invalid_argument("kc::Bot::Locale::ItemAddedMessage(): Item is empty");
 }
 
 dpp::message Bot::Locale::SearchMessage(const SearchStrings& strings, CardinalFunction cardinalFunction, const Youtube::Results& results)
@@ -489,6 +547,8 @@ dpp::message Bot::Locale::SearchMessage(const SearchStrings& strings, CardinalFu
                 ), 100);
                 break;
             }
+            default:
+                continue;
         }
         itemSelectMenu.add_select_option(option);
     }
@@ -564,9 +624,16 @@ dpp::command_option_choice Bot::Locale::ItemAutocompleteChoice(const ItemAutocom
                 itemDescription
             ), playlist.viewUrl());
         }
+        default:
+        {
+            throw std::runtime_error(fmt::format(
+                "kc::Bot::Locale::ItemAutocompleteChoice(): Item is type is unknown [type: {}]",
+                static_cast<int>(item.type())
+            ));
+        }
     }
 
-    throw std::invalid_argument("kc::Bot::Locale::ItemAutocompleteChoice(): Item is empty");
+
 }
 
 dpp::message Bot::Locale::EndMessage(const EndStrings& strings, const Settings& settings, EndReason reason, Session session)
@@ -590,7 +657,10 @@ dpp::message Bot::Locale::EndMessage(const EndStrings& strings, const Settings& 
         {
             embed.color = Colors::End;
             embed.title = strings.timeout;
-            embed.description = strings.timeoutCanBeChanged;
+            embed.description = fmt::format(
+                strings.timeoutCanBeChanged,
+                Utility::NiceString(Commands::Instance->set(),Commands::Instance->set().options[1])
+            );
             break;
         }
         case EndReason::EverybodyLeft:
@@ -617,18 +687,21 @@ dpp::message Bot::Locale::EndMessage(const EndStrings& strings, const Settings& 
         }
         default:
         {
-            throw std::invalid_argument("kc::Bot::Locale::EndMessage(): Reason is unknown");
+            throw std::runtime_error(fmt::format(
+                "kc::Bot::Locale::EndMessage(): Reason is unknown [reason: {}]",
+                static_cast<int>(reason)
+            ));
         }
     }
 
     embed.add_field(strings.sessionStats, "");
     embed.fields[0].value += fmt::format(
-        "{} `{}`\n",
+        "{} **`{}`**\n",
         strings.lasted,
         Utility::NiceString(session.startTimestamp.is_not_a_date_time() ? pt::time_duration() : pt::second_clock::local_time() - session.startTimestamp)
     );
     embed.fields[0].value += fmt::format(
-        "{}: `{}`\n",
+        "{}: **`{}`**\n",
         strings.tracksPlayed,
         Utility::NiceString(session.tracksPlayed)
     );

@@ -24,12 +24,12 @@ namespace kc {
 }
 
 // Custom kc::Bot modules
-#include "bot/info/info.hpp"
 #include "bot/locale/locale.hpp"
-#include "bot/player/player.hpp"
-#include "bot/player/session.hpp"
 #include "bot/commands.hpp"
 #include "bot/config.hpp"
+#include "bot/info.hpp"
+#include "bot/player.hpp"
+#include "bot/session.hpp"
 
 // Other custom modules
 #include "common/utility.hpp"

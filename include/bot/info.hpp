@@ -23,9 +23,9 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "bot/info/types.hpp"
 #include "bot/locale/locale_en.hpp"
 #include "bot/locale/locale_ru.hpp"
+#include "bot/types.hpp"
 
 namespace kc {
 

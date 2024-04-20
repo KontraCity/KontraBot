@@ -4,6 +4,9 @@
 #include <string>
 #include <random>
 
+// Library DPP
+#include <dpp/dpp.h>
+
 // Library Boost.Date_Time
 #include <boost/date_time.hpp>
 
@@ -35,6 +38,12 @@ namespace Utility
     /// @param number Number to convert
     /// @return Nice number string
     std::string NiceString(uint64_t number);
+
+    /// @brief Convert command to nice string
+    /// @param command Command to convert
+    /// @param option Command option if present
+    /// @return Nice command string
+    std::string NiceString(const dpp::slashcommand& command, const dpp::command_option& option = {});
 
     /// @brief Truncate string to limited length
     /// @param string String to truncate

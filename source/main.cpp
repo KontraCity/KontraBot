@@ -9,9 +9,9 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "bot/info/info.hpp"
 #include "bot/bot.hpp"
 #include "bot/config.hpp"
+#include "bot/info.hpp"
 using namespace kc;
 
 enum class ParseResult

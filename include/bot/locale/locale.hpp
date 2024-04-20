@@ -20,9 +20,9 @@ namespace kc {
 }
 
 // Custom kc::Bot modules
-#include "bot/info/types.hpp"
-#include "bot/player/session.hpp"
+#include "bot/session.hpp"
 #include "bot/signal.hpp"
+#include "bot/types.hpp"
 
 // Custom kc::Youtube modules
 #include "youtube/error.hpp"
@@ -38,7 +38,7 @@ namespace Bot
 {
     namespace LocaleConst
     {
-        constexpr size_t MaxSessionItemsShown = 10;
+        constexpr size_t MaxSessionItemsShown = 5;
 
         namespace Colors
         {
@@ -99,12 +99,40 @@ namespace Bot
         // Function used to get number's cardinal ending
         using CardinalFunction = const char* (*)(size_t);
 
+        struct MentionReplyStrings
+        {
+            const char* ifYouNeedAnyHelp;       // "If you need any help about how I play music, use {}" string
+            const char* differentLanguagesHint; // "I can speak different languages!" <newline> "Now its <language>" <newline> "Use {} if you need to change it" string in other language
+        };
+
+        struct HelpStrings
+        {
+            const char* hereAreAllOfMyCommands; // "Here are all of my commands" string
+            const char* differentLanguagesHint; // "I can speak different languages!" <newline> "Now its <language>" <newline> "Use {} if you need to change it" string in other language
+            const char* helpDescription;        // /help command description
+            const char* sessionDescription;     // /session command description
+            const char* sessionFaq;             // /session command FAQ
+            const char* settingsDescription;    // /settings command description
+            const char* statsDescription;       // /stats command description
+            const char* setDescription;         // /set language, /set timeout, /set change-status commands description
+            const char* setFaq;                 // /set command FAQ
+            const char* joinDescription;        // /join command description
+            const char* leaveDescription;       // /leave command description
+            const char* playDescription;        // /play command description
+            const char* playFaq;                // /play command FAQ
+            const char* pauseDescription;       // /pause command description
+            const char* seekDescription;        // /seek command description
+            const char* seekFaq;                // /seek command FAQ
+            const char* shuffleDescription;     // /shuffle command description
+            const char* skipDescription;        // /skip command description
+            const char* clearDescription;       // /clear command description
+            const char* stopDescription;        // /stop command description
+        };
+
         struct SessionStrings
         {
             const char* prettyQuiet;            // "It's pretty quiet here" string
             const char* nothingIsPlaying;       // "Nothing is playing. Go ahead and add something to queue!" string
-            const char* videoRequestedBy;       // "Video requested by {}:" string
-            const char* playlistRequestedBy;    // "Playlist requested by {}:" string
             const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" string
             const char* requestedBy;            // "Requested by {}" string
             const char* lastVideoPlaylistInfo;  // "Playlist by {}" <newline> "Last video is playing" string
@@ -181,7 +209,7 @@ namespace Bot
             const char* sessionInfo;            // "{}'s session #{} ended" string
             const char* userRequested;          // "User asked me to leave" string
             const char* timeout;                // "I was inactive" string
-            std::string timeoutCanBeChanged;    // "Timeout duration can be changed with /<set> <timeout>" string
+            const char* timeoutCanBeChanged;    // "Timeout duration can be changed with {}" string
             const char* everybodyLeft;          // "Everybody left voice channel" string
             const char* kicked;                 // "Somebody kicked me!" string
             const char* voiceStatusNotCleared;  // "Unfortunately, I was unable to clear voice status." <newline> "Discord only allows it to be modified when I'm in the voice channel." string
@@ -192,10 +220,23 @@ namespace Bot
         };
 
     protected:
+        /// @brief Create generic message
+        /// @param color Embed color
+        /// @param emoji Embed emoji
+        /// @param string Message string
+        /// @param ephemeral Whether the message should be ephemeral or not
+        /// @return Generic message
+        static dpp::message GenericMessage(uint32_t color, const char* emoji, const std::string& string, bool ephemeral);
+
         /// @brief Create success message
         /// @param string Message string
         /// @return Normal message
         static dpp::message SuccessMessage(const std::string& string);
+
+        /// @brief Create question message
+        /// @param string Message string
+        /// @return Ephemeral message
+        static dpp::message QuestionMessage(const std::string& string);
 
         /// @brief Create problem message
         /// @param string Message string
@@ -206,6 +247,16 @@ namespace Bot
         /// @param string Message string
         /// @return Ephemeral message
         static dpp::message ErrorMessage(const std::string& string);
+
+        /// @brief Create mention reply message
+        /// @param strings Locale's mention reply strings
+        /// @return Normal message
+        static dpp::message MentionReplyMessage(const MentionReplyStrings& strings);
+
+        /// @brief Create help message
+        /// @param strings Locale's help strings
+        /// @return Ephemeral message
+        static dpp::message HelpMessage(const HelpStrings& strings);
 
         /// @brief Create session message
         /// @param strings Locale's session message
@@ -238,7 +289,7 @@ namespace Bot
         /// @param item Added item
         /// @param cardinalFunction Locale's cardinal ending function
         /// @param requester User that added the item if needs to be shown in message
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
         static dpp::message ItemAddedMessage(const ItemAddedStrings& strings, const Youtube::Item& item, CardinalFunction cardinalFunction, const std::optional<dpp::user>& requester = {});
 
@@ -253,7 +304,7 @@ namespace Bot
         /// @param strings Locale's item autocomplete strings
         /// @param cardinalFunction Locale's cardinal ending function
         /// @param item Item to create autocomplete choice for
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Item autocomplete choice
         static dpp::command_option_choice ItemAutocompleteChoice(const ItemAutocompleteStrings& strings, CardinalFunction cardinalFunction, const Youtube::Item& item);
 
@@ -262,7 +313,7 @@ namespace Bot
         /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
-        /// @throw std::invalid_argument if reason is unknown
+        /// @throw std::runtime_error if reason is unknown
         /// @return Normal message
         static dpp::message EndMessage(const EndStrings& strings, const Settings& settings, EndReason reason, Session session);
 
@@ -278,6 +329,14 @@ namespace Bot
         /// @brief Get long locale name
         /// @return Long locale name
         virtual inline const char* longName() = 0;
+
+        /// @brief Create mention reply message
+        /// @return Mention reply message
+        virtual inline dpp::message mention() = 0;
+
+        /// @brief Create help message
+        /// @return Ephemeral message
+        virtual inline dpp::message help() = 0;
 
         /// @brief Create "I am not sitting in any voice channel" message
         /// @return Ephemeral message
@@ -379,7 +438,7 @@ namespace Bot
         /// @param item Added item
         /// @param paused Whether or not to display paused player warning
         /// @param requester User that added the item if needs to be shown in message
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
         virtual inline dpp::message itemAdded(const Youtube::Item& item, bool paused, const std::optional<dpp::user>& requester = {}) = 0;
 
@@ -399,35 +458,33 @@ namespace Bot
         virtual inline dpp::message paused(const Youtube::Video& video, bool paused) = 0;
 
         /// @brief Create "Duration of video <video> is only <duration>!" message
-        /// @param videoTitle Title of the video in question
-        /// @param videoDuration Duration of the video in question
+        /// @param video Playing video
         /// @return Ephemeral message
-        virtual inline dpp::message timestampOutOfBounds(const std::string& videoTitle, pt::time_duration videoDuration) = 0;
+        virtual inline dpp::message timestampOutOfBounds(const Youtube::Video& video) = 0;
 
         /// @brief Create "Seeking <video> to <timestamp>" message
-        /// @param videoTitle Seeking video title
+        /// @param video Seeking video
         /// @param timestamp Seek timestamp
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const std::string& videoTitle, pt::time_duration timestamp, bool paused) = 0;
+        virtual inline dpp::message seeking(const Youtube::Video& video, pt::time_duration timestamp, bool paused) = 0;
 
         /// @brief Create "Seeking <video> to chapter <chapter>, <timestamp>" message
-        /// @param videoTitle Seeking video title
-        /// @param name Chapter name
-        /// @param timestamp Seek timestamp
+        /// @param video Seeking video
+        /// @param chapter The chapter in question
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const std::string& videoTitle, const std::string& name, pt::time_duration timestamp, bool paused) = 0;
+        virtual inline dpp::message seeking(const Youtube::Video& video, const Youtube::Video::Chapter& chapter, bool paused) = 0;
 
         /// @brief Create "Video <video> has no chapters" message
-        /// @param videoTitle Playing video title
+        /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message noChapters(const std::string& videoTitle) = 0;
+        virtual inline dpp::message noChapters(const Youtube::Video& video) = 0;
 
         /// @brief Get "Video <video> doesn't have such chapter" message
-        /// @param videoTitle Playing video title
+        /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message unknownChapter(const std::string& videoTitle) = 0;
+        virtual inline dpp::message unknownChapter(const Youtube::Video& video) = 0;
 
         /// @brief Create "Queue is empty" message
         /// @return Ephemeral message
@@ -467,7 +524,7 @@ namespace Bot
 
         /// @brief Create item autocomplete choice
         /// @param item Item to create autocomplete choice for
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Item autocomplete choice
         virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item) = 0;
 
@@ -475,29 +532,26 @@ namespace Bot
         /// @return Ephemeral message
         virtual inline dpp::message unknownButton() = 0;
 
-        /// @brief Create "Something went wrong, I don't recognize this option" message
-        /// @return Ephemeral message
-        virtual inline dpp::message unknownOption() = 0;
-
         /// @brief Create "Skipping <livestream> because I can't play livestreams" message
-        /// @param livestreamTitle Title of skipped livestream
+        /// @param livestream Skipped livestream
         /// @return Normal message
-        virtual inline dpp::message livestreamSkipped(const std::string& livestreamTitle) = 0;
+        virtual inline dpp::message livestreamSkipped(const Youtube::Video& livestream) = 0;
 
         /// @brief Create "Skipping <premiere> because I can't play premieres" message
-        /// @param premiereTitle Title of skipped premiere
+        /// @param premiere skipped premiere
         /// @return Normal message
-        virtual inline dpp::message premiereSkipped(const std::string& premiereTitle) = 0;
+        virtual inline dpp::message premiereSkipped(const Youtube::Video& premiere) = 0;
 
         /// @brief Create "Something went wrong, I couldn't play <video>" message
-        /// @param title Title of video in question
+        /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message playError(const std::string& videoTitle) = 0;
+        virtual inline dpp::message playError(const Youtube::Video& video) = 0;
 
         /// @brief Create session end message
         /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
+        /// @throw std::runtime_error if reason is unknown
         /// @return Normal message
         virtual inline dpp::message sessionEnd(const Settings& settings, EndReason reason, Session session) = 0;
 

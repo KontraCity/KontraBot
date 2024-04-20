@@ -1,4 +1,4 @@
-#include "bot/player/player.hpp"
+#include "bot/player.hpp"
 
 namespace kc {
 
@@ -167,14 +167,14 @@ void Bot::Player::threadFunction()
             {
                 case Youtube::Video::Type::Livestream:
                 {
-                    m_root->message_create(info.settings().locale->livestreamSkipped(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
+                    m_root->message_create(info.settings().locale->livestreamSkipped(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
                     voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("\"{}\": Skipping livestream \"{}\"", guild->name, m_session.playingVideo->video.title());
                     break;
                 }
                 case Youtube::Video::Type::Premiere:
                 {
-                    m_root->message_create(info.settings().locale->premiereSkipped(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
+                    m_root->message_create(info.settings().locale->premiereSkipped(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
                     voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("\"{}\": Skipping premiere \"{}\"", guild->name, m_session.playingVideo->video.title());
                     break;
@@ -295,7 +295,7 @@ void Bot::Player::threadFunction()
     if (errorOccured)
     {
         Info info(m_session.guildId);
-        m_root->message_create(info.settings().locale->playError(m_session.playingVideo->video.title()).set_channel_id(m_session.textChannelId));
+        m_root->message_create(info.settings().locale->playError(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
         voiceClient->insert_marker(Signal(Signal::Type::PlayError, videoId));
         m_logger.error("\"{}\": Couldn't play \"{}\"", guild->name, m_session.playingVideo->video.title());
         m_threadStatus = ThreadStatus::Idle;

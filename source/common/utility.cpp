@@ -28,6 +28,13 @@ std::string Utility::NiceString(uint64_t number)
     return result;
 }
 
+std::string Utility::NiceString(const dpp::slashcommand& command, const dpp::command_option& option)
+{
+    if (option.name.empty())
+        return fmt::format("</{}:{}>", command.name, static_cast<uint64_t>(command.id));
+    return fmt::format("</{} {}:{}>", command.name, option.name, static_cast<uint64_t>(command.id));
+}
+
 std::string Utility::Truncate(const std::string& string, size_t maxLength)
 {
     if (string.length() <= maxLength)

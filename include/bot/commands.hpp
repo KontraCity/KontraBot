@@ -1,15 +1,32 @@
 ﻿#pragma once
 
+// STL modules
+#include <memory>
+#include <vector>
+#include <stdexcept>
+
+// Library DPP
+#include <dpp/dpp.h>
+
+// Library {fmt}
+#include <fmt/format.h>
+
 namespace kc {
 
 namespace Bot
 {
-    namespace Commands
+    namespace CommandsConst
     {
+        namespace Help
+        {
+            constexpr const char* Name = "help";
+            constexpr const char* Description = "Show help message";
+        }
+
         namespace Session
         {
             constexpr const char* Name = "session";
-            constexpr const char* Description = "Show session info including playing video/playlist and queue";
+            constexpr const char* Description = "Show information about current session";
         }
 
         namespace Settings
@@ -21,7 +38,7 @@ namespace Bot
         namespace Stats
         {
             constexpr const char* Name = "stats";
-            constexpr const char* Description = "Show stats of this guild";
+            constexpr const char* Description = "Show statistics of this guild";
         }
 
         namespace Set
@@ -57,7 +74,7 @@ namespace Bot
             namespace ChangeStatus
             {
                 constexpr const char* Name = "change-status";
-                constexpr const char* Description = "Tell me if I'm allowed to change voice channel status when I'm playing";
+                constexpr const char* Description = "Tell me if I'm allowed to change voice channel status when I'm playing or not";
 
                 namespace Change
                 {
@@ -81,7 +98,7 @@ namespace Bot
         namespace Leave
         {
             constexpr const char* Name = "leave";
-            constexpr const char* Description = "Leave voice channel";
+            constexpr const char* Description = "Leave voice channel that I'm currently sitting in";
         }
 
         namespace Play
@@ -99,13 +116,13 @@ namespace Bot
         namespace Pause
         {
             constexpr const char* Name = "pause";
-            constexpr const char* Description = "Toggle player pause";
+            constexpr const char* Description = "Pause playing video or resume playing it if it is already paused";
         }
 
         namespace Seek
         {
             constexpr const char* Name = "seek";
-            constexpr const char* Description = "Seek playing video";
+            constexpr const char* Description = "Seek playing video to timestamp or chapter";
 
             namespace TimestampChapter
             {
@@ -117,7 +134,7 @@ namespace Bot
         namespace Shuffle
         {
             constexpr const char* Name = "shuffle";
-            constexpr const char* Description = "Shuffle queue";
+            constexpr const char* Description = "Shuffle videos and playlists in queue";
         }
 
         namespace Skip
@@ -146,7 +163,7 @@ namespace Bot
         namespace Stop
         {
             constexpr const char* Name = "stop";
-            constexpr const char* Description = "Stop playing and clear queue";
+            constexpr const char* Description = "Stop playing video/playlist and clear queue";
         }
 
         namespace Russian
@@ -155,31 +172,37 @@ namespace Bot
             // https://discord.com/developers/docs/reference#locales
             constexpr const char* LocaleName = "ru";
 
+            namespace Help
+            {
+                constexpr const char* Name = CommandsConst::Help::Name;
+                constexpr const char* Description = u8"Показать справочное сообщение";
+            }
+
             namespace Session
             {
-                constexpr const char* Name = Commands::Session::Name;
-                constexpr const char* Description = u8"Показать информацию о сессии, включая играющее видео/плейлист и очередь";
+                constexpr const char* Name = CommandsConst::Session::Name;
+                constexpr const char* Description = u8"Показать информацию о текущей сессии";
             }
 
             namespace Settings
             {
-                constexpr const char* Name = Commands::Settings::Name;
+                constexpr const char* Name = CommandsConst::Settings::Name;
                 constexpr const char* Description = u8"Показать настройки этого сервера";
             }
 
             namespace Stats
             {
-                constexpr const char* Name = Commands::Stats::Name;
+                constexpr const char* Name = CommandsConst::Stats::Name;
                 constexpr const char* Description = u8"Показать статистику этого сервера";
             }
 
             namespace Set
             {
-                constexpr const char* Name = Commands::Set::Name;
+                constexpr const char* Name = CommandsConst::Set::Name;
 
                 namespace Language
                 {
-                    constexpr const char* Name = Commands::Set::Language::Name;
+                    constexpr const char* Name = CommandsConst::Set::Language::Name;
                     constexpr const char* Description = u8"Установить язык, на котором я буду разговаривать";
 
                     namespace Language
@@ -193,7 +216,7 @@ namespace Bot
 
                 namespace Timeout
                 {
-                    constexpr const char* Name = Commands::Set::Timeout::Name;
+                    constexpr const char* Name = CommandsConst::Set::Timeout::Name;
                     constexpr const char* Description = u8"Установить продолжительность тайм-аута бездействия";
 
                     namespace Duration
@@ -205,8 +228,8 @@ namespace Bot
 
                 namespace ChangeStatus
                 {
-                    constexpr const char* Name = Commands::Set::ChangeStatus::Name;
-                    constexpr const char* Description = u8"Скажи мне, можно ли мне менять статус голосового канала, когда я играю?";
+                    constexpr const char* Name = CommandsConst::Set::ChangeStatus::Name;
+                    constexpr const char* Description = u8"Скажи мне, можно ли мне менять статус голосового канала, когда я играю, или нет?";
 
                     namespace Change
                     {
@@ -218,20 +241,20 @@ namespace Bot
 
             namespace Join
             {
-                constexpr const char* Name = Commands::Join::Name;
+                constexpr const char* Name = CommandsConst::Join::Name;
                 constexpr const char* Description = u8"Зайти в твой голосовой канал";
             }
 
             namespace Leave
             {
-                constexpr const char* Name = Commands::Leave::Name;
-                constexpr const char* Description = u8"Выйти из голосового канала";
+                constexpr const char* Name = CommandsConst::Leave::Name;
+                constexpr const char* Description = u8"Выйти из голосового канала, в котором я сейчас сижу";
             }
 
             namespace Play
             {
-                constexpr const char* Name = Commands::Play::Name;
-                constexpr const char* Description = u8"Играть видео или плейлист YouTube";
+                constexpr const char* Name = CommandsConst::Play::Name;
+                constexpr const char* Description = u8"Сыграть видео или плейлист с YouTube";
 
                 namespace What
                 {
@@ -242,14 +265,14 @@ namespace Bot
 
             namespace Pause
             {
-                constexpr const char* Name = Commands::Pause::Name;
-                constexpr const char* Description = u8"Включить/выключить паузу плеера";
+                constexpr const char* Name = CommandsConst::Pause::Name;
+                constexpr const char* Description = u8"Поставить играющее видео на паузу или снять с неё, если оно уже стоит на паузе";
             }
 
             namespace Seek
             {
-                constexpr const char* Name = Commands::Seek::Name;
-                constexpr const char* Description = u8"Перемотать играющее видео";
+                constexpr const char* Name = CommandsConst::Seek::Name;
+                constexpr const char* Description = u8"Перемотать играющее видео на время или главу";
 
                 namespace TimestampChapter
                 {
@@ -260,40 +283,184 @@ namespace Bot
 
             namespace Shuffle
             {
-                constexpr const char* Name = Commands::Shuffle::Name;
-                constexpr const char* Description = u8"Перемешать очередь";
+                constexpr const char* Name = CommandsConst::Shuffle::Name;
+                constexpr const char* Description = u8"Перемешать видео и плейлисты в очереди";
             }
 
             namespace Skip
             {
-                constexpr const char* Name = Commands::Skip::Name;
+                constexpr const char* Name = CommandsConst::Skip::Name;
 
                 namespace Video
                 {
-                    constexpr const char* Name = Commands::Skip::Video::Name;
+                    constexpr const char* Name = CommandsConst::Skip::Video::Name;
                     constexpr const char* Description = u8"Пропустить играющее видео";
                 }
 
                 namespace Playlist
                 {
-                    constexpr const char* Name = Commands::Skip::Playlist::Name;
+                    constexpr const char* Name = CommandsConst::Skip::Playlist::Name;
                     constexpr const char* Description = u8"Пропустить играющий плейлист";
                 }
             }
 
             namespace Clear
             {
-                constexpr const char* Name = Commands::Clear::Name;
+                constexpr const char* Name = CommandsConst::Clear::Name;
                 constexpr const char* Description = u8"Очистить очередь";
             }
 
             namespace Stop
             {
-                constexpr const char* Name = Commands::Stop::Name;
-                constexpr const char* Description = u8"Остановить воспроизведение и очистить очередь";
+                constexpr const char* Name = CommandsConst::Stop::Name;
+                constexpr const char* Description = u8"Остановить воспроизведение играющего видео/плейлиста и очистить очередь";
             }
         }
     }
+
+    class Commands
+    {
+    public:
+        // Singleton instance
+        static const std::unique_ptr<Commands> Instance;
+
+    public:
+        /// @brief Get commands to register
+        /// @param botId Bot user ID
+        /// @return Commands to register
+        static std::vector<dpp::slashcommand> GetCommands(dpp::snowflake botId);
+
+    private:
+        bool m_parsed;
+        dpp::slashcommand m_help;
+        dpp::slashcommand m_session;
+        dpp::slashcommand m_settings;
+        dpp::slashcommand m_stats;
+        dpp::slashcommand m_set;
+        dpp::slashcommand m_join;
+        dpp::slashcommand m_leave;
+        dpp::slashcommand m_play;
+        dpp::slashcommand m_pause;
+        dpp::slashcommand m_seek;
+        dpp::slashcommand m_shuffle;
+        dpp::slashcommand m_skip;
+        dpp::slashcommand m_clear;
+        dpp::slashcommand m_stop;
+
+    private:
+        Commands();
+
+    public:
+        /// @brief Check if commands are parsed
+        /// @return True if commands are parsed
+        inline operator bool() const
+        {
+            return m_parsed;
+        }
+
+        /// @brief Parse bot commands
+        /// @param commands Commands to parse
+        /// @throw std::invalid_argument if unknown command is encountered
+        void parse(const dpp::slashcommand_map& commands);
+
+        /// @brief Get /help command
+        /// @return /help command
+        inline const dpp::slashcommand& help() const
+        {
+            return m_help;
+        }
+
+        /// @brief Get /session command
+        /// @return /session command
+        inline const dpp::slashcommand& session() const
+        {
+            return m_session;
+        }
+
+        /// @brief Get /settings command
+        /// @return /settings command
+        inline const dpp::slashcommand& settings() const
+        {
+            return m_settings;
+        }
+
+        /// @brief Get /stats command
+        /// @return /stats command
+        inline const dpp::slashcommand& stats() const
+        {
+            return m_stats;
+        }
+
+        /// @brief Get /set command
+        /// @return /set command
+        inline const dpp::slashcommand& set() const
+        {
+            return m_set;
+        }
+
+        /// @brief Get /join command
+        /// @return /join command
+        inline const dpp::slashcommand& join() const
+        {
+            return m_join;
+        }
+
+        /// @brief Get /leave command
+        /// @return /leave command
+        inline const dpp::slashcommand& leave() const
+        {
+            return m_leave;
+        }
+
+        /// @brief Get /play command
+        /// @return /play command
+        inline const dpp::slashcommand& play() const
+        {
+            return m_play;
+        }
+
+        /// @brief Get /pause command
+        /// @return /pause command
+        inline const dpp::slashcommand& pause() const
+        {
+            return m_pause;
+        }
+
+        /// @brief Get /seek command
+        /// @return /seek command
+        inline const dpp::slashcommand& seek() const
+        {
+            return m_seek;
+        }
+
+        /// @brief Get /shuffle command
+        /// @return /shuffle command
+        inline const dpp::slashcommand& shuffle() const
+        {
+            return m_shuffle;
+        }
+
+        /// @brief Get /skip command
+        /// @return /skip command
+        inline const dpp::slashcommand& skip() const
+        {
+            return m_skip;
+        }
+
+        /// @brief Get /clear command
+        /// @return /clear command
+        inline const dpp::slashcommand& clear() const
+        {
+            return m_clear;
+        }
+
+        /// @brief Get /stop command
+        /// @return /stop command
+        inline const dpp::slashcommand& stop() const
+        {
+            return m_stop;
+        }
+    };
 }
 
 } // namespace kc

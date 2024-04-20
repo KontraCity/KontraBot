@@ -1,4 +1,4 @@
-#include "bot/info/types.hpp"
+#include "bot/types.hpp"
 
 namespace kc {
 

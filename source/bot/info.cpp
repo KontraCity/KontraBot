@@ -1,4 +1,4 @@
-#include "bot/info/info.hpp"
+#include "bot/info.hpp"
 using namespace kc::Bot::InfoConst;
 
 namespace kc {

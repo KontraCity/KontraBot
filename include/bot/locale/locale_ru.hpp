@@ -59,6 +59,74 @@ namespace Bot
             return LongName;
         }
 
+        /// @brief Create mention reply message
+        /// @return Mention reply message
+        virtual inline dpp::message mention()
+        {
+            MentionReplyStrings strings = {};
+            strings.ifYouNeedAnyHelp = u8"**Если тебе нужна помощь о том, как я играю музыку, используй {}.**";
+            strings.differentLanguagesHint = {
+                ">>> ***I can speak different languages!***\n"
+                "Now it's **`Russian`**.\n"
+                "Use {} if you need to change it."
+            };
+            return MentionReplyMessage(strings);
+        }
+
+        /// @brief Create help message
+        /// @return Ephemeral message
+        virtual inline dpp::message help()
+        {
+            HelpStrings strings = {};
+            strings.hereAreAllOfMyCommands = u8"Вот все мои команды";
+            strings.differentLanguagesHint = {
+                ">>> ***I can speak different languages!***\n"
+                "Now it's **`Russian`**.\n"
+                "Use {} if you need to change it."
+            };
+            strings.helpDescription = u8"Показать это справочное сообщение.";
+            strings.sessionDescription = u8"Показать информацию о текущей сессии: играющее видео и его главы, играющий плейлист и его видео, видео/плейлисты в очереди и прочее.";
+            strings.sessionFaq = {
+                u8">>> ***Что такое сессия?***\n"
+                u8"Сессия - это такое состояние, когда я сижу в голосовом канале. Она начинается, когда я захожу, и заканчивается, когда я выхожу из него."
+            };
+            strings.settingsDescription = u8"Показать настройки этого сервера: язык, продолжительность тайм-аута бездействия и прочее.";
+            strings.statsDescription = u8"Показать статистику этого сервера: количество отправленных команд, нажатых кнопок, сессий, проигранных треков и прочее.";
+            strings.setDescription = u8"Установить настройки этого серера: язык, продолжительность тайм-аута бездействия, а также должен ли я менять статус голосового канала или нет.";
+            strings.setFaq = {
+                u8">>> ***Что такое тайм-аут бездействия?***\n"
+                u8"Рано или поздно в очереди закончатся видео/плейлисты для воспроизведения, и я буду сидеть и ничего не делать. "
+                u8"Эта настройка устанавливает количество времени, которое должно пройти перед тем, как я покину голосовой канал, если ничего не делаю.\n"
+                u8"***Что такое статус голосового канала?***\n"
+                u8"Это надпись чуть ниже названия канала. Для меня она - это самый простой и информативный способ сообщать всем, что сейчас играет. "
+                u8"Его можно запретить, если на этом сервере статус голосового канала используется для других целей и ты не хочешь, чтобы я его менял."
+            };
+            strings.joinDescription = u8"Зайти в твой голосовой канал. Не забывай, что сперва ты сам должен зайти в него.";
+            strings.leaveDescription = u8"Выйти из голосового канала, в котором я сейчас сижу.";
+            strings.playDescription = u8"Проиграть видео или плейлист с YouTube. Твой запрос будет добавлен в очередь, если сейчас уже что-то играет.";
+            strings.playFaq = {
+                u8">>> ***Что и как может быть проиграно?***\n"
+                u8"Почти всё что угодно может быть проиграно, даже YouTube #Shorts.\n"
+                "*Однако, к сожалению, я пока не умею проигрывать стримы и премьеры.*\n"
+                u8"Смело присылай ссылку на видео/плейлист, который ты хочешь проиграть, или начинай вводить его название, чтобы я поискал YouTube и помог тебе, показывая предложения."
+            };
+            strings.pauseDescription = u8"Поставить играющее видео на паузу или снять с неё, если оно уже стоит на паузе.";
+            strings.seekDescription = u8"Перемотать играющее видео на временную метку или главу.";
+            strings.seekFaq = {
+                u8">>> ***Как перемотать на временную метку?***\n"
+                u8"Достаточно просто написать временную метку в секундах (`50`, `743`, `9965`) или через двоеточия (`50`, `12:23`, `2:46:05`).\n"
+                u8"*Если написанное не будет похоже на временную метку, то я интерпретирую его как название главы.*\n"
+                u8"***Как перемотать на главу?***\n"
+                u8"Такая перемотка возможна только если у видео есть главы. Начинай вводить название желаемой главы, чтобы я отфильтровал их и показал подходящие.\n"
+                u8"*На пустое поле я покажу список всех глав, но из-за ограничения Discord их там будет не больше 25ти.*"
+            };
+            strings.shuffleDescription = u8"Перемешать видео/плейлисты в очереди. Не перемешывает видео в играющем плейлисте.";
+            strings.skipDescription = u8"Пропустить играющее видео или весь плейлист.";
+            strings.clearDescription = u8"Очистить видео/плейлисты в очереди. Не очищает играющее видео/плейлист.";
+            strings.stopDescription = u8"Перестать играть играющее видео/плейлист и очистить очередь.";
+            return HelpMessage(strings);
+        }
+
         /// @brief Create "I am not sitting in any voice channel" message
         /// @return Ephemeral message
         virtual inline dpp::message botNotInVoiceChannel()
@@ -74,8 +142,6 @@ namespace Bot
             SessionStrings strings = {};
             strings.prettyQuiet = u8"Здесь довольно тихо";
             strings.nothingIsPlaying = u8"Ничего не играет. Добавь что-нибудь в очередь!";
-            strings.videoRequestedBy = u8"Видео запрошено пользователем {}:";
-            strings.playlistRequestedBy = u8"Плейлист запрошен пользователем {}:";
             strings.videoInfo = {
                 u8"от {}, [{}]\n"
                 u8"{}, {} просмотр{}"
@@ -128,12 +194,12 @@ namespace Bot
         virtual inline dpp::message stats(const Stats& stats)
         {
             StatsStrings strings = {};
-            strings.hereAreTheStats = u8"Вот статистика этого сервера:";
-            strings.interactionsProcessed = u8"Команд/кнопок/выборов обработано";
+            strings.hereAreTheStats = u8"Вот статистика этого сервера";
+            strings.interactionsProcessed = u8"Команд отправлено и кнопок нажато";
             strings.sessionsCount = u8"Количество сессий";
             strings.tracksPlayed = u8"Треков проиграно";
-            strings.timesKicked = u8"Сколько раз был кикнут";
-            strings.timesMoved = u8"Сколько раз был передвинут";
+            strings.timesKicked = u8"Сколько раз я был кикнут";
+            strings.timesMoved = u8"Сколько раз я был передвинут";
             return StatsMessage(strings, stats);
         }
 
@@ -148,7 +214,7 @@ namespace Bot
         /// @return Normal message
         virtual inline dpp::message soBeIt()
         {
-            switch (Utility::RandomNumber(0, 3))
+            switch (Utility::RandomNumber(0, 4))
             {
                 default:
                     return SuccessMessage(u8"Да будет так");
@@ -158,6 +224,8 @@ namespace Bot
                     return SuccessMessage(u8"Хорошо");
                 case 3:
                     return SuccessMessage(u8"Внимательно запоминаю");
+                case 4:
+                    return SuccessMessage(u8"Ок");
             }
         }
 
@@ -269,7 +337,15 @@ namespace Bot
                 case Youtube::YoutubeError::Type::LoginRequired:
                     return ProblemMessage(u8"У этого видео ограниченный доступ");
                 case Youtube::YoutubeError::Type::Unplayable:
-                    return ProblemMessage(u8"Это видео заблокировано");
+                {
+                    dpp::message message = ProblemMessage(u8"Это видео заблокировано");
+                    message.embeds[0].add_field("", {
+                        u8">>> ***У тебя видео не заблокировано?***\n"
+                        u8"Из-за разных причин, видео может быть доступно в одной стране, но заблокировано в другой. "
+                        u8"Возможно, мы с тобой живём в разных странах."
+                    });
+                    return message;
+                }
                 case Youtube::YoutubeError::Type::YoutubeError:
                     return ProblemMessage(u8"Произошла ошибка на стороне YouTube");
                 case Youtube::YoutubeError::Type::PlaylistError:
@@ -308,7 +384,7 @@ namespace Bot
         /// @param item Item in question
         /// @param paused Whether or not to display paused player warning
         /// @param requester User that added the item if needs to be shown in message
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
         virtual inline dpp::message itemAdded(const Youtube::Item& item, bool paused, const std::optional<dpp::user>& requester = {})
         {
@@ -356,61 +432,65 @@ namespace Bot
         virtual inline dpp::message paused(const Youtube::Video& video, bool paused)
         {
             return SuccessMessage(fmt::format(
-                (paused ? u8"**{}** поставлено на паузу" : u8"Продолжаю играть **{}**"),
+                (paused ? u8"*{}* поставлено на паузу" : u8"Продолжаю играть *{}*"),
                 video.title()
             ));
         }
 
         /// @brief Create "Duration of video <video> is only <duration>!" message
-        /// @param videoTitle Title of the video in question
-        /// @param videoDuration Duration of the video in question
+        /// @param video Playing video
         /// @return Ephemeral message
-        virtual inline dpp::message timestampOutOfBounds(const std::string& videoTitle, pt::time_duration videoDuration)
+        virtual inline dpp::message timestampOutOfBounds(const Youtube::Video& video)
         {
-            return ProblemMessage(fmt::format(u8"Продолжительность видео **{}** - только `{}`!", videoTitle, Utility::NiceString(videoDuration)));
+            return ProblemMessage(fmt::format(u8"Продолжительность видео *{}* - `{}`", video.title(), Utility::NiceString(video.duration())));
         }
 
         /// @brief Create "Seeking <video> to <timestamp>" message
-        /// @param videoTitle Seeking video title
+        /// @param video Seeking video
         /// @param timestamp Seek timestamp
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const std::string& videoTitle, pt::time_duration timestamp, bool paused)
+        virtual inline dpp::message seeking(const Youtube::Video& video, pt::time_duration timestamp, bool paused)
         {
-            dpp::message message = SuccessMessage(fmt::format(u8"Перематываю **{}** на `{}`", videoTitle, Utility::NiceString(timestamp)));
+            dpp::message message = SuccessMessage(fmt::format(u8"Перематываю *{}* на `{}`", video.title(), Utility::NiceString(timestamp)));
             if (paused)
                 pausedWarning(message.embeds[0]);
             return message;
         }
 
         /// @brief Create "Seeking to chapter <chapter>, <timestamp>" message
-        /// @param videoTitle Seeking video title
-        /// @param name Chapter name
-        /// @param timestamp Seek timestamp
+        /// @param video Seeking video
+        /// @param chapter The chapter in question
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const std::string& videoTitle, const std::string& name, pt::time_duration timestamp, bool paused)
+        virtual inline dpp::message seeking(const Youtube::Video& video, const Youtube::Video::Chapter& chapter, bool paused)
         {
-            dpp::message message = SuccessMessage(fmt::format(u8"Перематываю **{}** на главу **{}**, `{}`", videoTitle, name, Utility::NiceString(timestamp)));
+            dpp::message message = SuccessMessage(fmt::format(
+                u8"Перематываю *{}* на главу *{}: {}*, `{}`",
+                video.title(),
+                chapter.number,
+                chapter.name,
+                Utility::NiceString(chapter.timestamp)
+            ));
             if (paused)
                 pausedWarning(message.embeds[0]);
             return message;
         }
 
         /// @brief Create "Video <video> has no chapters" message
-        /// @param videoTitle Playing video title
+        /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message noChapters(const std::string& videoTitle)
+        virtual inline dpp::message noChapters(const Youtube::Video& video)
         {
-            return ProblemMessage(fmt::format(u8"У видео **{}** нет глав", videoTitle));
+            return ProblemMessage(fmt::format(u8"У видео *{}* нет глав", video.title()));
         }
 
         /// @brief Get "Video <video> doesn't have such chapter" message
-        /// @param videoTitle Playing video title
+        /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message unknownChapter(const std::string& videoTitle)
+        virtual inline dpp::message unknownChapter(const Youtube::Video& video)
         {
-            return ProblemMessage(fmt::format(u8"У видео **{}** нет такой главы", videoTitle));
+            return ProblemMessage(fmt::format(u8"У видео *{}* нет такой главы", video.title()));
         }
  
         /// @brief Create "Queue is empty" message
@@ -449,10 +529,10 @@ namespace Bot
             switch (item.type())
             {
                 case Youtube::Item::Type::Video:
-                    message = SuccessMessage(fmt::format(u8"Пропущено видео **{}**", std::get<Youtube::Video>(item).title()));
+                    message = SuccessMessage(fmt::format(u8"Пропущено видео *{}*", std::get<Youtube::Video>(item).title()));
                     break;
                 case Youtube::Item::Type::Playlist:
-                    message = SuccessMessage(fmt::format(u8"Пропущен плейлист **{}**", std::get<Youtube::Playlist>(item).title()));
+                    message = SuccessMessage(fmt::format(u8"Пропущен плейлист *{}*", std::get<Youtube::Playlist>(item).title()));
                     break;
                 default:
                     return unknownError();
@@ -493,7 +573,7 @@ namespace Bot
 
         /// @brief Create item autocomplete choice
         /// @param item Item to create autocomplete choice for
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Item autocomplete choice
         virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item)
         {
@@ -512,41 +592,35 @@ namespace Bot
             return ErrorMessage(u8"Что-то пошло не так, я не узнаю эту кнопку");
         }
 
-        /// @brief Create "Something went wrong, I don't recognize this option" message
-        /// @return Ephemeral message
-        virtual inline dpp::message unknownOption()
-        {
-            return unknownButton();
-        }
-
         /// @brief Create "Skipping <livestream> because I can't play livestreams" message
-        /// @param livestreamTitle Title of skipped livestream
+        /// @param livestream Skipped livestream
         /// @return Normal message
-        virtual inline dpp::message livestreamSkipped(const std::string& livestreamTitle)
+        virtual inline dpp::message livestreamSkipped(const Youtube::Video& livestream)
         {
-            return ProblemMessage(fmt::format(u8"Пропускаю **{}**, потому что я не умею играть стримы", livestreamTitle));
+            return ProblemMessage(fmt::format(u8"Пропускаю *{}*, потому что я не умею играть стримы", livestream.title()));
         }
 
         /// @brief Create "Skipping <premiere> because I can't play premieres" message
-        /// @param premiereTitle Title of skipped premiere
+        /// @param Skipped premiere
         /// @return Normal message
-        virtual inline dpp::message premiereSkipped(const std::string& premiereTitle)
+        virtual inline dpp::message premiereSkipped(const Youtube::Video& premiere)
         {
-            return ProblemMessage(fmt::format(u8"Пропускаю **{}**, потому что я не умею играть премьеры", premiereTitle));
+            return ProblemMessage(fmt::format(u8"Пропускаю *{}*, потому что я не умею играть премьеры", premiere.title()));
         }
 
         /// @brief Create "Something went wrong, I couldn't play <video>" message
-        /// @param title Title of video in question
+        /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message playError(const std::string& videoTitle)
+        virtual inline dpp::message playError(const Youtube::Video& video)
         {
-            return ErrorMessage(fmt::format(u8"Что-то пошло не так: у меня не получилось проиграть **{}**", videoTitle)).set_flags(0);
+            return ErrorMessage(fmt::format(u8"Что-то пошло не так: у меня не получилось проиграть *{}*", video.title())).set_flags(0);
         }
 
         /// @brief Create session end message
         /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
+        /// @throw std::runtime_error if reason is unknown
         /// @return Normal message
         virtual inline dpp::message sessionEnd(const Settings& settings, EndReason reason, Session session)
         {
@@ -554,11 +628,7 @@ namespace Bot
             strings.sessionInfo = u8"Сессия #{1} пользователя {0} закончилась";
             strings.userRequested = u8"Пользователь попросил меня выйти";
             strings.timeout = u8"Я ничего не делал";
-            strings.timeoutCanBeChanged = fmt::format(
-                u8"Продолжительность тайм-аута может быть изменена с помощью **/{} {}**",
-                Commands::Russian::Set::Name,
-                Commands::Russian::Set::Timeout::Name
-            );
+            strings.timeoutCanBeChanged = u8"Продолжительность тайм-аута может быть изменена с помощью {}";
             strings.everybodyLeft = u8"Я остался один в голосовом канале";
             strings.kicked = u8"Кто-то меня кикнул!";
             strings.voiceStatusNotCleared = {

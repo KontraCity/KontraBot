@@ -51,6 +51,74 @@ namespace Bot
             return LongName;
         }
 
+        /// @brief Create mention reply message
+        /// @return Mention reply message
+        virtual inline dpp::message mention()
+        {
+            MentionReplyStrings strings = {};
+            strings.ifYouNeedAnyHelp = "**If you need any help about how I play music, use {}.**";
+            strings.differentLanguagesHint = {
+                u8">>> ***Я могу разговаривать на разных языках!***\n"
+                u8"Сейчас это **`Английский`**.\n"
+                u8"Используй {}, если тебе надо его поменять."
+            };
+            return MentionReplyMessage(strings);
+        }
+
+        /// @brief Create help message
+        /// @return Ephemeral message
+        virtual inline dpp::message help()
+        {
+            HelpStrings strings = {};
+            strings.hereAreAllOfMyCommands = "Here are all of my commands";
+            strings.differentLanguagesHint = {
+                u8">>> ***Я могу разговаривать на разных языках!***\n"
+                u8"Сейчас это **`Английский`**.\n"
+                u8"Используй {}, если тебе надо его поменять."
+            };
+            strings.helpDescription = "Show this help message.";
+            strings.sessionDescription = "Show information about current session: playing video and its chapters, playing playlist and its videos, videos/playlists in queue and more.";
+            strings.sessionFaq = {
+                ">>> ***What is a session?***\n"
+                "A session is a state where I am sitting in a voice channel. It starts when I join and ends when I leave the channel."
+            };
+            strings.settingsDescription = "Show settings of this guild: language, inactivity timeout duration and more.";
+            strings.statsDescription = "Show statistics of this guild: count of commands issued, buttons clicked, sessions, tracks played and more.";
+            strings.setDescription = "Configure settings of this guild: language, inactivity timeout duration and whether I should change voice channel status or not.";
+            strings.setFaq = {
+                ">>> ***What is an inactivity timeout?***\n"
+                "Sooner or later the queue is going to run out of videos/playlists to play and I'm going to sit and do nothing. "
+                "This setting defines how much time should pass before I leave the voice channel if I'm inactive.\n"
+                "***What is a voice channel status?***\n"
+                "That's the label just below the channel name. For me it's the easiest and most informative way to let everyone know what's currently playing. "
+                "It can be banned if voice channel status is used for other purposes in this guild and you don't want me to change it."
+            };
+            strings.joinDescription = "Join your voice channel. Don't forget that you should join it yourself first.";
+            strings.leaveDescription = "Leave voice channel that I'm currently sitting in.";
+            strings.playDescription = "Play video or playlist from YouTube. Your request will be added to queue if something is already playing.";
+            strings.playFaq = {
+                ">>> ***What and how can be played?***\n"
+                "Almost everything can be played, even YouTube #Shorts.\n"
+                "*However, unfortunately, I don't know how to play streams and premieres yet.*\n"
+                "Feel free to send a link of the item you want to play or start typing its title, so I can search YouTube and help you by showing suggestions."
+            };
+            strings.pauseDescription = "Pause currently playing video or resume playing it if it is already paused.";
+            strings.seekDescription = "Seek playing video to timestamp or chapter.";
+            strings.seekFaq = {
+                ">>> ***How to seek to timestamp?***\n"
+                "Just write the timestamp in seconds (`50`, `743`, `9965`) or with colons (`50`, `12:23`, `2:46:05`).\n"
+                "*If what's written doesn't look like a timestamp, I'll interpret it as a chapter name.*\n"
+                "***How to seek to chapter?***\n"
+                "This kind of seek is only possible if the video has chapters. Start typing the name of the desired chapter, so that I can filter them and show you the matched ones.\n"
+                "*I'll show a list of all chapters for an empty query, but due to Discord limitations, there will be at max 25 of them there.*"
+            };
+            strings.shuffleDescription = "Shuffle videos/playlists in queue. Doesn't do anything to videos in playing playlist.";
+            strings.skipDescription = "Skip playing video or whole playlist.";
+            strings.clearDescription = "Clear videos/playlists in queue. Doesn't do anything to playing video/playlist.";
+            strings.stopDescription = "Stop playback of playing video/playlist and clear queue.";
+            return HelpMessage(strings);
+        }
+
         /// @brief Create "I am not sitting in any voice channel" message
         /// @return Ephemeral message
         virtual inline dpp::message botNotInVoiceChannel()
@@ -66,8 +134,6 @@ namespace Bot
             SessionStrings strings = {};
             strings.prettyQuiet = "It's pretty quiet here";
             strings.nothingIsPlaying = "Nothing is playing. Go ahead and add something to queue!";
-            strings.videoRequestedBy = "Video requested by {}:";
-            strings.playlistRequestedBy = "Playlist requested by {}:";
             strings.videoInfo = {
                 "by {}, [{}]\n"
                 "{}, {} view{}"
@@ -120,12 +186,12 @@ namespace Bot
         virtual inline dpp::message stats(const Stats& stats)
         {
             StatsStrings strings = {};
-            strings.hereAreTheStats = "Here are this guild's stats:";
-            strings.interactionsProcessed = "Commands/buttons/options processed";
+            strings.hereAreTheStats = "Here are this guild's stats";
+            strings.interactionsProcessed = "Commands issued and buttons clicked";
             strings.sessionsCount = "Sessions count";
             strings.tracksPlayed = "Tracks played";
-            strings.timesKicked = "Times kicked";
-            strings.timesMoved = "Times moved";
+            strings.timesKicked = "Times I was kicked";
+            strings.timesMoved = "Times I was moved";
             return StatsMessage(strings, stats);
         }
 
@@ -140,7 +206,7 @@ namespace Bot
         /// @return Normal message
         virtual inline dpp::message soBeIt()
         {
-            switch (Utility::RandomNumber(0, 3))
+            switch (Utility::RandomNumber(0, 4))
             {
                 default:
                     return SuccessMessage("So be it");
@@ -148,8 +214,10 @@ namespace Bot
                     return SuccessMessage("Whatever you want");
                 case 2:
                     return SuccessMessage("Alright");
-                case 4:
+                case 3:
                     return SuccessMessage("Carefully recorded");
+                case 4:
+                    return SuccessMessage("Ok");
             }
         }
 
@@ -261,7 +329,15 @@ namespace Bot
                 case Youtube::YoutubeError::Type::LoginRequired:
                     return ProblemMessage("This video is private");
                 case Youtube::YoutubeError::Type::Unplayable:
-                    return ProblemMessage("This video is blocked");
+                {
+                    dpp::message message = ProblemMessage("This video is blocked");
+                    message.embeds[0].add_field("", {
+                        ">>> ***The video is not blocked for you?***\n"
+                        "For various reasons, a video may be available in one country but blocked in another. "
+                        "Perhaps you and I live in different countries."
+                    });
+                    return message;
+                }
                 case Youtube::YoutubeError::Type::YoutubeError:
                     return ProblemMessage("YouTube error occured");
                 case Youtube::YoutubeError::Type::PlaylistError:
@@ -300,7 +376,7 @@ namespace Bot
         /// @param item Added item
         /// @param paused Whether or not to display paused player warning
         /// @param requester User that added the item if needs to be shown in message
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
         virtual inline dpp::message itemAdded(const Youtube::Item& item, bool paused, const std::optional<dpp::user>& requester = {})
         {
@@ -348,62 +424,66 @@ namespace Bot
         virtual inline dpp::message paused(const Youtube::Video& video, bool paused)
         {
             return SuccessMessage(fmt::format(
-                "{} **{}**",
-                (paused ? "Paused" : "Resumed"),
+                "{} *{}*",
+                paused ? "Paused" : "Resumed",
                 video.title()
             ));
         }
         
         /// @brief Create "Duration of video <video> is only <duration>!" message
-        /// @param videoTitle Title of the video in question
-        /// @param videoDuration Duration of the video in question
+        /// @param video Playing video
         /// @return Ephemeral message
-        virtual inline dpp::message timestampOutOfBounds(const std::string& videoTitle, pt::time_duration videoDuration)
+        virtual inline dpp::message timestampOutOfBounds(const Youtube::Video& video)
         {
-            return ProblemMessage(fmt::format("Duration of video **{}** is only `{}`!", videoTitle, Utility::NiceString(videoDuration)));
+            return ProblemMessage(fmt::format("Duration of video *{}* is `{}`", video.title(), Utility::NiceString(video.duration())));
         }
 
         /// @brief Create "Seeking <video> to <timestamp>" message
-        /// @param videoTitle Seeking video title
+        /// @param video Seeking video
         /// @param timestamp Seek timestamp
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const std::string& videoTitle, pt::time_duration timestamp, bool paused)
+        virtual inline dpp::message seeking(const Youtube::Video& video, pt::time_duration timestamp, bool paused)
         {
-            dpp::message message = SuccessMessage(fmt::format("Seeking **{}** to `{}`", videoTitle, Utility::NiceString(timestamp)));
+            dpp::message message = SuccessMessage(fmt::format("Seeking *{}* to `{}`", video.title(), Utility::NiceString(timestamp)));
             if (paused)
                 pausedWarning(message.embeds[0]);
             return message;
         }
 
         /// @brief Create "Seeking <video> to chapter <chapter>, <timestamp>" message
-        /// @param videoTitle Seeking video title
-        /// @param name Seek timestamp
-        /// @param timestamp Timestamp string
+        /// @param video Seeking video
+        /// @param chapter The chapter in question
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const std::string& videoTitle, const std::string& name, pt::time_duration timestamp, bool paused)
+        virtual inline dpp::message seeking(const Youtube::Video& video, const Youtube::Video::Chapter& chapter, bool paused)
         {
-            dpp::message message = SuccessMessage(fmt::format("Seeking **{}** to chapter **{}**, `{}`", videoTitle, name, Utility::NiceString(timestamp)));
+            dpp::message message = SuccessMessage(fmt::format(
+                "Seeking *{}* to chapter *{}: {}*, `{}`",
+                video.title(),
+                chapter.number,
+                chapter.name,
+                Utility::NiceString(chapter.timestamp)
+            ));
             if (paused)
                 pausedWarning(message.embeds[0]);
             return message;
         }
 
         /// @brief Create "Video <video> has no chapters" message
-        /// @param videoTitle Playing video title
+        /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message noChapters(const std::string& videoTitle)
+        virtual inline dpp::message noChapters(const Youtube::Video& video)
         {
-            return ProblemMessage(fmt::format("Video **{}** has no chapters", videoTitle));
+            return ProblemMessage(fmt::format("Video *{}* has no chapters", video.title()));
         }
 
         /// @brief Get "Video <video> doesn't have such chapter" message
-        /// @param videoTitle Playing video title
+        /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message unknownChapter(const std::string& videoTitle)
+        virtual inline dpp::message unknownChapter(const Youtube::Video& video)
         {
-            return ProblemMessage(fmt::format("Video **{}** doesn't have such chapter", videoTitle));
+            return ProblemMessage(fmt::format("Video *{}* doesn't have such chapter", video.title()));
         }
 
         /// @brief Create "Queue is empty" message
@@ -442,10 +522,10 @@ namespace Bot
             switch (item.type())
             {
                 case Youtube::Item::Type::Video:
-                    message = SuccessMessage(fmt::format("Skipped video **{}**", std::get<Youtube::Video>(item).title()));
+                    message = SuccessMessage(fmt::format("Skipped video *{}*", std::get<Youtube::Video>(item).title()));
                     break;
                 case Youtube::Item::Type::Playlist:
-                    message = SuccessMessage(fmt::format("Skipped playlist **{}**", std::get<Youtube::Playlist>(item).title()));
+                    message = SuccessMessage(fmt::format("Skipped playlist *{}*", std::get<Youtube::Playlist>(item).title()));
                     break;
                 default:
                     return unknownError();
@@ -486,7 +566,7 @@ namespace Bot
 
         /// @brief Create item autocomplete choice
         /// @param item Item to create autocomplete choice for
-        /// @throw std::invalid_argument if item is empty
+        /// @throw std::runtime_error if item type is unknown
         /// @return Item autocomplete choice
         virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item)
         {
@@ -505,41 +585,35 @@ namespace Bot
             return ErrorMessage("Something went wrong, I don't recognize this button");
         }
 
-        /// @brief Create "Something went wrong, I don't recognize this option" message
-        /// @return Ephemeral message
-        virtual inline dpp::message unknownOption()
-        {
-            return ErrorMessage(u8"Something went wrong, I don't recognize this option");
-        }
-
         /// @brief Create "Skipping <livestream> because I can't play livestreams" message
-        /// @param livestreamTitle Title of skipped livestream
+        /// @param livestream Skipped livestream
         /// @return Normal message
-        virtual inline dpp::message livestreamSkipped(const std::string& livestreamTitle)
+        virtual inline dpp::message livestreamSkipped(const Youtube::Video& livestream)
         {
-            return ProblemMessage(fmt::format("Skipping **{}** because I can't play livestreams", livestreamTitle));
+            return ProblemMessage(fmt::format("Skipping *{}* because I can't play livestreams", livestream.title()));
         }
 
         /// @brief Create "Skipping <premiere> because I can't play premieres" message
-        /// @param premiereTitle Title of skipped premiere
+        /// @param premiere Skipped premiere
         /// @return Normal message
-        virtual inline dpp::message premiereSkipped(const std::string& premiereTitle)
+        virtual inline dpp::message premiereSkipped(const Youtube::Video& premiere)
         {
-            return ProblemMessage(fmt::format("Skipping **{}** because I can't play premieres", premiereTitle));
+            return ProblemMessage(fmt::format("Skipping *{}* because I can't play premieres", premiere.title()));
         }
 
         /// @brief Create "Something went wrong, I couldn't play <video>" message
-        /// @param title Title of video in question
+        /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message playError(const std::string& videoTitle)
+        virtual inline dpp::message playError(const Youtube::Video& video)
         {
-            return ErrorMessage(fmt::format("Something went wrong, couldn't play **{}**", videoTitle)).set_flags(0);
+            return ErrorMessage(fmt::format("Something went wrong, couldn't play *{}*", video.title())).set_flags(0);
         }
 
         /// @brief Create session end message
         /// @param settings Guild's settings
         /// @param reason Session end reason
         /// @param session Player session
+        /// @throw std::runtime_error if reason is unknown
         /// @return Normal message
         virtual inline dpp::message sessionEnd(const Settings& settings, EndReason reason, Session session)
         {
@@ -547,11 +621,7 @@ namespace Bot
             strings.sessionInfo = "{}'s session #{} ended";
             strings.userRequested = "User asked me to leave";
             strings.timeout = "I was inactive";
-            strings.timeoutCanBeChanged = fmt::format(
-                "Timeout duration can be changed with **/{} {}**",
-                Commands::Set::Name,
-                Commands::Set::Timeout::Name
-            );
+            strings.timeoutCanBeChanged = "Timeout duration can be changed with {}";
             strings.everybodyLeft = "I was left alone in the voice channel";
             strings.kicked = "Somebody kicked me!";
             strings.voiceStatusNotCleared = {
