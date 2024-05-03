@@ -42,12 +42,12 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 
     for (int attempt = 1; ; ++attempt)
     {
-        Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::Android, "player", { {"videoId", m_videoId} });
+        Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::IOS, "player", { {"videoId", m_videoId} });
         if (playerResponse.code != 200)
         {
             throw std::runtime_error(fmt::format(
                 "kc::Youtube::Extractor::Extractor(): "
-                "Couldn't get API response [video: \"{}\", client: \"web\", response code: {}]",
+                "Couldn't get API response [video: \"{}\", client: \"ios\", response code: {}]",
                 m_videoId, playerResponse.code
             ));
         }

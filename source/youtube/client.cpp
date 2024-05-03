@@ -33,6 +33,8 @@ const char* Youtube::Client::TypeToName(Type clientType)
     {
         case Type::Web:
             return "web";
+        case Type::IOS:
+            return "ios";
         case Type::Android:
             return "android";
         case Type::TvEmbedded:

@@ -78,6 +78,36 @@ namespace Youtube
             }
         }
     },
+    "ios": {
+        "api_key": "AIzaSyB-63vPrdThhKuerbB2N_l7Kwwcxj6yUAc",
+        "headers": [
+            "Origin: https://www.youtube.com",
+            "Content-Type: application/json",
+            "User-Agent: com.google.ios.youtube/19.09.3 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)",
+            "X-YouTube-Client-Name: 5",
+            "X-YouTube-Client-Version: 19.09.3"
+        ],
+        "data": {
+            "context": {
+                "client": {
+                    "clientName": "IOS",
+                    "clientVersion": "19.09.3",
+                    "deviceModel": "iPhone14,3",
+                    "userAgent": "com.google.ios.youtube/19.09.3 (iPhone14,3; U; CPU iOS 15_6 like Mac OS X)",
+                    "hl": "en",
+                    "timeZone": "UTC",
+                    "utcOffsetMinutes": 0
+                }
+            },
+            "playbackContext": {
+                "contentPlaybackContext": {
+                    "html5Preference": "HTML5_PREF_WANTS"
+                }
+            },
+            "contentCheckOk": true,
+            "racyCheckOk": true
+        }
+    },
     "android": {
         "api_key": "AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w",
         "headers": [
@@ -169,6 +199,12 @@ namespace Youtube
             *   Useful for getting verbose video/playlist information.
             */
             Web,
+
+            /*
+            *   Simulates Apple phone access.
+            *   Useful for non age restricted videos audio extraction.
+            */
+            IOS,
 
             /*
             *   Simulates Android phone access.
