@@ -30,7 +30,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     , m_unitsPerSecond(0)
     , m_seekPosition(0)
 {
-    av_log_set_level(AV_LOG_QUIET);
+    //av_log_set_level(AV_LOG_QUIET);
     if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
         throw std::invalid_argument(fmt::format(
@@ -83,27 +83,18 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 
             bool urlResolved = false;
             int bestBitrate = 0;
+            std::string bestMimeType;
             for (const json& formatObject : playerResponseJson["streamingData"]["adaptiveFormats"])
             {
-                /*
-                *   We primarily need an audio format that is:
-                *       - A WebM container;
-                *       - Opus encoded;
-                *       - Contains 2 channels;
-                *       - Has 48kHz sampling rate.
-                */
                 std::string mimeType = formatObject["mimeType"];
-                if (mimeType != "audio/webm; codecs=\"opus\"")
-                    continue;
-                if (formatObject["audioChannels"] != 2)
-                    continue;
-                if (formatObject["audioSampleRate"] != "48000")
+                if (mimeType.find("audio/") == std::string::npos)
                     continue;
 
                 int bitrate = formatObject["bitrate"];
-                if (bestBitrate >= bitrate)
+                if (bitrate < bestBitrate)
                     continue;
                 bestBitrate = bitrate;
+                bestMimeType = mimeType;
 
                 if (formatObject.contains("url"))
                 {
@@ -117,42 +108,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
                 }
             }
 
-            std::string bestMimeType;
             if (audioUrl.empty())
-            {
-                for (const json& formatObject : playerResponseJson["streamingData"]["adaptiveFormats"])
-                {
-                    /*
-                    *   No Opus audio track was found.
-                    *   We'll look for other audio tracks.
-                    */
-                    std::string mimeType = formatObject["mimeType"];
-                    if (mimeType.find("audio/") == std::string::npos)
-                        continue;
-
-                    int bitrate = formatObject["bitrate"];
-                    if (bestBitrate >= bitrate)
-                        continue;
-                    bestMimeType = mimeType;
-                    bestBitrate = bitrate;
-
-                    if (formatObject.contains("url"))
-                    {
-                        audioUrl = formatObject["url"];
-                        urlResolved = true;
-                    }
-                    else
-                    {
-                        audioUrl = formatObject["signatureCipher"];
-                        urlResolved = false;
-                    }
-                }
-
-                if (audioUrl.empty())
-                    throw LocalError(LocalError::Type::AudioNotSupported, m_videoId);
-                Logger.warn("Video \"{}\": No Opus track was found. Selecting [{}] instead", m_videoId, bestMimeType);
-            }
-
+                throw LocalError(LocalError::Type::AudioNotSupported, m_videoId);
             if (!urlResolved)
                 audioUrl = Youtube::Client::Instance->decryptSignatureCipher(audioUrl);
         }
@@ -417,19 +374,6 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
             }
             else if (samplesConverted != 0)
             {
-                bytesConverted = av_samples_get_buffer_size(nullptr, 2, samplesConverted, AV_SAMPLE_FMT_S16P, 0);
-                if (bytesConverted < 0)
-                {
-                    av_freep(&buffer);
-                    av_frame_free(&frame);
-                    av_packet_unref(&packet);
-                    throw std::runtime_error(fmt::format(
-                        "kc::Youtube::Extractor::extractFrame(): "
-                        "Couldn't get flushed bytes count [video: \"{}\", return code: {}]",
-                        m_videoId, bytesConverted
-                    ));
-                }
-
                 rawFrame.reserve(rawFrame.size() + bytesConverted);
                 for (int sampleIndex = 0; sampleIndex < samplesConverted; ++sampleIndex)
                 {
