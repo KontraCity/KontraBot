@@ -30,7 +30,6 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     , m_unitsPerSecond(0)
     , m_seekPosition(0)
 {
-    //av_log_set_level(AV_LOG_QUIET);
     if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
         throw std::invalid_argument(fmt::format(

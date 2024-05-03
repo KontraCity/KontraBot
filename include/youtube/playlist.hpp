@@ -124,9 +124,9 @@ namespace Youtube
             /// @return Previous version of iterator
             inline Iterator operator++(int)
             {
-                Iterator previousIterator = *this;
                 ++(*this);
-                return previousIterator;
+                Iterator previousIterator = *this;
+                return --previousIterator;
             }
 
             /// @brief Advance iterator back
@@ -142,9 +142,9 @@ namespace Youtube
             /// @return Previous version of iterator
             inline Iterator operator--(int)
             {
-                Iterator previousIterator = *this;
                 --(*this);
-                return previousIterator;
+                Iterator previousIterator = *this;
+                return ++previousIterator;
             }
 
             /// @brief Check if iterator is valid
