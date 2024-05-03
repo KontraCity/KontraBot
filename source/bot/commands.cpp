@@ -102,6 +102,16 @@ Bot::Commands::Commands()
 
 void Bot::Commands::parse(const dpp::slashcommand_map& commands)
 {
+    std::vector<dpp::slashcommand> registerCommands = GetCommands(0);
+    if (commands.size() != registerCommands.size())
+    {
+        throw std::invalid_argument(fmt::format(
+            "kc::Bot::Commands::parse(): Incorrect count of registered commands: {}/{}",
+            commands.size(),
+            registerCommands.size()
+        ));
+    }
+
     for (const auto& command : commands)
     {
         if (command.second.name == Help::Name)
@@ -133,7 +143,12 @@ void Bot::Commands::parse(const dpp::slashcommand_map& commands)
         else if (command.second.name == Stop::Name)
             m_stop = command.second;
         else
-            throw std::invalid_argument(fmt::format("kc::Bot::parse(): Unknown command: \"/{}\"", command.second.name));
+        {
+            throw std::invalid_argument(fmt::format(
+                "Unknown command encountered: \"/{}\"",
+                command.second.name
+            ));
+        }
     }
     m_parsed = true;
 }
