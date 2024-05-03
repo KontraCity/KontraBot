@@ -88,12 +88,13 @@ void Youtube::Client::update()
         throw std::runtime_error("kc::Youtube::Client::update(): Couldn't extract signature timestamp from player code");
     m_clients["tv_embedded"]["data"]["playbackContext"]["contentPlaybackContext"]["signatureTimestamp"] = std::stoi(matches.str(1));
 
-    if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(R"(=function\(a\)\{a=a\.split\(""\);(\w+)\.[\s\S]*?return a\.join\(""\)\};)")))
+    if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(R"(=function\(a\)\{a=a\.split\(""\);([\w\$]+)\.[\s\S]*?return a\.join\(""\)\};)")))
         throw std::runtime_error("kc::Youtube::Client::update(): Couldn't extract signature decrypt function from player code");
     m_interpreter->reset();
     m_interpreter->execute(SignatureDecrypt + matches.str(0));
 
-    if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(fmt::format(R"(var {}=\{{[\s\S]*?\}};)", matches.str(1)))))
+    std::string encapsulatedObjectName = boost::regex_replace(matches.str(1), boost::regex(R"(\$)"), R"(\\$)");
+    if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(fmt::format(R"(var {}=\{{[\s\S]*?\}};)", encapsulatedObjectName))))
         throw std::runtime_error("kc::Youtube::Client::update(): Couldn't extract singature decrypt object from player code");
     m_interpreter->execute(matches.str(0));
     m_logger.info("Updated to player \"{}\"", m_playerId);

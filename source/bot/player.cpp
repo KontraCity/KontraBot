@@ -297,7 +297,6 @@ void Bot::Player::threadFunction()
         Info info(m_session.guildId);
         m_root->message_create(info.settings().locale->playError(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
         voiceClient->insert_marker(Signal(Signal::Type::PlayError, videoId));
-        m_logger.error("\"{}\": Couldn't play \"{}\"", guild->name, m_session.playingVideo->video.title());
         m_threadStatus = ThreadStatus::Idle;
         return;
     }
