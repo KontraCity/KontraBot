@@ -129,7 +129,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
         if (!session.playingVideo->chapter.name.empty())
         {
             embed.description += fmt::format(
-                "[{}. {} [{}]]({})\n",
+                "[{}: {} [{}]]({})\n",
                 session.playingVideo->chapter.number,
                 session.playingVideo->chapter.name,
                 Utility::NiceString(session.playingVideo->chapter.duration),
@@ -164,7 +164,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             {
                 embed.description = fmt::format(
                     "**[{}. {}]({})**\n"
-                    "[{}. {} [{}]]({})\n",
+                    "[{}: {} [{}]]({})\n",
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl(),
@@ -198,7 +198,7 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (!session.playingVideo->chapter.name.empty())
             {
                 embed.description += fmt::format(
-                    "[{}. {} [{}]]({})\n",
+                    "[{}: {} [{}]]({})\n",
                     session.playingVideo->chapter.number,
                     session.playingVideo->chapter.name,
                     Utility::NiceString(session.playingVideo->chapter.duration),
