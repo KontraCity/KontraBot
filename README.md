@@ -5,7 +5,7 @@ Supports multiple languages, notices video chapters and shows playing items in v
 ## Dependencies
 * [libfmt](https://github.com/fmtlib/fmt)
 * [libcurl](https://github.com/curl/curl)
-* [libdpp](https://github.com/brainboxdotcc/DPP) (has an unfixed bug, https://github.com/brainboxdotcc/DPP/issues/1124)
+* [libdpp](https://github.com/brainboxdotcc/DPP)
 * [libspdlog](https://github.com/gabime/spdlog)
 * [libmujs](https://github.com/ccxvii/mujs)
 * [libboost_regex](https://github.com/boostorg/regex)
