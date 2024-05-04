@@ -562,6 +562,14 @@ namespace Bot
         /// @brief Create "[Paused]" string
         /// @return "[Paused]" string
         virtual inline const char* paused() = 0;
+
+        /// @brief Create "Video" string
+        /// @return "Video" string
+        virtual inline const char* video() = 0;
+
+        /// @brief Create "Chapter" string
+        /// @return "Chapter" string
+        virtual inline const char* chapter() = 0;
     };
 }
 

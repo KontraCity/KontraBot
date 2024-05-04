@@ -234,7 +234,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                     return;
                 }
 
-                m_logger.info("Ready");
+                m_logger.info("Ready: logged in as {}", me.format_username());
                 current_user_get_guilds([this](const dpp::confirmation_callback_t& event)
                 {
                     if (event.is_error())

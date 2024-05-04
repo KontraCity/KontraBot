@@ -648,6 +648,20 @@ namespace Bot
         {
             return "[Paused]";
         }
+
+        /// @brief Create "Video" string
+        /// @return "Video" string
+        virtual inline const char* video()
+        {
+            return "Video";
+        }
+
+        /// @brief Create "Chapter" string
+        /// @return "Chapter" string
+        virtual inline const char* chapter()
+        {
+            return "Chapter";
+        }
     };
 }
 

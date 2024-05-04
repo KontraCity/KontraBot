@@ -115,7 +115,8 @@ void Bot::Player::updateStatus(const Info& info)
     if (!m_session.playingVideo->chapter.name.empty())
     {
         setStatus(prefix + fmt::format(
-            "{}: {} [{}]",
+            "{} #{}: {} [{}]",
+            info.settings().locale->chapter(),
             m_session.playingVideo->chapter.number,
             m_session.playingVideo->chapter.name,
             Utility::NiceString(m_session.playingVideo->chapter.duration)
@@ -136,7 +137,8 @@ void Bot::Player::updateStatus(const Info& info)
     Youtube::Playlist::Iterator iterator = m_session.playingPlaylist->iterator;
     --iterator;
     setStatus(prefix + fmt::format(
-        "{}. {} [{}]",
+        "{} #{}: {} [{}]",
+        info.settings().locale->video(),
         iterator.index() + 1,
         iterator->title(),
         Utility::NiceString(iterator->duration())
