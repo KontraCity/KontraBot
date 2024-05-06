@@ -121,7 +121,40 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             ));
         }
 
-        int result = avformat_open_input(&m_format, audioUrl.c_str(), nullptr, nullptr);
+        AVDictionary* options = nullptr;
+        int result = av_dict_set(&options, "reconnect", "1", 0);
+        if (result < 0)
+        {
+            throw std::runtime_error(fmt::format(
+                "kc::Youtube::Extractor::Extractor(): "
+                "Couldn't set dictionary value [video: \"{}\", value: \"reconnect\", return code: {}]",
+                m_videoId, result
+            ));
+        }
+
+        result = av_dict_set(&options, "reconnect_streamed", "1", 0);
+        if (result < 0)
+        {
+            av_dict_free(&options);
+            throw std::runtime_error(fmt::format(
+                "kc::Youtube::Extractor::Extractor(): "
+                "Couldn't set dictionary value [video: \"{}\", value: \"reconnect_streamed\", return code: {}]",
+                m_videoId, result
+            ));
+        }
+
+        result = av_dict_set(&options, "reconnect_delay_max", "30", 0);
+        if (result < 0)
+        {
+            av_dict_free(&options);
+            throw std::runtime_error(fmt::format(
+                "kc::Youtube::Extractor::Extractor(): "
+                "Couldn't set dictionary value [video: \"{}\", value: \"reconnect_delay_max\", return code: {}]",
+                m_videoId, result
+            ));
+        }
+
+        result = avformat_open_input(&m_format, audioUrl.c_str(), nullptr, &options);
         if (result == 0)
             break;
 
