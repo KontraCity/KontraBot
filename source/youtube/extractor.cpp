@@ -1,28 +1,21 @@
 #include "youtube/extractor.hpp"
+using namespace kc::Youtube::ExtractorConst;
 
 namespace kc {
 
 Youtube::Extractor::Frame::Frame()
-    : m_timestampSet(false)
-    , m_timestamp(0)
-{}
-
-Youtube::Extractor::Frame::Frame(double timestamp)
-    : m_timestampSet(true)
-    , m_timestamp(static_cast<uint64_t>(timestamp < 0 ? 0 : timestamp))
+    : m_timestamp(-1)
 {}
 
 void Youtube::Extractor::Frame::clear()
 {
-    m_timestampSet = false;
-    m_timestamp = 0;
+    m_timestamp = -1;
     vector::clear();
 }
 
-spdlog::logger Youtube::Extractor::Logger("extractor", std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-
 Youtube::Extractor::Extractor(const std::string& videoId)
-    : m_videoId(videoId)
+    : m_logger(fmt::format("extractor \"{}\"", videoId), std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    , m_videoId(videoId)
     , m_format(nullptr)
     , m_stream(nullptr)
     , m_codec(nullptr)
@@ -60,7 +53,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             std::string responseVideoId = playerResponseJson["videoDetails"]["videoId"];
             if (responseVideoId != videoId)
             {
-                Logger.warn("Video \"{}\": API response is for wrong video \"{}\", trying \"tv_embedded\" client", m_videoId, responseVideoId);
+                m_logger.warn("API response is for wrong video \"{}\", trying \"tv_embedded\" client", responseVideoId);
                 clientFallback = true;
             }
 
@@ -160,7 +153,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 
         if (attempt == MaxAttempts)
             throw LocalError(LocalError::Type::CouldntDownload, m_videoId);
-        Logger.warn("Video \"{}\": Attempt {}/{} failed, retrying", m_videoId, attempt, MaxAttempts);
+        m_logger.warn("Attempt {}/{} failed, retrying", attempt, MaxAttempts);
     }
 
     int result = avformat_find_stream_info(m_format, nullptr);
@@ -243,14 +236,13 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     */
     m_resampler = swr_alloc_set_opts(
         nullptr,
-        AV_CH_LAYOUT_STEREO,
-        AV_SAMPLE_FMT_S16P,
-        48000,
+        OutputLayout,
+        OutputFormat,
+        OutputSampleRate,
         parameters->channel_layout,
         static_cast<AVSampleFormat>(parameters->format),
         parameters->sample_rate,
-        0,
-        nullptr
+        0, nullptr
     );
     if (!m_resampler)
     {
@@ -285,7 +277,7 @@ Youtube::Extractor::~Extractor()
     avformat_close_input(&m_format);
 }
 
-void Youtube::Extractor::seekTo(uint64_t timestamp)
+void Youtube::Extractor::seekTo(int64_t timestamp)
 {
     m_seekPosition = timestamp * m_unitsPerSecond;
     av_seek_frame(m_format, m_stream->index, m_seekPosition, AVSEEK_FLAG_BACKWARD);
@@ -317,7 +309,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
             break;
         }
 
-        if (!rawFrame.timestampSet())
+        if (rawFrame.timestamp() == -1)
             rawFrame.setTimestamp(static_cast<double>(packet.dts) / m_unitsPerSecond * 1'000);
 
         int result = avcodec_send_packet(m_codec, &packet);
@@ -345,7 +337,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         while (avcodec_receive_frame(m_codec, frame) >= 0)
         {
             uint8_t* buffer = nullptr;
-            int bytesAllocated = av_samples_alloc(&buffer, nullptr, 2, frame->nb_samples, AV_SAMPLE_FMT_S16P, 0);
+            int bytesAllocated = av_samples_alloc(&buffer, nullptr, OutputChannelCount, frame->nb_samples, OutputFormat, 0);
             if (bytesAllocated < 0)
             {
                 av_frame_free(&frame);
@@ -370,7 +362,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 ));
             }
 
-            int bytesConverted = av_samples_get_buffer_size(nullptr, 2, samplesConverted, AV_SAMPLE_FMT_S16P, 0);
+            int bytesConverted = av_samples_get_buffer_size(nullptr, OutputChannelCount, samplesConverted, OutputFormat, 0);
             if (bytesConverted < 0)
             {
                 av_freep(&buffer);

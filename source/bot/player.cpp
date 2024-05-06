@@ -147,9 +147,7 @@ void Bot::Player::updateStatus(const Info& info)
 
 void Bot::Player::threadFunction()
 {
-    dpp::guild* guild = dpp::find_guild(m_session.guildId);
     std::string videoId;
-
     {
         std::lock_guard lock(m_mutex);
         if (!m_session.playingVideo)
@@ -167,18 +165,22 @@ void Bot::Player::threadFunction()
 
             switch (m_session.playingVideo->video.type())
             {
+                case Youtube::Video::Type::Normal:
+                {
+                    break;
+                }
                 case Youtube::Video::Type::Livestream:
                 {
                     m_root->message_create(info.settings().locale->livestreamSkipped(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
                     voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
-                    m_logger.info("\"{}\": Skipping livestream \"{}\"", guild->name, m_session.playingVideo->video.title());
+                    m_logger.info("Skipping livestream \"{}\"", m_session.playingVideo->video.title());
                     break;
                 }
                 case Youtube::Video::Type::Premiere:
                 {
                     m_root->message_create(info.settings().locale->premiereSkipped(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
                     voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
-                    m_logger.info("\"{}\": Skipping premiere \"{}\"", guild->name, m_session.playingVideo->video.title());
+                    m_logger.info("Skipping premiere \"{}\"", m_session.playingVideo->video.title());
                     break;
                 }
             }
@@ -242,8 +244,7 @@ void Bot::Player::threadFunction()
     catch (const Youtube::YoutubeError& error)
     {
         m_logger.error(
-            "\"{}\": Couldn't play \"{}\": YouTube error: {}",
-            guild->name,
+            "Couldn't play \"{}\": YouTube error: {}",
             m_session.playingVideo->video.id(),
             error.what()
         );
@@ -252,8 +253,7 @@ void Bot::Player::threadFunction()
     catch (const Youtube::LocalError& error)
     {
         m_logger.error(
-            "\"{}\": Couldn't play \"{}\": Local error: {}",
-            guild->name,
+            "Couldn't play \"{}\": Local error: {}",
             m_session.playingVideo->video.id(),
             error.what()
         );
@@ -262,8 +262,7 @@ void Bot::Player::threadFunction()
     catch (const std::runtime_error& error)
     {
         m_logger.error(
-            "\"{}\": Couldn't play \"{}\": Runtime error: {}",
-            guild->name,
+            "Couldn't play \"{}\": Runtime error: {}",
             m_session.playingVideo->video.id(),
             error.what()
         );
@@ -272,8 +271,7 @@ void Bot::Player::threadFunction()
     catch (const std::exception& error)
     {
         m_logger.error(
-            "\"{}\": Couldn't play \"{}\": Unknown error: {}",
-            guild->name,
+            "Couldn't play \"{}\": Unknown error: {}",
             m_session.playingVideo->video.id(),
             error.what()
         );
@@ -282,8 +280,7 @@ void Bot::Player::threadFunction()
     catch (...)
     {
         m_logger.error(
-            "\"{}\": Couldn't play \"{}\": Unknown error",
-            guild->name,
+            "Couldn't play \"{}\": Unknown error",
             m_session.playingVideo->video.id()
         );
         errorOccured = true;
@@ -347,7 +344,7 @@ void Bot::Player::signalDisconnect(Locale::EndReason reason)
 }
 
 Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
-    : m_logger("player", std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    : m_logger(fmt::format("player \"{}\"", interaction.get_guild().name), std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
     , m_root(root)
     , m_timeout([this]() { signalDisconnect(Locale::EndReason::Timeout); }, info.settings().timeoutMinutes * 60)
     , m_client(client)
@@ -572,6 +569,7 @@ void Bot::Player::endSession(Info& info, bool dontClearVoiceStatus)
         incrementPlayedTracks(info);
     if (!dontClearVoiceStatus)
         setStatus("");
+    m_logger.info("Session ended");
 }
 
 void Bot::Player::endSession(Info& info, Locale::EndReason reason)
@@ -605,7 +603,8 @@ void Bot::Player::endSession(Info& info, Locale::EndReason reason)
         }
     }
 
-    m_root->message_create(info.settings().locale->sessionEnd(info.settings(), reason, m_session).set_channel_id(m_session.textChannelId));
+    dpp::message message = info.settings().locale->sessionEnd(info.settings(), reason, m_session);
+    m_root->message_create(message.set_channel_id(m_session.textChannelId));
 }
 
 } // namespace kc

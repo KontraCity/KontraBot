@@ -37,63 +37,65 @@ using nlohmann::json;
 
 namespace Youtube
 {
+    namespace ExtractorConst
+    {
+        // Maximum count of extraction attempts
+        constexpr int MaxAttempts = 5;
+
+        /*
+         *  Size of audio frame for DPP. If the frame is smaller, the rest is filled with silence.
+         *  All frames must be this size, and only the last frame can be smaller.
+        */
+        constexpr int FrameSize = 11520;
+
+        // Output PCM data properties
+        constexpr int OutputLayout = AV_CH_LAYOUT_STEREO;
+        constexpr int OutputChannelCount = 2;
+        constexpr AVSampleFormat OutputFormat = AV_SAMPLE_FMT_S16P;
+        constexpr int OutputSampleRate = 48000;
+    }
+
     class Extractor
     {
-    private:
-        static constexpr int MaxAttempts = 5;
-        static constexpr int FrameSize = 11520;
-
     public:
         class Frame : public std::vector<uint8_t>
         {
         private:
-            bool m_timestampSet;
-            uint64_t m_timestamp;
+            int64_t m_timestamp;
 
         public:
             /// @brief Create empty frame
             Frame();
 
-            /// @brief Create a frame
-            /// @param timestamp Frame timestamp
-            Frame(double timestamp);
-
             /// @brief Clear frame
             void clear();
 
-            /// @brief Check if frame's timestamp is set
-            /// @return True if frame's timestamp is set
-            inline bool timestampSet() const
-            {
-                return m_timestampSet;
-            }
-
-            /// @brief Get frame timestamp in milliseconds
+            /// @brief Get frame timestamp
             /// @return Frame timestamp in milliseconds
-            inline uint64_t timestamp() const
+            inline int64_t timestamp() const
             {
                 return m_timestamp;
             }
 
-            /// @brief Set frame timestamp in milliseconds
-            /// @param timestamp The timestamp to set
-            inline void setTimestamp(uint64_t timestamp)
+            /// @brief Set frame timestamp
+            /// @param timestamp Frame timestamp in milliseconds
+            inline void setTimestamp(int64_t timestamp)
             {
+                if (timestamp < 0)
+                    timestamp = -1;
                 m_timestamp = timestamp;
             }
         };
 
-    private:
-        static spdlog::logger Logger;
-
     public:
+        spdlog::logger m_logger;
         std::string m_videoId;
         AVFormatContext* m_format;
         AVStream* m_stream;
         AVCodecContext* m_codec;
         SwrContext* m_resampler;
         int m_unitsPerSecond;
-        uint64_t m_seekPosition;
+        int64_t m_seekPosition;
         Frame m_overflowFrame;
 
     public:
@@ -109,7 +111,7 @@ namespace Youtube
 
         /// @brief Seek audio track
         /// @param timestamp Timestamp to seek to in seconds
-        void seekTo(uint64_t timestamp);
+        void seekTo(int64_t timestamp);
 
         /// @brief Extract next audio frame
         /// @throw std::runtime_error if internal error occurs

@@ -1043,8 +1043,9 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         {
             return fmt::format(
                 "\"{}\" / \"{}\": [{}/{}]: {}",
+                guild.name,
                 event.command.usr.format_username(),
-                guild.name, event.custom_id,
+                event.custom_id,
                 event.values[0],
                 message
             );
