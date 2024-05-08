@@ -1,13 +1,14 @@
-﻿### --- Initial configuration --- ###
+﻿## --- Initial configuration --- ##
 cmake_minimum_required(VERSION 3.10)
 project(KontraBot VERSION 0)
 
-### --- C++ configuration --- ###
+## --- Compiler configuration --- ##
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
+include_directories("include/")
 
-### --- Executable configuration --- ###
-add_executable(KontraBot "source/main.cpp"
+## --- KontraBot library configuration --- ##
+add_library(kontrabot
     # Bot modules
     "source/bot/commands.cpp"
     "source/bot/bot.cpp"
@@ -34,10 +35,7 @@ add_executable(KontraBot "source/main.cpp"
     "source/youtube/utility.cpp"
     "source/youtube/video.cpp"
 )
-target_include_directories(KontraBot PRIVATE "include/")
-
-### --- Linking configuration --- ###
-target_link_libraries(KontraBot PRIVATE
+target_link_libraries(kontrabot PRIVATE
     "fmt"
     "curl"
     "dpp"
@@ -46,3 +44,7 @@ target_link_libraries(KontraBot PRIVATE
     "boost_regex"
     "avcodec" "avformat" "avutil" "swresample"
 )
+
+## --- KontraBot executable configuration --- ##
+add_executable(KontraBot "source/main.cpp")
+target_link_libraries(KontraBot PRIVATE "kontrabot")
