@@ -1,4 +1,4 @@
-﻿## --- Initial configuration --- ##
+﻿## --- Project configuration --- ##
 cmake_minimum_required(VERSION 3.10)
 project(KontraBot VERSION 0)
 
@@ -48,3 +48,9 @@ target_link_libraries(kontrabot PRIVATE
 ## --- KontraBot executable configuration --- ##
 add_executable(KontraBot "source/main.cpp")
 target_link_libraries(KontraBot PRIVATE "kontrabot")
+
+## --- Testing configuration --- ##
+option(BuildTests "Build KontraBot tests" ON)
+if (BuildTests)
+    add_subdirectory("tests/")
+endif()

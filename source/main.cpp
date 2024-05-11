@@ -17,7 +17,7 @@ using namespace kc;
 enum class ParseResult
 {
     None,       // Parsing error occured
-    Help,       // Help message was requested
+    ShowHelp,   // Help message was requested
     Generate,   // Necessary files generation was requested
     Register,   // Commands registering was requested
     Start,      // Normal bot start was requested
@@ -37,7 +37,7 @@ static ParseResult ParseOptions(int argc, char** argv)
 
         if (option == "-h" || option == "--help")
         {
-            parseResult = ParseResult::Help;
+            parseResult = ParseResult::ShowHelp;
             continue;
         }
 
@@ -159,7 +159,7 @@ int main(int argc, char** argv)
     {
         case ParseResult::None:
             return 1;
-        case ParseResult::Help:
+        case ParseResult::ShowHelp:
             ShowHelpMessage(argv[0]);
             return 0;
         case ParseResult::Generate:
