@@ -3,23 +3,16 @@
 namespace kc {
 
 Youtube::Playlist::Iterator::Iterator()
-{
-    invalidate();
-}
+    : m_root(nullptr)
+    , m_video(nullptr)
+    , m_index(-1)
+{}
 
 Youtube::Playlist::Iterator::Iterator(Playlist* root, size_t index)
     : m_root(root)
+    , m_video(root->discoverVideo(index))
     , m_index(index)
-{
-    m_video = m_root->discoverVideo(m_index);
-}
-
-void Youtube::Playlist::Iterator::invalidate()
-{
-    m_root = nullptr;
-    m_video = nullptr;
-    m_index = -1;
-}
+{}
 
 void Youtube::Playlist::checkAlerts(const json& browseResponseJson)
 {

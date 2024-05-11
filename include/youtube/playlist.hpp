@@ -69,9 +69,6 @@ namespace Youtube
             /// @param index Index of video to initialize iterator for
             Iterator(Playlist* root, size_t index = 0);
 
-            /// @brief Make iterator invalid
-            void invalidate();
-
             /// @brief Get current video with playlist watch URL
             /// @throw std::invalid_argument if iterator is invalid
             /// @return Current video with playlist watch URL
@@ -115,8 +112,6 @@ namespace Youtube
             {
                 if (m_video)
                     m_video = m_root->discoverVideo(++m_index);
-                if (!m_video)
-                    invalidate();
                 return *this;
             }
 
