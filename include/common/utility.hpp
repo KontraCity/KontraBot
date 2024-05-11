@@ -1,6 +1,7 @@
 #pragma once
 
 // STL modules
+#include <optional>
 #include <string>
 #include <random>
 
@@ -9,6 +10,10 @@
 
 // Library Boost.Date_Time
 #include <boost/date_time.hpp>
+
+// Library spdlog
+#include <spdlog/spdlog.h>
+#include <spdlog/sinks/stdout_color_sinks.h>
 
 // Library {fmt}
 #include <fmt/format.h>
@@ -24,6 +29,12 @@ namespace pt = boost::posix_time;
 
 namespace Utility
 {
+    /// @brief Create a logger
+    /// @param name Logger name
+    /// @param forceColor Whether to force sinks colors or not
+    /// @return Created logger
+    spdlog::logger CreateLogger(const std::string& name, std::optional<bool> forceColor = {});
+
     /// @brief Convert date to nice string
     /// @param date Date to convert
     /// @return Nice date string

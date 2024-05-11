@@ -156,7 +156,7 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
 
 Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
     : cluster(config->discordBotApiToken())
-    , m_logger("bot", std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    , m_logger(Utility::CreateLogger("bot"))
 {
     using namespace CommandsConst;
 

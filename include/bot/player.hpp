@@ -18,10 +18,6 @@
 // Library boost::date_time
 #include <boost/date_time.hpp>
 
-// Library spdlog
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 // Library {fmt}
 #include <fmt/format.h>
 
@@ -38,6 +34,9 @@ namespace kc {
 #include "bot/session.hpp"
 #include "bot/signal.hpp"
 #include "bot/timeout.hpp"
+
+// Other custom modules
+#include "common/utility.hpp"
 
 // Custom kc::Youtube modules
 #include "youtube/extractor.hpp"

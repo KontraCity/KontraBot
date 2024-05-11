@@ -1,10 +1,6 @@
 ﻿// STL modules
 #include <filesystem>
 
-// Library spdlog
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 // Library {fmt}
 #include <fmt/format.h>
 
@@ -12,24 +8,45 @@
 #include "bot/bot.hpp"
 #include "bot/config.hpp"
 #include "bot/info.hpp"
+#include "common/utility.hpp"
 using namespace kc;
 
-enum class ParseResult
+struct ParseResult
 {
-    None,       // Parsing error occured
-    ShowHelp,   // Help message was requested
-    Generate,   // Necessary files generation was requested
-    Register,   // Commands registering was requested
-    Start,      // Normal bot start was requested
+    enum class Result
+    {
+        None,       // Parsing error occured
+        ShowHelp,   // Help message was requested
+        Generate,   // Necessary files generation was requested
+        Register,   // Commands registering was requested
+        Start,      // Normal bot start was requested
+    };
+
+    Result result;
+    bool forceColor;
 };
 
+/// @brief Parse commmandline arguments
+/// @param argc Count of arguments
+/// @param argv Values of arguments
+/// @return Parse result
 static ParseResult ParseOptions(int argc, char** argv)
 {
-    ParseResult parseResult = ParseResult::Start;
+    ParseResult result;
+    result.result = ParseResult::Result::Start;
+    result.forceColor = false;
+
     for (int index = 1; index < argc; ++index)
     {
         std::string option = argv[index];
-        if (parseResult != ParseResult::Start)
+
+        if (option == "-fc" || option == "--force-color")
+        {
+            result.forceColor = true;
+            continue;
+        }
+
+        if (result.result != ParseResult::Result::Start)
         {
             fmt::print("Ignoring option: \"{}\"\n", option);
             continue;
@@ -37,19 +54,19 @@ static ParseResult ParseOptions(int argc, char** argv)
 
         if (option == "-h" || option == "--help")
         {
-            parseResult = ParseResult::ShowHelp;
+            result.result = ParseResult::Result::ShowHelp;
             continue;
         }
 
         if (option == "-g" || option == "--generate")
         {
-            parseResult = ParseResult::Generate;
+            result.result = ParseResult::Result::Generate;
             continue;
         }
 
         if (option == "-r" || option == "--register")
         {
-            parseResult = ParseResult::Register;
+            result.result = ParseResult::Result::Register;
             continue;
         }
 
@@ -59,22 +76,25 @@ static ParseResult ParseOptions(int argc, char** argv)
             option,
             argv[0]
         );
-        return ParseResult::None;
+
+        result.result = ParseResult::Result::None;
+        return result;
     }
-    return parseResult;
+
+    return result;
 }
 
 /// @brief Initialize config
 /// @return Initialized config
-static Bot::Config::Pointer Init()
+static Bot::Config::Pointer Init(const ParseResult& result)
 {
+    spdlog::logger logger(Utility::CreateLogger("init", result.forceColor));
     try
     {
         return std::make_shared<Bot::Config>();
     }
     catch (const Bot::Config::Error& error)
     {
-        spdlog::logger logger("init", std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
         logger.error("Configuration error: {}", error.what());
         return {};
     }
@@ -88,10 +108,12 @@ static void ShowHelpMessage(const char* executableName)
         "KontraBot usage: {} [OPTIONS]\n"
         "Possible options:\n"
         "    No options\t\tStart bot normally\n"
+        "    -fc, --force-color\tForce colored logs regardless of whether your tty supports them or not\n"
+        "Unique options:\n"
         "    -h, --help\t\tShow this help message and exit\n"
         "    -g, --generate\tGenerate necessary files and exit\n"
         "    -r, --register\tRegister slashcommands and exit\n"
-        "Only one option may be passed. All others will be ignored.\n",
+        "Only one of the unique options may be passed at the same time. All others will be ignored.\n",
         executableName
     );
 }
@@ -154,21 +176,21 @@ static int GenerateFiles()
 
 int main(int argc, char** argv)
 {
-    ParseResult parseResult = ParseOptions(argc, argv);
-    switch (parseResult)
+    ParseResult result = ParseOptions(argc, argv);
+    switch (result.result)
     {
-        case ParseResult::None:
+        case ParseResult::Result::None:
             return 1;
-        case ParseResult::ShowHelp:
+        case ParseResult::Result::ShowHelp:
             ShowHelpMessage(argv[0]);
             return 0;
-        case ParseResult::Generate:
+        case ParseResult::Result::Generate:
             return GenerateFiles();
         default:
             break;
     }
 
-    Bot::Config::Pointer config = Init();
+    Bot::Config::Pointer config = Init(result);
     if (!config)
         return 1;
 
@@ -177,7 +199,7 @@ int main(int argc, char** argv)
         "GitHub repository: https://github.com/KontraCity/KontraBot\n"
     );
 
-    if (parseResult == ParseResult::Register)
+    if (result.result == ParseResult::Result::Register)
     {
         Bot::Bot bot(config, true);
         return 0;

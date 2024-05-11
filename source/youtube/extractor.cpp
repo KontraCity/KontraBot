@@ -14,7 +14,7 @@ void Youtube::Extractor::Frame::clear()
 }
 
 Youtube::Extractor::Extractor(const std::string& videoId)
-    : m_logger(fmt::format("extractor \"{}\"", videoId), std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    : m_logger(kc::Utility::CreateLogger(fmt::format("extractor \"{}\"", videoId)))
     , m_videoId(videoId)
     , m_format(nullptr)
     , m_stream(nullptr)
@@ -23,6 +23,38 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     , m_unitsPerSecond(0)
     , m_seekPosition(0)
 {
+    av_log_set_callback([](void* opaque, int level, const char* format, va_list arguments)
+    {
+        std::string string(1024, '\0');
+        int stringLength = vsnprintf(string.data(), string.size(), format, arguments);
+        string.resize(stringLength - 1);
+
+        static spdlog::logger logger(kc::Utility::CreateLogger("ffmpeg"));
+        switch (level)
+        {
+            case AV_LOG_INFO:
+                logger.info(string);
+                break;
+            case AV_LOG_WARNING:
+                /* Filtering needless warnings */
+                if (string == "Could not update timestamps for skipped samples.")
+                    break;
+                if (string == "Could not update timestamps for discarded samples.")
+                    break;
+                logger.warn(string);
+                break;
+            case AV_LOG_ERROR:
+                logger.error(string);
+                break;
+            case AV_LOG_FATAL:
+            case AV_LOG_PANIC:
+                logger.critical(string);
+                break;
+            default:
+                break;
+        }
+    });
+
     if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
         throw std::invalid_argument(fmt::format(

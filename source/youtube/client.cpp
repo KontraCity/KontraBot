@@ -49,7 +49,7 @@ const char* Youtube::Client::TypeToName(Type clientType)
 }
 
 Youtube::Client::Client()
-    : m_logger("client", std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    : m_logger(Utility::CreateLogger("client"))
     , m_initialized(true)
 {
     try

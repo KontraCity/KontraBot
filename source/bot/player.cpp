@@ -344,7 +344,7 @@ void Bot::Player::signalDisconnect(Locale::EndReason reason)
 }
 
 Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
-    : m_logger(fmt::format("player \"{}\"", interaction.get_guild().name), std::make_shared<spdlog::sinks::stdout_color_sink_mt>())
+    : m_logger(Utility::CreateLogger(fmt::format("player \"{}\"", interaction.get_guild().name)))
     , m_root(root)
     , m_timeout([this]() { signalDisconnect(Locale::EndReason::Timeout); }, info.settings().timeoutMinutes * 60)
     , m_client(client)
@@ -569,7 +569,13 @@ void Bot::Player::endSession(Info& info, bool dontClearVoiceStatus)
         incrementPlayedTracks(info);
     if (!dontClearVoiceStatus)
         setStatus("");
-    m_logger.info("Session ended");
+
+    m_logger.info(
+        "Session ended [{}, {} track{}]",
+        Utility::NiceString(pt::second_clock::local_time() - m_session.startTimestamp),
+        m_session.tracksPlayed,
+        LocaleEn::Cardinal(m_session.tracksPlayed)
+    );
 }
 
 void Bot::Player::endSession(Info& info, Locale::EndReason reason)

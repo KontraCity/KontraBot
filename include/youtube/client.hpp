@@ -12,16 +12,13 @@
 // Library Boost.Regex
 #include <boost/regex.hpp>
 
-// Library spdlog
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 // Library {fmt}
 #include <fmt/format.h>
 
 // Custom modules
 #include "common/curl.hpp"
 #include "common/interpreter.hpp"
+#include "common/utility.hpp"
 
 namespace kc {
 
