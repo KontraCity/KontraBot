@@ -54,6 +54,7 @@ namespace Bot
                 AlreadyJoined,          // Bot is already sitting in user's voice channel
                 CantJoin,               // Bot is already sitting in another voice channel
                 UserNotInVoiceChannel,  // User is not in sitting in voice channel
+                UserInAfkChannel,       // User is sitting in an AFK channel
             };
 
             Result result;

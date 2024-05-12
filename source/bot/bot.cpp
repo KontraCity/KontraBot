@@ -45,9 +45,12 @@ Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const 
     auto userVoiceEntry = guild->voice_members.find(user.id);
     if (userVoiceEntry == guild->voice_members.end())
         return { JoinStatus::Result::UserNotInVoiceChannel };
+    if (userVoiceEntry->second.channel_id == guild->afk_channel_id)
+        return { JoinStatus::Result::UserInAfkChannel };
 
     dpp::voiceconn* botVoice = client->get_voice(guild->id);
     dpp::channel* userVoice = dpp::find_channel(userVoiceEntry->second.channel_id);
+
     if (botVoice)
     {
         if (botVoice->channel_id == userVoice->id)
@@ -97,6 +100,9 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
                 case JoinStatus::Result::UserNotInVoiceChannel:
                     m_logger.info(logMessage("User not in voice channel"));
                     return info.settings().locale->userNotInVoiceChannel();
+                case JoinStatus::Result::UserInAfkChannel:
+                    m_logger.info(logMessage("User is sitting in an AFK channel"));
+                    return info.settings().locale->cantPlayInAfkChannels();
             }
 
             m_logger.info(logMessage(fmt::format(
@@ -122,6 +128,9 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             case JoinStatus::Result::CantJoin:
                 m_logger.info(logMessage("Can't join"));
                 return info.settings().locale->cantJoin();
+            case JoinStatus::Result::UserInAfkChannel:
+                m_logger.info(logMessage("User is sitting in an AFK channel"));
+                return info.settings().locale->cantPlayInAfkChannels();
         }
 
         m_logger.info(logMessage(fmt::format("Added \"{}\" / \"{}\" [{} videos]", playlist.author(), playlist.title(), Utility::NiceString(playlist.videoCount()))));
@@ -479,12 +488,16 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                     event.reply(info.settings().locale->userNotInVoiceChannel());
                     m_logger.info(logMessage("User not in voice channel"));
                     return;
+                case JoinStatus::Result::UserInAfkChannel:
+                    event.reply(info.settings().locale->cantPlayInAfkChannels());
+                    m_logger.info(logMessage("User is sitting in AFK channel"));
+                    return;
             }
         }
 
         if (playerControlsLocked(guild, event.command.usr.id))
         {
-            event.reply(info.settings().locale->alreadyTaken());
+            event.reply(info.settings().locale->onlyUsersWithMeCanControlPlayer());
             m_logger.info(logMessage("Player controls are locked for user"));
             return;
         }
@@ -987,7 +1000,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             {
                 if (playerControlsLocked(guild, event.command.usr.id))
                 {
-                    event.reply(info.settings().locale->alreadyTaken());
+                    event.reply(info.settings().locale->onlyUsersWithMeCanControlPlayer());
                     m_logger.info(logMessage("Player controls are locked for user"));
                     return;
                 }
@@ -1053,7 +1066,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
         if (playerControlsLocked(guild, event.command.usr.id))
         {
-            event.reply(info.settings().locale->alreadyTaken());
+            event.reply(info.settings().locale->onlyUsersWithMeCanControlPlayer());
             m_logger.info(logMessage("Player controls are locked for user"));
             return;
         }

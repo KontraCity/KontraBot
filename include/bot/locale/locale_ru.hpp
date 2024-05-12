@@ -142,6 +142,8 @@ namespace Bot
             SessionStrings strings = {};
             strings.prettyQuiet = u8"Здесь довольно тихо";
             strings.nothingIsPlaying = u8"Ничего не играет. Добавь что-нибудь в очередь!";
+            strings.video = u8"Видео";
+            strings.chapter = u8"Глава";
             strings.videoInfo = {
                 u8"от {}, [{}]\n"
                 u8"{}, {} просмотр{}"
@@ -203,11 +205,11 @@ namespace Bot
             return StatsMessage(strings, stats);
         }
 
-        /// @brief Create "Sorry, I'm already taken!" message
+        /// @brief Create "Only users sitting with me can control the player" message
         /// @return Ephemeral message
-        virtual inline dpp::message alreadyTaken()
+        virtual inline dpp::message onlyUsersWithMeCanControlPlayer()
         {
-            return ProblemMessage(u8"Извини, я уже занят!");
+            return ProblemMessage(u8"Только сидящие со мной пользователи могут управлять плеером");
         }
 
         /// @brief Randomly create "So be it" or "Whatever you want" message
@@ -290,6 +292,13 @@ namespace Bot
         virtual inline dpp::message userNotInVoiceChannel()
         {
             return ProblemMessage(u8"Сначала зайди в голосовой канал");
+        }
+
+        /// @brief Crate "I can't play in AFK channels!" message
+        /// @return Ephemeral message
+        virtual inline dpp::message cantPlayInAfkChannels()
+        {
+            return ProblemMessage(u8"Я не могу играть в АФК каналах!");
         }
 
         /// @brief Create "Left <voicechannel>" message

@@ -60,7 +60,7 @@ dpp::message Bot::Locale::HelpMessage(const HelpStrings& strings)
 {
     dpp::embed embed;
     embed.color = Colors::Success;
-    embed.description = fmt::format("{} **{}**:", Emojis::Success, strings.hereAreAllOfMyCommands), "";
+    embed.description = fmt::format("{} **{}**:", Emojis::Success, strings.hereAreAllOfMyCommands);
     embed.add_field("", fmt::format(strings.differentLanguagesHint, Utility::NiceString(Commands::Instance->set(), Commands::Instance->set().options[0])));
     embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->help()), strings.helpDescription), "");
     embed.add_field(fmt::format("{}\n{}", Utility::NiceString(Commands::Instance->session()), strings.sessionDescription), strings.sessionFaq);
@@ -129,8 +129,9 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
         if (!session.playingVideo->chapter.name.empty())
         {
             embed.description += fmt::format(
-                "[{}: {} [{}]]({})\n",
-                session.playingVideo->chapter.number,
+                "[{} #{}: {} [{}]]({})\n",
+                strings.chapter,
+                Utility::NiceString(session.playingVideo->chapter.number),
                 session.playingVideo->chapter.name,
                 Utility::NiceString(session.playingVideo->chapter.duration),
                 session.playingVideo->video.watchUrl(session.playingVideo->chapter.timestamp)
@@ -147,7 +148,8 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (session.playingVideo->chapter.name.empty())
             {
                 embed.description = fmt::format(
-                    "**[{}. {}]({})**\n",
+                    "**[{} #{}: {}]({})**\n",
+                    strings.video,
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl()
@@ -163,16 +165,18 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             else
             {
                 embed.description = fmt::format(
-                    "**[{}. {}]({})**\n"
-                    "[{}: {} [{}]]({})\n",
+                    "**[{} #{}: {}]({})**\n"
+                    "[{} #{}: {} [{}]]({})\n",
+                    strings.video,
                     Utility::NiceString(iterator.index() + 1),
                     iterator->title(),
                     iterator.watchUrl(),
-                    session.playingVideo->chapter.number,
+                    strings.chapter,
+                    Utility::NiceString(session.playingVideo->chapter.number),
                     session.playingVideo->chapter.name,
                     Utility::NiceString(session.playingVideo->chapter.duration),
                     iterator->watchUrl(session.playingVideo->chapter.timestamp)
-                ) + embed.description + fmt::format(
+                ) + embed.description + "\n\n" + fmt::format(
                     ">>> **[{}]({})**\n",
                     session.playingPlaylist->playlist.title(),
                     session.playingPlaylist->playlist.viewUrl()
@@ -190,7 +194,8 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             --iterator;
             std::string oldDescription = embed.description;
             embed.description = fmt::format(
-                "**[{}. {}]({})**\n",
+                "**[{} #{}: {}]({})**\n",
+                strings.video,
                 Utility::NiceString(iterator.index() + 1),
                 iterator->title(),
                 iterator.watchUrl()
@@ -198,8 +203,9 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
             if (!session.playingVideo->chapter.name.empty())
             {
                 embed.description += fmt::format(
-                    "[{}: {} [{}]]({})\n",
-                    session.playingVideo->chapter.number,
+                    "[{} #{}: {} [{}]]({})\n",
+                    strings.chapter,
+                    Utility::NiceString(session.playingVideo->chapter.number),
                     session.playingVideo->chapter.name,
                     Utility::NiceString(session.playingVideo->chapter.duration),
                     session.playingVideo->video.watchUrl(session.playingVideo->chapter.timestamp)

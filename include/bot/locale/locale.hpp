@@ -46,7 +46,7 @@ namespace Bot
             constexpr uint32_t Question = dpp::colors::yellow;
             constexpr uint32_t Problem = dpp::colors::red;
             constexpr uint32_t Error = dpp::colors::dark_red;
-            constexpr uint32_t End = dpp::colors::purple_amethyst;
+            constexpr uint32_t End = 0x0ea8ea;
             constexpr uint32_t BadEnd = dpp::colors::yellow;
         }
 
@@ -133,6 +133,8 @@ namespace Bot
         {
             const char* prettyQuiet;            // "It's pretty quiet here" string
             const char* nothingIsPlaying;       // "Nothing is playing. Go ahead and add something to queue!" string
+            const char* video;                  // "Video" string
+            const char* chapter;                // "Chapter" string
             const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" string
             const char* requestedBy;            // "Requested by {}" string
             const char* lastVideoPlaylistInfo;  // "Playlist by {}" <newline> "Last video is playing" string
@@ -357,9 +359,9 @@ namespace Bot
         /// @return Normal message
         virtual inline dpp::message stats(const Stats& stats) = 0;
 
-        /// @brief Create "Sorry, I'm already taken!" message
+        /// @brief Create "Only users sitting with me can control the player" message
         /// @return Ephemeral message
-        virtual inline dpp::message alreadyTaken() = 0;
+        virtual inline dpp::message onlyUsersWithMeCanControlPlayer() = 0;
 
         /// @brief Randomly create "So be it" or "Whatever you want" message
         /// @return Normal message
@@ -400,6 +402,10 @@ namespace Bot
         /// @brief Create "Join a voice channel first" message
         /// @return Ephemeral message
         virtual inline dpp::message userNotInVoiceChannel() = 0;
+
+        /// @brief Crate "I can't play in AFK channels!" message
+        /// @return Ephemeral message
+        virtual inline dpp::message cantPlayInAfkChannels() = 0;
 
         /// @brief Create "Left <voicechannel>" message
         /// @param channelId ID of voice channel in question

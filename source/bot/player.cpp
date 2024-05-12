@@ -117,7 +117,7 @@ void Bot::Player::updateStatus(const Info& info)
         setStatus(prefix + fmt::format(
             "{} #{}: {} [{}]",
             info.settings().locale->chapter(),
-            m_session.playingVideo->chapter.number,
+            Utility::NiceString(m_session.playingVideo->chapter.number),
             m_session.playingVideo->chapter.name,
             Utility::NiceString(m_session.playingVideo->chapter.duration)
         ));
@@ -139,7 +139,7 @@ void Bot::Player::updateStatus(const Info& info)
     setStatus(prefix + fmt::format(
         "{} #{}: {} [{}]",
         info.settings().locale->video(),
-        iterator.index() + 1,
+        Utility::NiceString(iterator.index() + 1),
         iterator->title(),
         Utility::NiceString(iterator->duration())
     ));
