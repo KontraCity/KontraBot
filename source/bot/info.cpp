@@ -12,10 +12,9 @@ std::lock_guard<std::mutex> Bot::Info::GetFileLock(dpp::snowflake guildId)
     return std::lock_guard(fileMutexes[guildId]);
 }
 
-spdlog::logger Bot::Info::Logger("info", std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-
 Bot::Info::Info(dpp::snowflake guildId)
-    : m_fileLock(GetFileLock(guildId))
+    : m_logger(Utility::CreateLogger(fmt::format("info \"{}\"", static_cast<uint64_t>(guildId))))
+    , m_fileLock(GetFileLock(guildId))
     , m_filePath(fmt::format("{}/{}.json", InfoDirectory, static_cast<uint64_t>(guildId)))
 {
     if (!std::filesystem::is_regular_file(m_filePath))
@@ -80,7 +79,7 @@ Bot::Info::~Info()
     std::ofstream infoFile(m_filePath, std::ios::trunc);
     if (!infoFile)
     {
-        Logger.error("Couldn't save info file \"{}\"", m_filePath);
+        m_logger.error("Couldn't save info file");
         return;
     }
     infoFile << infoJson.dump(4) << '\n';

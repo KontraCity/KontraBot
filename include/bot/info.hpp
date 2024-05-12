@@ -15,10 +15,6 @@
 // Library nlohmann::json
 #include <nlohmann/json.hpp>
 
-// Library spdlog
-#include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
 // Library {fmt}
 #include <fmt/format.h>
 
@@ -26,6 +22,7 @@
 #include "bot/locale/locale_en.hpp"
 #include "bot/locale/locale_ru.hpp"
 #include "bot/types.hpp"
+#include "common/utility.hpp"
 
 namespace kc {
 
@@ -64,9 +61,7 @@ namespace Bot
         static std::lock_guard<std::mutex> GetFileLock(dpp::snowflake guildId);
 
     private:
-        static spdlog::logger Logger;
-
-    private:
+        spdlog::logger m_logger;
         std::lock_guard<std::mutex> m_fileLock;
         std::string m_filePath;
         Settings m_previousSettings;

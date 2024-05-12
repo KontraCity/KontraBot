@@ -1,6 +1,7 @@
 #pragma once
 
 // STL modules
+#include <mutex>
 #include <string>
 #include <vector>
 #include <stdexcept>

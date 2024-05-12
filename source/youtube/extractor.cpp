@@ -25,33 +25,51 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 {
     av_log_set_callback([](void* opaque, int level, const char* format, va_list arguments)
     {
+        static std::mutex mutex;
+        std::lock_guard lock(mutex);
+
+        /*
+         *  The format string provided by ffmpeg libraries contains '\n' character at the end.
+         *  The same character is inserted by spdlog, so the one in format string should be discarded.
+        */
         std::string string(1024, '\0');
         int stringLength = vsnprintf(string.data(), string.size(), format, arguments);
         string.resize(stringLength - 1);
 
-        static spdlog::logger logger(kc::Utility::CreateLogger("ffmpeg"));
+        static spdlog::logger logger = kc::Utility::CreateLogger("ffmpeg");
         switch (level)
         {
             case AV_LOG_INFO:
+            {
                 logger.info(string);
                 break;
+            }
             case AV_LOG_WARNING:
+            {
                 /* Filtering needless warnings */
                 if (string == "Could not update timestamps for skipped samples.")
                     break;
                 if (string == "Could not update timestamps for discarded samples.")
                     break;
+
                 logger.warn(string);
                 break;
+            }
             case AV_LOG_ERROR:
+            {
                 logger.error(string);
                 break;
+            }
             case AV_LOG_FATAL:
             case AV_LOG_PANIC:
+            {
                 logger.critical(string);
                 break;
+            }
             default:
+            {
                 break;
+            }
         }
     });
 

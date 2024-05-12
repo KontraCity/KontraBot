@@ -171,7 +171,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
     on_log([this, registerCommands](const dpp::log_t& event)
     {
-        static spdlog::logger logger("dpp", std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+        static spdlog::logger logger = Utility::CreateLogger("dpp");
         switch (event.severity)
         {
             case dpp::ll_warning:
@@ -199,6 +199,10 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             case dpp::ll_critical:
             {
                 logger.critical(event.message);
+                break;
+            }
+            default:
+            {
                 break;
             }
         }

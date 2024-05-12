@@ -88,7 +88,7 @@ static ParseResult ParseOptions(int argc, char** argv)
 /// @return Initialized config
 static Bot::Config::Pointer Init(const ParseResult& result)
 {
-    spdlog::logger logger(Utility::CreateLogger("init", result.forceColor));
+    spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
     try
     {
         return std::make_shared<Bot::Config>();
