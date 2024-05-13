@@ -89,6 +89,7 @@ namespace Bot
 
     private:
         spdlog::logger m_logger;
+        size_t m_previousPresencePlayerCount;
         std::map<dpp::snowflake, Player> m_players;
         std::map<dpp::snowflake, std::string> m_ephemeralTokens;
 
@@ -98,6 +99,9 @@ namespace Bot
         /// @param channelId ID of text channel to update
         /// @return Updated player entry
         PlayerEntry updatePlayerTextChannelId(dpp::snowflake guildId, dpp::snowflake channelId);
+
+        /// @brief Update bot presence
+        void updatePresence();
 
         /// @brief Check if bot's player controls are locked for user (only users sitting in the same voice channel with bot can control player)
         /// @param guild User's guild

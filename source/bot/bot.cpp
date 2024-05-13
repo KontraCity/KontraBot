@@ -18,6 +18,26 @@ Bot::Bot::PlayerEntry Bot::Bot::updatePlayerTextChannelId(dpp::snowflake guildId
     return player;
 }
 
+void Bot::Bot::updatePresence()
+{
+    size_t playerCount = m_players.size();
+    if (playerCount == m_previousPresencePlayerCount)
+        return;
+    m_previousPresencePlayerCount = playerCount;
+
+    if (!playerCount)
+    {
+        set_presence(dpp::presence(dpp::ps_idle, dpp::at_custom, ""));
+        return;
+    }
+
+    set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
+        "Sitting in {} guild{}",
+        playerCount,
+        LocaleEn::Cardinal(playerCount)
+    )));
+}
+
 bool Bot::Bot::playerControlsLocked(const dpp::guild& guild, dpp::snowflake userId)
 {
     PlayerEntry playerEntry = m_players.find(guild.id);
@@ -66,6 +86,7 @@ Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const 
     );
     if (item)
         emplacedPlayerEntry.first->second.addItem(item, user, info);
+    updatePresence();
     return { JoinStatus::Result::Joined, userVoice };
 }
 
@@ -276,6 +297,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                     for (const auto& guild : guilds)
                         m_logger.info(" \"{}\" [{}]", guild.second.name, static_cast<uint64_t>(guild.second.id));
                 });
+                updatePresence();
             });
         }
     });
@@ -1173,6 +1195,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             ++info.stats().timesKicked;
             playerEntry->second.endSession(info, Locale::EndReason::Kicked);
             m_players.erase(event.state.guild_id);
+            updatePresence();
         }
     });
 }
@@ -1188,6 +1211,7 @@ Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dp
         m_players.find(guild.id)->second.endSession(info, reason);
     m_players.erase(guild.id);
     client->disconnect_voice(guild.id);
+    updatePresence();
     return { LeaveStatus::Result::Left, disconnectedChannel };
 }
 
