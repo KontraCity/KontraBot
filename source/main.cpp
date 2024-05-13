@@ -22,6 +22,7 @@ struct ParseResult
         Start,      // Normal bot start was requested
     };
 
+    const char* executableName;
     Result result;
     bool forceColor;
 };
@@ -33,6 +34,7 @@ struct ParseResult
 static ParseResult ParseOptions(int argc, char** argv)
 {
     ParseResult result;
+    result.executableName = argv[0];
     result.result = ParseResult::Result::Start;
     result.forceColor = false;
 
@@ -74,7 +76,7 @@ static ParseResult ParseOptions(int argc, char** argv)
             "Unknown option: \"{}\"\n"
             "See {} --help\n",
             option,
-            argv[0]
+            result.executableName
         );
 
         result.result = ParseResult::Result::None;
@@ -84,38 +86,23 @@ static ParseResult ParseOptions(int argc, char** argv)
     return result;
 }
 
-/// @brief Initialize config
-/// @return Initialized config
-static Bot::Config::Pointer Init(const ParseResult& result)
-{
-    spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
-    try
-    {
-        return std::make_shared<Bot::Config>();
-    }
-    catch (const Bot::Config::Error& error)
-    {
-        logger.error("Configuration error: {}", error.what());
-        return {};
-    }
-}
-
 /// @brief Show help message
 /// @param executableName Executable name
-static void ShowHelpMessage(const char* executableName)
+static int ShowHelpMessage(const ParseResult& result)
 {
     fmt::print(
         "KontraBot usage: {} [OPTIONS]\n"
-        "Possible options:\n"
-        "    No options\t\tStart bot normally\n"
+        "Available options:\n"
+        "    (No options)\tStart bot normally\n"
         "    -fc, --force-color\tForce colored logs regardless of whether your tty supports them or not\n"
         "Unique options:\n"
-        "    -h, --help\t\tShow this help message and exit\n"
+        "    -h, --help\t\tShow this message and exit\n"
         "    -g, --generate\tGenerate necessary files and exit\n"
         "    -r, --register\tRegister slashcommands and exit\n"
         "Only one of the unique options may be passed at the same time. All others will be ignored.\n",
-        executableName
+        result.executableName
     );
+    return 0;
 }
 
 /// @brief Generate necessary files
@@ -174,6 +161,24 @@ static int GenerateFiles()
     return 0;
 }
 
+/// @brief Initialize config
+/// @return Initialized config
+static Bot::Config::Pointer Init(const ParseResult& result)
+{
+    spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
+    try
+    {
+        return std::make_shared<Bot::Config>();
+    }
+    catch (const Bot::Config::Error& error)
+    {
+        logger.error("Configuration error: {}", error.what());
+        logger.info("Hint: Check configuration file \"{}\"", Bot::ConfigConst::ConfigFile);
+        logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
+        return {};
+    }
+}
+
 int main(int argc, char** argv)
 {
     ParseResult result = ParseOptions(argc, argv);
@@ -182,8 +187,7 @@ int main(int argc, char** argv)
         case ParseResult::Result::None:
             return 1;
         case ParseResult::Result::ShowHelp:
-            ShowHelpMessage(argv[0]);
-            return 0;
+            return ShowHelpMessage(result);
         case ParseResult::Result::Generate:
             return GenerateFiles();
         default:

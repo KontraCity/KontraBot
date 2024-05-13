@@ -295,7 +295,7 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
                     m_logger.info("Serving {} guilds:", guilds.size());
                     for (const auto& guild : guilds)
-                        m_logger.info(" \"{}\" [{}]", guild.second.name, static_cast<uint64_t>(guild.second.id));
+                        m_logger.info("    \"{}\" [{}]", guild.second.name, static_cast<uint64_t>(guild.second.id));
                 });
                 updatePresence();
             });
