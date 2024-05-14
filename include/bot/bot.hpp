@@ -44,6 +44,7 @@ namespace Bot
         // Function used to create handler's log message
         using LogMessageFunction = std::function<std::string(const std::string&)>;
 
+        // Bot player map entry
         using PlayerEntry = std::map<dpp::snowflake, Player>::iterator;
 
         struct JoinStatus

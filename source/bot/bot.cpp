@@ -146,9 +146,9 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             case JoinStatus::Result::AlreadyJoined:
                 playerEntry->second.addItem(playlist, requester, info);
                 break;
-            case JoinStatus::Result::CantJoin:
-                m_logger.info(logMessage("Can't join"));
-                return info.settings().locale->cantJoin();
+            case JoinStatus::Result::UserNotInVoiceChannel:
+                m_logger.info(logMessage("User not in voice channel"));
+                return info.settings().locale->userNotInVoiceChannel();
             case JoinStatus::Result::UserInAfkChannel:
                 m_logger.info(logMessage("User is sitting in an AFK channel"));
                 return info.settings().locale->cantPlayInAfkChannels();

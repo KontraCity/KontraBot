@@ -155,7 +155,7 @@ static int GenerateFiles()
 
     fmt::print(
         "Configuration file \"{}\" and information directory \"{}/\" were created.\n"
-        "Please configure the bot before starting it.\n",
+        "Please configure the file before starting KontraBot.\n",
         Bot::ConfigConst::ConfigFile, Bot::InfoConst::InfoDirectory
     );
     return 0;
@@ -198,16 +198,16 @@ int main(int argc, char** argv)
     if (!config)
         return 1;
 
-    fmt::print(
-        "Welcome to KontraBot NG\n"
-        "GitHub repository: https://github.com/KontraCity/KontraBot\n"
-    );
-
     if (result.result == ParseResult::Result::Register)
     {
         Bot::Bot bot(config, true);
         return 0;
     }
+
+    fmt::print(
+        "Welcome to KontraBot NG\n"
+        "GitHub repository: https://github.com/KontraCity/KontraBot\n"
+    );
 
     Bot::Bot bot(config);
     bot.start(false);

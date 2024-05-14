@@ -7,6 +7,11 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 include_directories("include/")
 
+## --- Packages configuration --- ##
+find_package(fmt CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(Boost REQUIRED)
+
 ## --- KontraBot library configuration --- ##
 add_library(kontrabot
     # Bot modules
@@ -37,9 +42,9 @@ add_library(kontrabot
 )
 target_link_libraries(kontrabot PRIVATE
     "fmt"
+    "spdlog"
     "curl"
     "dpp"
-    "spdlog"
     "mujs"
     "boost_regex"
     "avcodec" "avformat" "avutil" "swresample"

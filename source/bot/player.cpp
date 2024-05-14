@@ -161,7 +161,6 @@ void Bot::Player::threadFunction()
             dpp::discord_voice_client* voiceClient = getVoiceClient();
             if (!voiceClient)
                 return;
-            Info info(m_session.guildId);
 
             switch (m_session.playingVideo->video.type())
             {
@@ -171,14 +170,12 @@ void Bot::Player::threadFunction()
                 }
                 case Youtube::Video::Type::Livestream:
                 {
-                    m_root->message_create(info.settings().locale->livestreamSkipped(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
                     voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("Skipping livestream \"{}\"", m_session.playingVideo->video.title());
                     break;
                 }
                 case Youtube::Video::Type::Premiere:
                 {
-                    m_root->message_create(info.settings().locale->premiereSkipped(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
                     voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("Skipping premiere \"{}\"", m_session.playingVideo->video.title());
                     break;

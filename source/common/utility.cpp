@@ -8,7 +8,7 @@ spdlog::logger Utility::CreateLogger(const std::string& name, std::optional<bool
     if (forceColor)
     {
         /*
-        *   This function is initialized when forceColor argument is passed.
+        *   This function is initialized when [forceColor] parameter is passed.
         *   This is why the sink is configured here.
         */
         sink->set_pattern("[%^%d.%m.%C %H:%M:%S%$] [%n] %v");
