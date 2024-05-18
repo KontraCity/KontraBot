@@ -601,28 +601,23 @@ namespace Bot
             return ErrorMessage(u8"Что-то пошло не так, я не узнаю эту кнопку");
         }
 
-        /// @brief Create "Skipping <livestream> because I can't play livestreams" message
-        /// @param livestream Skipped livestream
-        /// @return Normal message
-        virtual inline dpp::message livestreamSkipped(const Youtube::Video& livestream)
-        {
-            return ProblemMessage(fmt::format(u8"Пропускаю *{}*, потому что я не умею играть стримы", livestream.title()));
-        }
-
-        /// @brief Create "Skipping <premiere> because I can't play premieres" message
-        /// @param Skipped premiere
-        /// @return Normal message
-        virtual inline dpp::message premiereSkipped(const Youtube::Video& premiere)
-        {
-            return ProblemMessage(fmt::format(u8"Пропускаю *{}*, потому что я не умею играть премьеры", premiere.title()));
-        }
-
         /// @brief Create "Something went wrong, I couldn't play <video>" message
         /// @param video The video in question
         /// @return Normal message
         virtual inline dpp::message playError(const Youtube::Video& video)
         {
             return ErrorMessage(fmt::format(u8"Что-то пошло не так: у меня не получилось проиграть *{}*", video.title())).set_flags(0);
+        }
+
+        /// @brief Create "Something happened with my connection to Discord... Playing <video> from the start" message
+        /// @param video The video in question
+        /// @return Normal message
+        virtual inline dpp::message reconnectedPlay(const Youtube::Video& video)
+        {
+            return QuestionMessage(fmt::format(
+                u8"Что-то произошло с моим подключением к Discord... Играю *{}* с начала",
+                video.title()
+            ));
         }
 
         /// @brief Create session end message

@@ -45,6 +45,7 @@ namespace Bot
         pt::ptime startTimestamp;
         uint64_t tracksPlayed = 0;
         std::string voiceChannelStatus;
+        std::string voiceServerEndpoint;
 
         std::optional<PlayingVideo> playingVideo;
         std::optional<PlayingPlaylist> playingPlaylist;

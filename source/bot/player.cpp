@@ -107,10 +107,10 @@ void Bot::Player::updateStatus(const Info& info)
         return;
     }
 
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return;
-    std::string prefix = voiceClient->is_paused() ? fmt::format("{} ", info.settings().locale->paused()) : "";
+    std::string prefix = client->is_paused() ? fmt::format("{} ", info.settings().locale->paused()) : "";
 
     if (!m_session.playingVideo->chapter.name.empty())
     {
@@ -158,31 +158,25 @@ void Bot::Player::threadFunction()
 
         if (m_session.playingVideo->video.type() != Youtube::Video::Type::Normal)
         {
-            dpp::discord_voice_client* voiceClient = getVoiceClient();
-            if (!voiceClient)
+            dpp::discord_voice_client* client = getVoiceClient();
+            if (!client)
                 return;
 
             switch (m_session.playingVideo->video.type())
             {
-                case Youtube::Video::Type::Normal:
-                {
-                    break;
-                }
                 case Youtube::Video::Type::Livestream:
                 {
-                    voiceClient->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
+                    client->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("Skipping livestream \"{}\"", m_session.playingVideo->video.title());
                     break;
                 }
                 case Youtube::Video::Type::Premiere:
                 {
-                    voiceClient->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
+                    client->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
                     m_logger.info("Skipping premiere \"{}\"", m_session.playingVideo->video.title());
                     break;
                 }
             }
-
-            m_threadStatus = ThreadStatus::Idle;
             return;
         }
 
@@ -208,15 +202,20 @@ void Bot::Player::threadFunction()
                 if (m_threadStatus == ThreadStatus::Stopped)
                     return;
 
-                dpp::discord_voice_client* voiceClient = getVoiceClient();
-                if (!voiceClient)
-                    return;
+
 
                 if (m_session.seekTimestamp != -1)
                 {
                     extractor.seekTo(m_session.seekTimestamp);
-                    voiceClient->stop_audio();
                     m_session.seekTimestamp = -1;
+
+                    dpp::discord_voice_client* client = getVoiceClient();
+                    if (!client)
+                    {
+                        m_threadStatus = ThreadStatus::Idle;
+                        return;
+                    }
+                    client->stop_audio();
                 }
 
                 if (!m_session.playingVideo->video.chapters().empty())
@@ -229,12 +228,25 @@ void Bot::Player::threadFunction()
                         if (chapterEntry->timestamp != lastChapter.timestamp)
                         {
                             lastChapter = *chapterEntry;
-                            voiceClient->insert_marker(Signal(Signal::Type::ChapterReached, chapterEntry->name));
+
+                            dpp::discord_voice_client* client = getVoiceClient();
+                            if (!client)
+                            {
+                                m_threadStatus = ThreadStatus::Idle;
+                                return;
+                            }
+                            client->insert_marker(Signal(Signal::Type::ChapterReached, chapterEntry->name));
                         }
                     }
                 }
                 
-                voiceClient->send_audio_raw(reinterpret_cast<uint16_t*>(frame.data()), frame.size());
+                dpp::discord_voice_client* client = getVoiceClient();
+                if (!client)
+                {
+                    m_threadStatus = ThreadStatus::Idle;
+                    return;
+                }
+                client->send_audio_raw(reinterpret_cast<uint16_t*>(frame.data()), frame.size());
             }
         }
     }
@@ -284,29 +296,32 @@ void Bot::Player::threadFunction()
     }
 
     std::lock_guard lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
+    {
+        m_threadStatus = ThreadStatus::Idle;
         return;
+    }
 
     if (errorOccured)
     {
         Info info(m_session.guildId);
         m_root->message_create(info.settings().locale->playError(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
-        voiceClient->insert_marker(Signal(Signal::Type::PlayError, videoId));
+        client->insert_marker(Signal(Signal::Type::PlayError, videoId));
         m_threadStatus = ThreadStatus::Idle;
         return;
     }
 
-    voiceClient->insert_marker(Signal(Signal::Type::Played, videoId));
+    client->insert_marker(Signal(Signal::Type::Played, videoId));
     m_threadStatus = ThreadStatus::Idle;
 }
 
 dpp::discord_voice_client* Bot::Player::getVoiceClient()
 {
-    dpp::voiceconn* botVoice = m_client->get_voice(m_session.guildId);
-    if (!botVoice || !botVoice->voiceclient || !botVoice->is_ready())
+    dpp::voiceconn* connection = m_client->get_voice(m_session.guildId);
+    if (!connection || !connection->is_ready() || !connection->is_active())
         return nullptr;
-    return botVoice->voiceclient;
+    return connection->voiceclient;
 }
 
 void Bot::Player::startThread()
@@ -365,20 +380,20 @@ Bot::Player::~Player()
 void Bot::Player::signalReady(const Info& info)
 {
     std::lock_guard lock(m_mutex);
-    m_session.startTimestamp = pt::second_clock::local_time();
-    if (m_timeout.enabled())
-        m_timeout.reset();
-
-    dpp::guild* guild = dpp::find_guild(m_session.guildId);
-    if (Bot::CountVoiceMembers(*guild, m_session.voiceChannelId) == 1)
+    if (m_session.startTimestamp.is_not_a_date_time())
     {
-        signalDisconnect(Locale::EndReason::EverybodyLeft);
-        return;
+        m_session.startTimestamp = pt::second_clock::local_time();
+        if (m_timeout.enabled())
+            m_timeout.reset();
+        extractNextVideo(info);
+        checkPlayingVideo();
+        updateStatus(info);
     }
-
-    extractNextVideo(info);
-    checkPlayingVideo();
-    updateStatus(info);
+    else
+    {
+        checkPlayingVideo();
+        m_root->message_create(info.settings().locale->reconnectedPlay(m_session.playingVideo->video).set_channel_id(m_session.textChannelId));
+    }
 }
 
 void Bot::Player::signalMarker(const Signal& signal, Info& info)
@@ -410,7 +425,6 @@ void Bot::Player::updateTextChannel(dpp::snowflake channelId)
     m_session.textChannelId = channelId;
 }
 
-
 void Bot::Player::updateTimeout(const Info& info)
 {
     std::lock_guard lock(m_mutex);
@@ -425,6 +439,12 @@ void Bot::Player::updateVoiceStatus(const Info& info)
     updateStatus(info);
 }
 
+void Bot::Player::updateVoiceServerEndpoint(const std::string& endpoint)
+{
+    std::lock_guard lock(m_mutex);
+    m_session.voiceServerEndpoint = endpoint;
+}
+
 Bot::Session Bot::Player::session()
 {
     std::lock_guard lock(m_mutex);
@@ -434,43 +454,42 @@ Bot::Session Bot::Player::session()
 void Bot::Player::addItem(const Youtube::Item& item, const dpp::user& requester, const Info& info)
 {
     std::unique_lock lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    if (!getVoiceClient())
     {
         m_session.queue.emplace_back(Session::EnqueuedItem{ item, requester });
         return;
     }
 
-    if (!m_session.playingVideo)
+    if (m_session.playingVideo)
     {
         m_session.queue.emplace_back(Session::EnqueuedItem{ item, requester });
-        extractNextVideo(info);
-        updateStatus(info);
-        startThread();
         return;
     }
 
     m_session.queue.emplace_back(Session::EnqueuedItem{ item, requester });
+    extractNextVideo(info);
+    updateStatus(info);
+    startThread();
 }
 
 bool Bot::Player::paused()
 {
     std::lock_guard lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return false;
-    return voiceClient->is_paused();
+    return client->is_paused();
 }
 
 bool Bot::Player::pauseResume(const Info& info)
 {
     std::lock_guard lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return false;
 
-    bool isPaused = !voiceClient->is_paused();
-    voiceClient->pause_audio(isPaused);
+    bool isPaused = !client->is_paused();
+    client->pause_audio(isPaused);
     (isPaused ? m_timeout.enable() : m_timeout.disable());
     updateStatus(info);
     return isPaused;
@@ -479,8 +498,8 @@ bool Bot::Player::pauseResume(const Info& info)
 void Bot::Player::seek(uint64_t timestamp, const Info& info)
 {
     std::unique_lock lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return;
 
     if (!m_session.playingVideo->video.chapters().empty())
@@ -505,12 +524,12 @@ void Bot::Player::shuffle()
 void Bot::Player::skipVideo(Info& info)
 {
     std::unique_lock lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return;
 
     stopThread(lock);
-    voiceClient->stop_audio();
+    client->stop_audio();
     incrementPlayedTracks(info);
 
     extractNextVideo(info);
@@ -521,12 +540,12 @@ void Bot::Player::skipVideo(Info& info)
 void Bot::Player::skipPlaylist(Info& info)
 {
     std::unique_lock lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return;
 
     stopThread(lock);
-    voiceClient->stop_audio();
+    client->stop_audio();
     incrementPlayedTracks(info);
 
     m_session.playingPlaylist.reset();
@@ -544,12 +563,12 @@ void Bot::Player::clear()
 void Bot::Player::stop(Info& info)
 {
     std::unique_lock lock(m_mutex);
-    dpp::discord_voice_client* voiceClient = getVoiceClient();
-    if (!voiceClient)
+    dpp::discord_voice_client* client = getVoiceClient();
+    if (!client)
         return;
 
     stopThread(lock);
-    voiceClient->stop_audio();
+    client->stop_audio();
     incrementPlayedTracks(info);
 
     m_session.playingVideo.reset();

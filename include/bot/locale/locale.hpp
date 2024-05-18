@@ -538,20 +538,15 @@ namespace Bot
         /// @return Ephemeral message
         virtual inline dpp::message unknownButton() = 0;
 
-        /// @brief Create "Skipping <livestream> because I can't play livestreams" message
-        /// @param livestream Skipped livestream
-        /// @return Normal message
-        virtual inline dpp::message livestreamSkipped(const Youtube::Video& livestream) = 0;
-
-        /// @brief Create "Skipping <premiere> because I can't play premieres" message
-        /// @param premiere skipped premiere
-        /// @return Normal message
-        virtual inline dpp::message premiereSkipped(const Youtube::Video& premiere) = 0;
-
         /// @brief Create "Something went wrong, I couldn't play <video>" message
         /// @param video The video in question
         /// @return Normal message
         virtual inline dpp::message playError(const Youtube::Video& video) = 0;
+
+        /// @brief Create "Something happened with my connection to Discord... Playing <video> from the start" message
+        /// @param video The video in question
+        /// @return Normal message
+        virtual inline dpp::message reconnectedPlay(const Youtube::Video& video) = 0;
 
         /// @brief Create session end message
         /// @param settings Guild's settings

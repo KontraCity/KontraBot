@@ -154,6 +154,10 @@ namespace Bot
         /// @param info Guild's info
         void updateVoiceStatus(const Info& info);
 
+        /// @brief Update player's voice server endpoint
+        /// @param endpoint Endpoint to update to
+        void updateVoiceServerEndpoint(const std::string& endpoint);
+
         /// @brief Get player session
         /// @return Player session
         Session session();

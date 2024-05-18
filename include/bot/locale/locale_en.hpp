@@ -594,28 +594,23 @@ namespace Bot
             return ErrorMessage("Something went wrong, I don't recognize this button");
         }
 
-        /// @brief Create "Skipping <livestream> because I can't play livestreams" message
-        /// @param livestream Skipped livestream
-        /// @return Normal message
-        virtual inline dpp::message livestreamSkipped(const Youtube::Video& livestream)
-        {
-            return ProblemMessage(fmt::format("Skipping *{}* because I can't play livestreams", livestream.title()));
-        }
-
-        /// @brief Create "Skipping <premiere> because I can't play premieres" message
-        /// @param premiere Skipped premiere
-        /// @return Normal message
-        virtual inline dpp::message premiereSkipped(const Youtube::Video& premiere)
-        {
-            return ProblemMessage(fmt::format("Skipping *{}* because I can't play premieres", premiere.title()));
-        }
-
         /// @brief Create "Something went wrong, I couldn't play <video>" message
         /// @param video The video in question
         /// @return Normal message
         virtual inline dpp::message playError(const Youtube::Video& video)
         {
             return ErrorMessage(fmt::format("Something went wrong, couldn't play *{}*", video.title())).set_flags(0);
+        }
+
+        /// @brief Create "Something happened with my connection to Discord... Playing <video> from the start" message
+        /// @param video The video in question
+        /// @return Normal message
+        virtual inline dpp::message reconnectedPlay(const Youtube::Video& video)
+        {
+            return QuestionMessage(fmt::format(
+                "Something happened with my connection to Discord... Playing *{}* from the start",
+                video.title()
+            ));
         }
 
         /// @brief Create session end message

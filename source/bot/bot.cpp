@@ -1198,6 +1198,33 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             updatePresence();
         }
     });
+
+    on_voice_server_update([this](const dpp::voice_server_update_t& event)
+    {
+        PlayerEntry playerEntry = m_players.find(event.guild_id);
+        if (playerEntry == m_players.end())
+        {
+            m_logger.warn("Voice server update event received from guild with no player");
+            return;
+        }
+
+        std::string playerEndpoint = playerEntry->second.session().voiceServerEndpoint;
+        if (playerEndpoint.empty())
+        {
+            playerEntry->second.updateVoiceServerEndpoint(event.endpoint);
+            return;
+        }
+
+        if (playerEndpoint == event.endpoint)
+            return;
+        playerEntry->second.updateVoiceServerEndpoint(event.endpoint);
+
+        m_logger.warn("Voice server changed from \"{}\" to \"{}\", reconnecting", playerEndpoint, event.endpoint);
+        dpp::voiceconn* connection = event.from->get_voice(event.guild_id);
+        connection->disconnect();
+        connection->websocket_hostname = event.endpoint;
+        connection->connect(event.guild_id);
+    });
 }
 
 Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dpp::guild& guild, Info& info, Locale::EndReason reason)
