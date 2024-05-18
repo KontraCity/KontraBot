@@ -583,8 +583,20 @@ void Bot::Player::endSession(Info& info, bool dontClearVoiceStatus)
     std::lock_guard lock(m_mutex);
     if (m_session.playingVideo)
         incrementPlayedTracks(info);
-    if (!dontClearVoiceStatus)
-        setStatus("");
+
+    if (dontClearVoiceStatus)
+    {
+        m_client->disconnect_voice(m_session.guildId);
+    }
+    else
+    {
+        dpp::discord_client* client = m_client;
+        Session session = m_session;
+        m_root->channel_set_voice_status(m_session.voiceChannelId, "", [client, session](const dpp::confirmation_callback_t& event)
+        {
+            client->disconnect_voice(session.guildId);
+        });
+    }
 
     m_logger.info(
         "Session ended [{}, {} track{}]",
@@ -599,6 +611,10 @@ void Bot::Player::endSession(Info& info, Locale::EndReason reason)
     switch (reason)
     {
         case Locale::EndReason::UserRequested:
+        {
+            endSession(info);
+            return;
+        }
         case Locale::EndReason::Timeout:
         {
             endSession(info);

@@ -132,6 +132,7 @@ namespace Bot
         virtual inline dpp::message session(const Session& session)
         {
             SessionStrings strings = {};
+            strings.infoFooter = "Session lasted {} | Tracks played: {}";
             strings.prettyQuiet = "It's pretty quiet here";
             strings.nothingIsPlaying = "Nothing is playing. Go ahead and add something to queue!";
             strings.video = "Video";
@@ -625,8 +626,8 @@ namespace Bot
             strings.sessionInfo = "{}'s session #{} ended";
             strings.userRequested = "User asked me to leave";
             strings.timeout = "I was inactive";
-            strings.timeoutCanBeChanged = "Timeout duration can be changed with {}";
-            strings.everybodyLeft = "I was left alone in the voice channel";
+            strings.timeoutCanBeChanged = "Timeout duration can\nbe changed with {}";
+            strings.everybodyLeft = "Everybody left the voice channel";
             strings.kicked = "Somebody kicked me!";
             strings.voiceStatusNotCleared = {
                 "Unfortunately, I was unable to clear voice channel status.\n"

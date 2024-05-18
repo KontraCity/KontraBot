@@ -96,6 +96,11 @@ dpp::message Bot::Locale::SessionMessage(const SessionStrings& strings, Cardinal
     message.add_embed(dpp::embed().set_color(Colors::Success));
     message.set_flags(dpp::m_ephemeral);
     dpp::embed& embed = message.embeds[0];
+    embed.set_footer(fmt::format(
+        strings.infoFooter,
+        Utility::NiceString(pt::second_clock::local_time() - session.startTimestamp),
+        session.tracksPlayed
+    ), "");
 
     if (!session.playingVideo)
     {

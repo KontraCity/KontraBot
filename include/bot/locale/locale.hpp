@@ -131,6 +131,7 @@ namespace Bot
 
         struct SessionStrings
         {
+            const char* infoFooter;             // "Session lasted [{}] | Tracks played: [{}]" string
             const char* prettyQuiet;            // "It's pretty quiet here" string
             const char* nothingIsPlaying;       // "Nothing is playing. Go ahead and add something to queue!" string
             const char* video;                  // "Video" string

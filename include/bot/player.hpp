@@ -199,12 +199,12 @@ namespace Bot
         /// @param info Guild's info
         void stop(Info& info);
 
-        /// @brief End player session
+        /// @brief End player session and leave voice channel
         /// @param info Guild's info
         /// @param dontClearVoiceStatus Whether or not voice status shouldn't be cleared
         void endSession(Info& info, bool dontClearVoiceStatus = false);
 
-        /// @brief End player session
+        /// @brief End player session and leave voice channel
         /// @param info Guild's info
         /// @param reason Session end reason
         void endSession(Info& info, Locale::EndReason reason);

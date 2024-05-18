@@ -1234,10 +1234,9 @@ Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dp
         return { LeaveStatus::Result::BotNotInVoiceChannel };
 
     const dpp::channel* disconnectedChannel = dpp::find_channel(botVoice->channel_id);
-    if (reason != Locale::EndReason::UserRequested)
-        m_players.find(guild.id)->second.endSession(info, reason);
+    m_players.find(guild.id)->second.endSession(info, reason);
     m_players.erase(guild.id);
-    client->disconnect_voice(guild.id);
+    //client->disconnect_voice(guild.id);
     updatePresence();
     return { LeaveStatus::Result::Left, disconnectedChannel };
 }
