@@ -140,7 +140,7 @@ namespace Bot
         /// @param info Guild's info
         /// @param reason Leave reason
         /// @return Leave status
-        LeaveStatus leaveVoice(dpp::discord_client* client, const dpp::guild& guild, Info& info, Locale::EndReason reason = Locale::EndReason::UserRequested);
+        LeaveStatus leaveVoice(dpp::discord_client* client, const dpp::guild& guild, Info& info, Locale::EndReason reason);
     };
 }
 

@@ -103,6 +103,8 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             Youtube::Video video(itemId);
             switch (video.type())
             {
+                case Youtube::Video::Type::Normal:
+                    break;
                 case Youtube::Video::Type::Livestream:
                     m_logger.info(logMessage("Livestreams can't be played"));
                     return info.settings().locale->cantPlayLivestreams();
@@ -124,18 +126,12 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
                 case JoinStatus::Result::UserInAfkChannel:
                     m_logger.info(logMessage("User is sitting in an AFK channel"));
                     return info.settings().locale->cantPlayInAfkChannels();
+                default:
+                    break;
             }
 
-            m_logger.info(logMessage(fmt::format(
-                "Added \"{}\" / \"{}\" [{}]",
-                video.author(),
-                video.title(),
-                Utility::NiceString(video.duration())
-            )));
-
-            if (showRequester)
-                return info.settings().locale->itemAdded(video, playerEntry->second.paused(), interaction.get_issuing_user());
-            return info.settings().locale->itemAdded(video, playerEntry->second.paused());
+            m_logger.info(logMessage(fmt::format("Added \"{}\" [{}]", video.title(), Utility::NiceString(video.duration()))));
+            return info.settings().locale->itemAdded(video, playerEntry->second.paused(), showRequester ? interaction.get_issuing_user() : std::optional<dpp::user>{});
         }
 
         Youtube::Playlist playlist(itemId);
@@ -152,9 +148,11 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             case JoinStatus::Result::UserInAfkChannel:
                 m_logger.info(logMessage("User is sitting in an AFK channel"));
                 return info.settings().locale->cantPlayInAfkChannels();
+            default:
+                break;
         }
 
-        m_logger.info(logMessage(fmt::format("Added \"{}\" / \"{}\" [{} videos]", playlist.author(), playlist.title(), Utility::NiceString(playlist.videoCount()))));
+        m_logger.info(logMessage(fmt::format("Added \"{}\" [{} videos]", playlist.title(), Utility::NiceString(playlist.videoCount()))));
         return info.settings().locale->itemAdded(playlist, playerEntry->second.paused(), showRequester ? interaction.get_issuing_user() : std::optional<dpp::user>{});
     }
     catch (const Youtube::YoutubeError& error)
@@ -532,12 +530,9 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         {
             std::optional<kc::Bot::Session> session;
             if (playerEntry != m_players.end())
-            {
-                playerEntry->second.endSession(info);
                 session.emplace(playerEntry->second.session());
-            }
 
-            LeaveStatus leaveStatus = leaveVoice(event.from, guild, info);
+            LeaveStatus leaveStatus = leaveVoice(event.from, guild, info, Locale::EndReason::UserRequested);
             switch (leaveStatus.result)
             {
                 case LeaveStatus::Result::Left:
@@ -1201,10 +1196,19 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
 
     on_voice_server_update([this](const dpp::voice_server_update_t& event)
     {
+        const LogMessageFunction logMessage = [&event](const std::string& message)
+        {
+            return fmt::format(
+                "\"{}\": {}",
+                dpp::find_guild(event.guild_id)->name,
+                message
+            );
+        };
+
         PlayerEntry playerEntry = m_players.find(event.guild_id);
         if (playerEntry == m_players.end())
         {
-            m_logger.warn("Voice server update event received from guild with no player");
+            m_logger.warn(logMessage("Voice server update event received from guild with no player"));
             return;
         }
 
@@ -1219,11 +1223,11 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
             return;
         playerEntry->second.updateVoiceServerEndpoint(event.endpoint);
 
-        m_logger.warn("Voice server changed from \"{}\" to \"{}\", reconnecting", playerEndpoint, event.endpoint);
         dpp::voiceconn* connection = event.from->get_voice(event.guild_id);
         connection->disconnect();
         connection->websocket_hostname = event.endpoint;
         connection->connect(event.guild_id);
+        m_logger.warn(logMessage(fmt::format("Voice server changed from \"{}\" to \"{}\", reconnecting", playerEndpoint, event.endpoint)));
     });
 }
 
@@ -1236,7 +1240,6 @@ Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dp
     const dpp::channel* disconnectedChannel = dpp::find_channel(botVoice->channel_id);
     m_players.find(guild.id)->second.endSession(info, reason);
     m_players.erase(guild.id);
-    //client->disconnect_voice(guild.id);
     updatePresence();
     return { LeaveStatus::Result::Left, disconnectedChannel };
 }
