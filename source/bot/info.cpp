@@ -3,18 +3,8 @@ using namespace kc::Bot::InfoConst;
 
 namespace kc {
 
-std::lock_guard<std::mutex> Bot::Info::GetFileLock(dpp::snowflake guildId)
-{
-    static std::mutex mutex;
-    std::lock_guard lock(mutex);
-
-    static std::map<dpp::snowflake, std::mutex> fileMutexes;
-    return std::lock_guard(fileMutexes[guildId]);
-}
-
 Bot::Info::Info(dpp::snowflake guildId)
     : m_logger(Utility::CreateLogger(fmt::format("info \"{}\"", static_cast<uint64_t>(guildId))))
-    , m_fileLock(GetFileLock(guildId))
     , m_filePath(fmt::format("{}/{}.json", InfoDirectory, static_cast<uint64_t>(guildId)))
 {
     if (!std::filesystem::is_regular_file(m_filePath))

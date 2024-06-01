@@ -508,15 +508,15 @@ dpp::message Bot::Locale::SearchMessage(const SearchStrings& strings, CardinalFu
 
     dpp::component itemSelectMenu;
     itemSelectMenu.type = dpp::cot_selectmenu;
-    itemSelectMenu.custom_id = Signal(Signal::Type::SearchSelect, results.query());
+    itemSelectMenu.custom_id = Utility::Truncate(Signal(Signal::Type::SearchSelect, results.query()), 100);
     if (results.type() == Youtube::Results::Type::Search)
     {
-        itemSelectMenu.placeholder = fmt::format(
+        itemSelectMenu.placeholder = Utility::Truncate(fmt::format(
             strings.resultCount,
             results.query(),
             results.size(),
             cardinalFunction(results.size())
-        );
+        ), 150);
     }
     else
     {

@@ -95,7 +95,7 @@ void Youtube::Video::parseChapters(const std::string& description)
             line.replace(matches.position(), matches.str(0).length(), "");
         if (boost::regex_search(line, matches, boost::regex(R"((?:[-\|: ]+)$)")))
             line.replace(matches.position(), matches.str(0).length(), "");
-        m_chapters.push_back({ m_chapters.size() + 1, line, timestamp });
+        m_chapters.push_back({ m_chapters.size() + 1, kc::Utility::Truncate(line, 100), timestamp });
     }
 
     if (m_chapters.empty())

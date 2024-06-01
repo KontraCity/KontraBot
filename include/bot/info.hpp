@@ -55,14 +55,7 @@ namespace Bot
     class Info
     {
     private:
-        /// @brief Get guild info file lock
-        /// @param guildId ID of guild
-        /// @return Guild info file lock
-        static std::lock_guard<std::mutex> GetFileLock(dpp::snowflake guildId);
-
-    private:
         spdlog::logger m_logger;
-        std::lock_guard<std::mutex> m_fileLock;
         std::string m_filePath;
         Settings m_previousSettings;
         Settings m_settings;

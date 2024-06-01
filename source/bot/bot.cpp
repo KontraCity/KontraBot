@@ -1,4 +1,4 @@
-﻿#include "bot/bot.hpp"
+#include "bot/bot.hpp"
 
 namespace kc {
 
