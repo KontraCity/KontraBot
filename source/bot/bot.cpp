@@ -1047,6 +1047,12 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
                 )));
                 return;
             }
+            case Signal::Type::Unsupported:
+            {
+                event.reply(info.settings().locale->unsupportedButton());
+                m_logger.info(logMessage("Unsupported button"));
+                break;
+            }
             default:
             {
                 event.reply(info.settings().locale->unknownButton());
@@ -1097,12 +1103,22 @@ Bot::Bot::Bot(std::shared_ptr<Config> config, bool registerCommands)
         {
             case Signal::Type::PlayVideo:
             case Signal::Type::PlayPlaylist:
+            {
                 event.reply(addItem(event.from, event.command, signal.data(), logMessage, info, true));
                 break;
+            }
+            case Signal::Type::Unsupported:
+            {
+                event.reply(info.settings().locale->unsupportedButton());
+                m_logger.info(logMessage("Unsupported button"));
+                break;
+            }
             default:
+            {
                 event.reply(info.settings().locale->unknownButton());
                 m_logger.error(logMessage("Unknown select option"));
                 break;
+            }
         }
 
         if (m_ephemeralTokens.find(event.command.msg.id) != m_ephemeralTokens.end())

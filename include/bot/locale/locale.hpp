@@ -535,6 +535,10 @@ namespace Bot
         /// @return Item autocomplete choice
         virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item) = 0;
 
+        /// @brief Create "Sorry, this button is no longer supported: use slashcommands instead" messagee
+        /// @return Ephemeral message
+        virtual inline dpp::message unsupportedButton() = 0;
+
         /// @brief Create "Something went wrong, I don't recognize this button" message
         /// @return Ephemeral message
         virtual inline dpp::message unknownButton() = 0;

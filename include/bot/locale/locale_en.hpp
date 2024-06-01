@@ -588,6 +588,13 @@ namespace Bot
             return ItemAutocompleteChoice(strings, &Cardinal, item);
         }
 
+        /// @brief Create "Sorry, this button is no longer supported: use slashcommands instead" messagee
+        /// @return Ephemeral message
+        virtual inline dpp::message unsupportedButton()
+        {
+            return ProblemMessage("Sorry, this button is no longer supported: use slashcommands instead");
+        }
+
         /// @brief Create "Something went wrong, I don't recognize this button" message
         /// @return Ephemeral message
         virtual inline dpp::message unknownButton()

@@ -27,6 +27,7 @@ namespace Bot
             Played,
             ChapterReached,
             PlayError,
+            Unsupported,
             Unknown,
         };
 
