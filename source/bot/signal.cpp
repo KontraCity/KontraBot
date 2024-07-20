@@ -2,9 +2,15 @@
 
 namespace kc {
 
+std::string Bot::Signal::CreateSignalString(Type type, const std::string& data)
+{
+    return fmt::format("{}_{}", static_cast<int>(type), data);
+}
+
 Bot::Signal::Signal(Type type, const std::string& data)
     : m_type(type)
     , m_data(data)
+    , m_string(CreateSignalString(type, data))
 {}
 
 Bot::Signal::Signal(const std::string& signalString)
@@ -47,6 +53,8 @@ Bot::Signal::Signal(const std::string& signalString)
             m_data = "";
             m_type = Type::Unknown;
         }
+
+        m_string = CreateSignalString(m_type, m_data);
         return;
     }
     m_data = matches.str(2);
@@ -55,6 +63,7 @@ Bot::Signal::Signal(const std::string& signalString)
     if (signalId < 0 || signalId >= static_cast<int>(Type::Unknown))
         return;
     m_type = static_cast<Type>(signalId);
+    m_string = CreateSignalString(m_type, m_data);
 }
 
 } // namespace kc

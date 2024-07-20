@@ -2,6 +2,7 @@
 
 // STL modules
 #include <string>
+#include <string_view>
 
 // Library Boost.Regex
 #include <boost/regex.hpp>
@@ -34,6 +35,14 @@ namespace Bot
     private:
         Type m_type;
         std::string m_data;
+        std::string m_string;
+
+    private:
+        /// @brief Create signal string
+        /// @param type Signal type
+        /// @param data Signal data
+        /// @return Created signal string
+        static std::string CreateSignalString(Type type, const std::string& data);
 
     public:
         /// @brief Create a signal
@@ -63,7 +72,14 @@ namespace Bot
         /// @return Signal string
         inline operator std::string() const
         {
-            return fmt::format("{}_{}", static_cast<int>(m_type), m_data);
+            return m_string;
+        }
+
+        /// @brief Convert signal to string view
+        /// @return Signal string view
+        inline operator std::string_view() const
+        {
+            return { m_string.c_str() };
         }
     };
 }
