@@ -13,9 +13,237 @@ void Youtube::Extractor::Frame::clear()
     vector::clear();
 }
 
+size_t Youtube::Extractor::HeaderWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target)
+{
+    std::lock_guard lock(target->m_mutex);
+    if (target->m_threadStatus == ThreadStatus::Stopped)
+        return 0;
+
+    if (!target->m_fileSize)
+    {
+        std::string string(reinterpret_cast<char*>(data), itemCount);
+        boost::smatch matches;
+        if (boost::regex_search(string, matches, boost::regex(R"(Content-Length: (\d+))")))
+            target->m_fileSize = std::stoull(matches.str(1));
+    }
+
+    return itemSize * itemCount;
+}
+
+size_t Youtube::Extractor::ExtractorWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target)
+{
+    std::lock_guard lock(target->m_mutex);
+    if (target->m_threadStatus == ThreadStatus::Stopped)
+        return 0;
+
+    target->m_buffer.insert(target->m_buffer.end(), data, data + itemCount);
+    target->m_cv.notify_all();
+    return itemSize * itemCount;
+}
+
+int Youtube::Extractor::Read(void* root, uint8_t* buffer, int bufferLength)
+{
+    Extractor* extractor = reinterpret_cast<Extractor*>(root);
+    std::unique_lock lock(extractor->m_mutex);
+
+    while (true)
+    {
+        int bytesAvailable = static_cast<int>(extractor->m_buffer.size() + extractor->m_positionOffset - extractor->m_position);
+        if (bytesAvailable < bufferLength)
+        {
+            if (extractor->m_threadStatus != ThreadStatus::Running)
+            {
+                if (bytesAvailable == 0)
+                    return AVERROR_EOF;
+            }
+            else
+            {
+                extractor->m_cv.wait(lock);
+                continue;
+            }
+        }
+
+        // More bytes may be available than requested
+        if (bytesAvailable > bufferLength)
+            bytesAvailable = bufferLength;
+
+        std::copy(
+            extractor->m_buffer.data() + (extractor->m_position - extractor->m_positionOffset),
+            extractor->m_buffer.data() + (extractor->m_position - extractor->m_positionOffset) + bytesAvailable,
+            buffer
+        );
+        extractor->m_position += bytesAvailable;
+        return bytesAvailable;
+    }
+}
+
+int64_t Youtube::Extractor::Seek(void* root, int64_t offset, int whence)
+{
+    Extractor* extractor = reinterpret_cast<Extractor*>(root);
+    std::unique_lock lock(extractor->m_mutex);
+
+    if (whence == AVSEEK_SIZE)
+        return extractor->m_fileSize;
+    else if (whence != SEEK_SET)
+        return AVERROR(EINVAL);
+
+    if (static_cast<size_t>(offset) <= extractor->m_position && extractor->m_positionOffset == 0)
+    {
+        extractor->m_position = offset;
+        return extractor->m_position;
+    }
+
+    lock.unlock();
+    extractor->stopThread();
+    lock.lock();
+
+    extractor->m_buffer.clear();
+    extractor->m_position = offset;
+    extractor->m_positionOffset = offset;
+    extractor->startThread(offset);
+    extractor->m_cv.wait(lock);
+    return extractor->m_position;
+}
+
+void Youtube::Extractor::threadFunction(uint64_t startPosition)
+{
+    {
+        std::lock_guard lock(m_mutex);
+        m_threadStatus = ThreadStatus::Running;
+    }
+
+    try
+    {
+        std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl(curl_easy_init(), curl_easy_cleanup);
+        if (!curl.get())
+            throw std::runtime_error("Couldn't initialize Curl");
+
+        CURLcode result = curl_easy_setopt(curl.get(), CURLOPT_URL, m_audioUrl.c_str());
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request URL [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_LIMIT, 15360);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request low speed limit [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_TIME, 1);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request low speed timeout [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_FOLLOWLOCATION, 1L);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request redirection [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_HEADERDATA, this);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request header target [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_HEADERFUNCTION, &Extractor::HeaderWriter);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request header function [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_WRITEDATA, this);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request write target [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, &Extractor::ExtractorWriter);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request write function [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_RANGE, fmt::format("{}-", startPosition).c_str());
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]", static_cast<int>(result)));
+
+        m_logger.info("Starting download from position {}", startPosition);
+        for (int attempt = 1; true; ++attempt)
+        {
+            result = curl_easy_perform(curl.get());
+            switch (result)
+            {
+                case CURLE_WRITE_ERROR:
+                {
+                    // Thread is cancelled
+                    return;
+                }
+                case CURLE_OPERATION_TIMEDOUT:
+                case CURLE_SSL_CONNECT_ERROR:
+                case CURLE_RECV_ERROR:
+                {
+                    /*
+                    *   One of the following things happened:
+                    *       -> The download became too slow
+                    *       -> The download halted altogether
+                    *       -> The conection has closed
+                    *   We have to retry the download.
+                    */
+                    startPosition = m_positionOffset + m_buffer.size();
+                    m_logger.warn("Download attempt #{} failed, retrying at position {}", attempt, startPosition);
+
+                    result = curl_easy_setopt(curl.get(), CURLOPT_RANGE, fmt::format("{}-", startPosition).c_str());
+                    if (result != CURLE_OK)
+                        throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]",static_cast<int>(result)));
+                    continue;
+                }
+                case CURLE_OK:
+                {
+                    break;
+                }
+                default:
+                {
+                    throw std::runtime_error(fmt::format("Couldn't perform request [return code: {}]", static_cast<int>(result)));
+                }
+            }
+            break;
+        }
+
+        long responseCode = 0;
+        result = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &responseCode);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't retrieve response code [return code: {}]", static_cast<int>(result)));
+
+        /*
+         * 200 = OK: whole file successfully downloaded
+         * 206 = Partial Content: whole range successfully downloaded
+        */
+        if (responseCode != 200 && responseCode != 206)
+            throw std::runtime_error(fmt::format("Couldn't initiate download [HTTP response code: {}]", responseCode));
+
+        std::lock_guard lock(m_mutex);
+        m_threadStatus = ThreadStatus::Idle;
+        m_cv.notify_all();
+        m_logger.info("Download finished successfully (current: {} bytes, total: {} bytes)", m_buffer.size(), m_fileSize);
+    }
+    catch (const std::runtime_error& error)
+    {
+        std::lock_guard lock(m_mutex);
+        m_threadStatus = ThreadStatus::Error;
+        m_cv.notify_all();
+        m_logger.error("Download error: {}", error.what());
+    }
+}
+
+void Youtube::Extractor::startThread(uint64_t startPosition)
+{
+    if (m_thread.joinable())
+        m_thread.join();
+    m_thread = std::thread(&Extractor::threadFunction, this, startPosition);
+}
+
+void Youtube::Extractor::stopThread()
+{
+    m_threadStatus = ThreadStatus::Stopped;
+    if (m_thread.joinable())
+        m_thread.join();
+}
+
 Youtube::Extractor::Extractor(const std::string& videoId)
     : m_logger(kc::Utility::CreateLogger(fmt::format("extractor \"{}\"", videoId)))
     , m_videoId(videoId)
+    , m_fileSize(0)
+    , m_threadStatus(ThreadStatus::Idle)
+    , m_position(0)
+    , m_positionOffset(0)
+    , m_io(nullptr)
     , m_format(nullptr)
     , m_stream(nullptr)
     , m_codec(nullptr)
@@ -46,12 +274,6 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             }
             case AV_LOG_WARNING:
             {
-                /* Filtering needless warnings */
-                if (string == "Could not update timestamps for skipped samples.")
-                    break;
-                if (string == "Could not update timestamps for discarded samples.")
-                    break;
-
                 logger.warn(string);
                 break;
             }
@@ -82,7 +304,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         ));
     }
 
-    for (int attempt = 1; ; ++attempt)
+    for (int attempt = 1; true; ++attempt)
     {
         Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::IOS, "player", { {"videoId", m_videoId} });
         if (playerResponse.code != 200)
@@ -94,7 +316,6 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             ));
         }
 
-        std::string audioUrl;
         try
         {
             json playerResponseJson = json::parse(playerResponse.data);
@@ -140,20 +361,20 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 
                 if (formatObject.contains("url"))
                 {
-                    audioUrl = formatObject["url"];
+                    m_audioUrl = formatObject["url"];
                     urlResolved = true;
                 }
                 else
                 {
-                    audioUrl = formatObject["signatureCipher"];
+                    m_audioUrl = formatObject["signatureCipher"];
                     urlResolved = false;
                 }
             }
 
-            if (audioUrl.empty())
+            if (m_audioUrl.empty())
                 throw LocalError(LocalError::Type::AudioNotSupported, m_videoId);
             if (!urlResolved)
-                audioUrl = Youtube::Client::Instance->decryptSignatureCipher(audioUrl);
+                m_audioUrl = Youtube::Client::Instance->decryptSignatureCipher(m_audioUrl);
         }
         catch (const json::exception& error)
         {
@@ -164,52 +385,64 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             ));
         }
 
-        AVDictionary* options = nullptr;
-        int result = av_dict_set(&options, "reconnect", "1", 0);
-        if (result < 0)
         {
-            throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::Extractor(): "
-                "Couldn't set dictionary value [video: \"{}\", value: \"reconnect\", return code: {}]",
-                m_videoId, result
-            ));
+            std::unique_lock lock(m_mutex);
+            startThread();
+            m_cv.wait(lock);
         }
 
-        result = av_dict_set(&options, "reconnect_streamed", "1", 0);
-        if (result < 0)
-        {
-            av_dict_free(&options);
-            throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::Extractor(): "
-                "Couldn't set dictionary value [video: \"{}\", value: \"reconnect_streamed\", return code: {}]",
-                m_videoId, result
-            ));
-        }
-
-        result = av_dict_set(&options, "reconnect_delay_max", "30", 0);
-        if (result < 0)
-        {
-            av_dict_free(&options);
-            throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::Extractor(): "
-                "Couldn't set dictionary value [video: \"{}\", value: \"reconnect_delay_max\", return code: {}]",
-                m_videoId, result
-            ));
-        }
-
-        result = avformat_open_input(&m_format, audioUrl.c_str(), nullptr, &options);
-        if (result == 0)
+        if (m_threadStatus != ThreadStatus::Error)
             break;
+        stopThread();
 
         if (attempt == MaxAttempts)
             throw LocalError(LocalError::Type::CouldntDownload, m_videoId);
-        m_logger.warn("Attempt {}/{} failed, retrying", attempt, MaxAttempts);
+        m_logger.warn("Extraction attempt {}/{} failed, retrying", attempt, MaxAttempts);
     }
 
-    int result = avformat_find_stream_info(m_format, nullptr);
+    m_io = avio_alloc_context(nullptr, 0, 0, this, &Extractor::Read, nullptr, &Extractor::Seek);
+    if (!m_io)
+    {
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate IO context [video: \"{}\"]",
+            m_videoId
+        ));
+    }
+
+    m_format = avformat_alloc_context();
+    if (!m_format)
+    {
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate format context [video: \"{}\"]",
+            m_videoId
+        ));
+    }
+    m_format->pb = m_io;
+
+    int result = avformat_open_input(&m_format, "", nullptr, nullptr);
     if (result < 0)
     {
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kc::Youtube::Extractor::Extractor(): "
+            "Couldn't open input [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+
+    result = avformat_find_stream_info(m_format, nullptr);
+    if (result < 0)
+    {
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't find audio stream info [video: \"{}\", return code: {}]",
@@ -221,6 +454,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     if (streamIndex < 0)
     {
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't find best audio stream [video: \"{}\", return code: {}]",
@@ -236,6 +471,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     if (!decoder)
     {
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't find audio decoder [video: \"{}\"]",
@@ -247,6 +484,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     if (!m_codec)
     {
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't allocate codec context [video: \"{}\"]",
@@ -259,6 +498,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     {
         avcodec_free_context(&m_codec);
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't fill codec context with stream parameters [video: \"{}\", return code: {}]",
@@ -271,6 +512,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     {
         avcodec_free_context(&m_codec);
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't open audio decoder context [video: \"{}\", return code: {}]",
@@ -298,6 +541,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     {
         avcodec_free_context(&m_codec);
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't allocate resampler context [video: \"{}\"]",
@@ -311,6 +556,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         swr_free(&m_resampler);
         avcodec_free_context(&m_codec);
         avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
             "Couldn't initialize resampler [video: \"{}\", return code: {}]",
@@ -325,6 +572,8 @@ Youtube::Extractor::~Extractor()
     avcodec_close(m_codec);
     avcodec_free_context(&m_codec);
     avformat_close_input(&m_format);
+    avio_context_free(&m_io);
+    stopThread();
 }
 
 void Youtube::Extractor::seekTo(int64_t timestamp)

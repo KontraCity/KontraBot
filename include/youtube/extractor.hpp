@@ -4,6 +4,9 @@
 #include <mutex>
 #include <string>
 #include <vector>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
 #include <stdexcept>
 
 // Library nlohmann/json
@@ -18,6 +21,9 @@ extern "C" {
     #include <libavcodec/avcodec.h>
     #include <libswresample/swresample.h>
 }
+
+// Library Curl
+#include <curl/curl.h>
 
 // Library {fmt}
 #include <fmt/format.h>
@@ -54,6 +60,15 @@ namespace Youtube
 
     class Extractor
     {
+    private:
+        enum class ThreadStatus
+        {
+            Idle,
+            Running,
+            Stopped,
+            Error,
+        };
+
     public:
         class Frame : public std::vector<uint8_t>
         {
@@ -84,9 +99,52 @@ namespace Youtube
             }
         };
 
+    private:
+        /// @brief Curl header writer callback
+        /// @param data Data to write
+        /// @param itemSize Size of one item in bytes
+        /// @param itemCount Count of items
+        /// @param target Target to write data to
+        /// @return Count of written bytes
+        static size_t HeaderWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target);
+
+        /// @brief Curl extractor writer callback
+        /// @param data Data to write
+        /// @param itemSize Size of one item in bytes
+        /// @param itemCount Count of items
+        /// @param target Target to write data to
+        /// @return Count of written bytes
+        static size_t ExtractorWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target);
+
+        /// @brief FFmpeg data read callback
+        /// @param root Extractor to read data from
+        /// @param buffer Buffer to read data to
+        /// @param bufferLength Length of the read buffer
+        /// @return Count of bytes read
+        static int Read(void* root, uint8_t* buffer, int bufferLength);
+
+        /// @brief FFmpeg data seek callback
+        /// @param root Extractor to seek data in
+        /// @param offset Position offset in bytes
+        /// @param whence Whence the offset is from
+        /// @return Seeked data position
+        static int64_t Seek(void* root, int64_t offset, int whence);
+
     public:
         spdlog::logger m_logger;
         std::string m_videoId;
+        std::string m_audioUrl;
+        uint64_t m_fileSize;
+
+        std::mutex m_mutex;
+        std::thread m_thread;
+        ThreadStatus m_threadStatus;
+        std::condition_variable m_cv;
+        std::vector<uint8_t> m_buffer;
+        uint64_t m_position;
+        uint64_t m_positionOffset;
+
+        AVIOContext* m_io;
         AVFormatContext* m_format;
         AVStream* m_stream;
         AVCodecContext* m_codec;
@@ -94,6 +152,18 @@ namespace Youtube
         int m_unitsPerSecond;
         int64_t m_seekPosition;
         Frame m_overflowFrame;
+
+    private:
+        /// @brief Download thread implementation
+        /// @param startPosition Byte position to start download from
+        void threadFunction(uint64_t startPosition);
+
+        /// @brief Start download thread
+        /// @param startPosition Byte position to start download from
+        void startThread(uint64_t startPosition = 0);
+
+        /// @brief Stop download thread
+        void stopThread();
 
     public:
         /// @brief Initialize audio extractor
