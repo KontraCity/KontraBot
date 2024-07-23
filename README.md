@@ -1,5 +1,5 @@
 # KontraBot
-Yet another Discord music bot that can play videos and playlists from YouTube.
+Yet another music bot for Discord that can play videos and playlists from YouTube.
 Supports multiple languages, notices video chapters and shows playing items in voice channel status.
 
 ## Build without HTTP/3 and QUIC
@@ -30,7 +30,7 @@ $ make -j
 #### Command line
 ```sh
 $ mkdir build && cd build
-$ cmake .. -DLIB_DIRECTORY=<path> -DLIB_64_DIRECTORY=<path> -DENABLE_HTTP_3=ON -DCMAKE_BUILD_TYPE=Release
+$ cmake .. -DCURL_LIBS_DIRECTORY=<path> -DOPENSSL_LIBS_DIRECTORY=<path> -DENABLE_HTTP_3=ON -DCMAKE_BUILD_TYPE=Release
 $ make -j
 ```
 

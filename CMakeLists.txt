@@ -10,19 +10,21 @@ include_directories("include/")
 ## --- HTTP/3 and QUIC configuration --- ##
 option(ENABLE_HTTP_3 "Enable HTTP/3 and QUIC support" ON)
 if (ENABLE_HTTP_3)
-    set(LIB_DIRECTORY "/usr/local/lib")
-    set(LIB_64_DIRECTORY "/usr/local/lib64")
+    set(CURL_LIBS_DIRECTORY "/usr/local/lib" CACHE STRING "Directory where custom built Curl and other libraries are installed")
+    set(OPENSSL_LIBS_DIRECTORY "/usr/local/lib64" CACHE STRING "Directory where custom built OpenSSL libraries are installed")
     set(NETWORKING_LIBRARIES
-        "${LIB_DIRECTORY}/libcurl.a"
-        "${LIB_DIRECTORY}/libnghttp3.a"
-        "${LIB_DIRECTORY}/libngtcp2.a"
-        "${LIB_DIRECTORY}/libngtcp2_crypto_quictls.a"
-        "${LIB_64_DIRECTORY}/libssl.a"
-        "${LIB_64_DIRECTORY}/libcrypto.a"
+        "${CURL_LIBS_DIRECTORY}/libcurl.a"
+        "${CURL_LIBS_DIRECTORY}/libnghttp3.a"
+        "${CURL_LIBS_DIRECTORY}/libngtcp2.a"
+        "${CURL_LIBS_DIRECTORY}/libngtcp2_crypto_quictls.a"
+        "${OPENSSL_LIBS_DIRECTORY}/libssl.a"
+        "${OPENSSL_LIBS_DIRECTORY}/libcrypto.a"
         "z"
     )
     add_compile_definitions(HTTP3_ENABLED)
     message("HTTP/3 and QUIC support is ENABLED")
+    message("Curl libraries directory: \"${CURL_LIBS_DIRECTORY}\"")
+    message("OpenSSL libraries directory: \"${OPENSSL_LIBS_DIRECTORY}\"")
 else()
     set(NETWORKING_LIBRARIES "curl")
     message("HTTP/3 and QUIC support is DISABLED")
