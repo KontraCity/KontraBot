@@ -117,9 +117,14 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
         }
     }
 
-    result = curl_easy_perform(curl.get());
-    if (result != CURLE_OK)
+    for (int attempt = 1; attempt <= 5; ++attempt)
     {
+        result = curl_easy_perform(curl.get());
+        if (result == CURLE_SSL_CONNECT_ERROR || result == CURLE_RECV_ERROR)
+            continue;
+        else if (result == CURLE_OK)
+            break;
+
         throw std::invalid_argument(fmt::format(
             "kc::Curl::Request(): "
             "Couldn't perform request [return code: {}]",
