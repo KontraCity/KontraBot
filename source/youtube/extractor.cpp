@@ -23,7 +23,7 @@ size_t Youtube::Extractor::HeaderWriter(uint8_t* data, size_t itemSize, size_t i
     {
         std::string string(reinterpret_cast<char*>(data), itemCount);
         boost::smatch matches;
-        if (boost::regex_search(string, matches, boost::regex(R"(Content-Length: (\d+))")))
+        if (boost::regex_search(string, matches, boost::regex(R"([Cc]ontent-[Ll]ength: (\d+))")))
             target->m_fileSize = std::stoull(matches.str(1));
     }
 
@@ -122,6 +122,12 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request URL [return code: {}]", static_cast<int>(result)));
 
+#ifdef HTTP3_ENABLED
+        result = curl_easy_setopt(curl.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_3);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request HTTP version [return code: {}]", static_cast<int>(result)));
+#endif
+
         result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_LIMIT, 15360);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request low speed limit [return code: {}]", static_cast<int>(result)));
@@ -154,7 +160,12 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]", static_cast<int>(result)));
 
+#ifdef HTTP3_ENABLED
+        m_logger.info("Starting download with HTTP/3 and QUIC from position {}", startPosition);
+#else
         m_logger.info("Starting download from position {}", startPosition);
+#endif
+
         for (int attempt = 1; true; ++attempt)
         {
             result = curl_easy_perform(curl.get());

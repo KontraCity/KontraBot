@@ -7,10 +7,26 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 include_directories("include/")
 
-## --- Packages configuration --- ##
-find_package(fmt CONFIG REQUIRED)
-find_package(spdlog CONFIG REQUIRED)
-find_package(Boost REQUIRED)
+## --- HTTP/3 and QUIC configuration --- ##
+option(ENABLE_HTTP_3 "Enable HTTP/3 and QUIC support" ON)
+if (ENABLE_HTTP_3)
+    set(LIB_DIRECTORY "/usr/local/lib")
+    set(LIB_64_DIRECTORY "/usr/local/lib64")
+    set(NETWORKING_LIBRARIES
+        "${LIB_DIRECTORY}/libcurl.a"
+        "${LIB_DIRECTORY}/libnghttp3.a"
+        "${LIB_DIRECTORY}/libngtcp2.a"
+        "${LIB_DIRECTORY}/libngtcp2_crypto_quictls.a"
+        "${LIB_64_DIRECTORY}/libssl.a"
+        "${LIB_64_DIRECTORY}/libcrypto.a"
+        "z"
+    )
+    add_compile_definitions(HTTP3_ENABLED)
+    message("HTTP/3 and QUIC support is ENABLED")
+else()
+    set(NETWORKING_LIBRARIES "curl")
+    message("HTTP/3 and QUIC support is DISABLED")
+endif()
 
 ## --- KontraBot library configuration --- ##
 add_library(kontrabot
@@ -43,11 +59,11 @@ add_library(kontrabot
 target_link_libraries(kontrabot PRIVATE
     "fmt"
     "spdlog"
-    "curl"
     "dpp"
     "mujs"
     "boost_regex"
     "avcodec" "avformat" "avutil" "swresample"
+    ${NETWORKING_LIBRARIES}
 )
 
 ## --- KontraBot executable configuration --- ##
@@ -55,7 +71,7 @@ add_executable(KontraBot "source/main.cpp")
 target_link_libraries(KontraBot PRIVATE "kontrabot")
 
 ## --- Testing configuration --- ##
-option(BuildTests "Build KontraBot tests" ON)
-if (BuildTests)
+option(BUILD_TESTS "Build KontraBot tests" ON)
+if (BUILD_TESTS)
     add_subdirectory("tests/")
 endif()

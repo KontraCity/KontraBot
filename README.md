@@ -1,21 +1,36 @@
 # KontraBot
-The simplest Discord music bot that can play videos and playlists from YouTube.
+Yet another Discord music bot that can play videos and playlists from YouTube.
 Supports multiple languages, notices video chapters and shows playing items in voice channel status.
 
-## Dependencies
+## Build without HTTP/3 and QUIC
+#### Dependencies
 * [libfmt](https://github.com/fmtlib/fmt)
-* [libcurl](https://github.com/curl/curl)
 * [libdpp](https://github.com/brainboxdotcc/DPP)
 * [libspdlog](https://github.com/gabime/spdlog)
 * [libmujs](https://github.com/ccxvii/mujs)
 * [libboost_regex](https://github.com/boostorg/regex)
 * [libavcodec, libavformat, libavutil, libswresample](https://github.com/FFmpeg/FFmpeg)
-
-## Build
-You're going to have to install all the dependencies on your own. After that, the process is simple:
+* [libcurl](https://github.com/curl/curl)
+#### Command line
 ```sh
 $ mkdir build && cd build
-$ cmake .. -DCMAKE_BUILD_TYPE=Release
+$ cmake .. -DENABLE_HTTP_3=OFF -DCMAKE_BUILD_TYPE=Release
+$ make -j
+```
+
+## Build with HTTP/3 and QUIC
+#### Dependencies
+* [libfmt](https://github.com/fmtlib/fmt)
+* [libdpp](https://github.com/brainboxdotcc/DPP)
+* [libspdlog](https://github.com/gabime/spdlog)
+* [libmujs](https://github.com/ccxvii/mujs)
+* [libboost_regex](https://github.com/boostorg/regex)
+* [libavcodec, libavformat, libavutil, libswresample](https://github.com/FFmpeg/FFmpeg)
+* [Custom libcurl build](https://curl.se/docs/http3.html)
+#### Command line
+```sh
+$ mkdir build && cd build
+$ cmake .. -DLIB_DIRECTORY=<path> -DLIB_64_DIRECTORY=<path> -DENABLE_HTTP_3=ON -DCMAKE_BUILD_TYPE=Release
 $ make -j
 ```
 

@@ -202,13 +202,8 @@ void Bot::Player::threadFunction()
                 if (m_threadStatus == ThreadStatus::Stopped)
                     return;
 
-
-
                 if (m_session.seekTimestamp != -1)
                 {
-                    extractor.seekTo(m_session.seekTimestamp);
-                    m_session.seekTimestamp = -1;
-
                     dpp::discord_voice_client* client = getVoiceClient();
                     if (!client)
                     {
@@ -216,6 +211,9 @@ void Bot::Player::threadFunction()
                         return;
                     }
                     client->stop_audio();
+
+                    extractor.seekTo(m_session.seekTimestamp);
+                    m_session.seekTimestamp = -1;
                 }
 
                 if (!m_session.playingVideo->video.chapters().empty())
