@@ -42,8 +42,8 @@ namespace Youtube
 {
     namespace ExtractorConst
     {
-        // Maximum count of extraction attempts
-        constexpr int MaxAttempts = 5;
+        constexpr int MaxExtractionAttempts = 5;    // Maximum count of extraction attempts
+        constexpr int MaxRequestAttempts = 5;       // Maximum count of request attempts
 
         /*
          *  Size of audio frame for DPP. If the frame is smaller, the rest is filled with silence.

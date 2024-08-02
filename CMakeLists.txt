@@ -11,9 +11,9 @@ include_directories("include/")
 option(ENABLE_DPI_WORKAROUND "Enable DPI workaround" YES)
 if (ENABLE_DPI_WORKAROUND)
     add_compile_definitions(DPI_WORKAROUND_ENABLED)
-    message("DPI workaround is ENABLED")
+    message("[CONFIG] DPI workaround is ENABLED")
 else()
-    message("DPI workaround is DISABLED")
+    message("[CONFIG] DPI workaround is DISABLED")
 endif()
 
 ## --- HTTP/3 and QUIC configuration --- ##
@@ -31,12 +31,12 @@ if (ENABLE_HTTP_3)
         "z"
     )
     add_compile_definitions(HTTP3_ENABLED)
-    message("HTTP/3 and QUIC support is ENABLED")
-    message("Curl libraries directory: \"${CURL_LIBS_DIRECTORY}\"")
-    message("OpenSSL libraries directory: \"${OPENSSL_LIBS_DIRECTORY}\"")
+    message("[CONFIG] HTTP/3 and QUIC support is ENABLED")
+    message("[CONFIG] Curl libraries directory: \"${CURL_LIBS_DIRECTORY}\"")
+    message("[CONFIG] OpenSSL libraries directory: \"${OPENSSL_LIBS_DIRECTORY}\"")
 else()
     set(NETWORKING_LIBRARIES "curl")
-    message("HTTP/3 and QUIC support is DISABLED")
+    message("[CONFIG] HTTP/3 and QUIC support is DISABLED")
 endif()
 
 ## --- KontraBot library configuration --- ##

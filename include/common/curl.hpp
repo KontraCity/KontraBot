@@ -12,10 +12,16 @@
 // Library {fmt}
 #include <fmt/format.h>
 
+// Custom modules
+#include "common/utility.hpp"
+
 namespace kc {
 
 namespace Curl
 {
+    // Maximum amount of request attempts
+    constexpr int MaxRequestAttempts = 5;
+
     struct Response
     {
         long code = -1;

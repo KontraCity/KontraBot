@@ -23,6 +23,7 @@ static size_t StringWriter(uint8_t* data, size_t itemSize, size_t itemCount, std
 /// @return Request response
 static Curl::Response Request(const std::string& url, const std::vector<std::string>& headers, const std::string& data = {})
 {
+    static spdlog::logger logger = Utility::CreateLogger("curl");
     std::unique_ptr<CURL, decltype(&curl_easy_cleanup)> curl(curl_easy_init(), curl_easy_cleanup);
     if (!curl.get())
         throw std::runtime_error("kc::Curl::Request(): Couldn't initialize Curl");
@@ -117,19 +118,37 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
         }
     }
 
-    for (int attempt = 1; attempt <= 5; ++attempt)
+    for (int attempt = 1; true; ++attempt)
     {
         result = curl_easy_perform(curl.get());
-        if (result == CURLE_SSL_CONNECT_ERROR || result == CURLE_RECV_ERROR)
-            continue;
-        else if (result == CURLE_OK)
+        if (result == CURLE_OK)
             break;
 
-        throw std::invalid_argument(fmt::format(
-            "kc::Curl::Request(): "
-            "Couldn't perform request [return code: {}]",
-            static_cast<int>(result)
-        ));
+        if (attempt == Curl::MaxRequestAttempts)
+        {
+            logger.error(
+                "All {} {} request attempts to \"{}\" failed (return code: {})",
+                Curl::MaxRequestAttempts,
+                data.empty() ? "GET" : "POST",
+                url,
+                result
+            );
+            throw std::invalid_argument(fmt::format(
+                "kc::Curl::Request(): "
+                "Couldn't perform request in {} attempts [return code: {}]",
+                Curl::MaxRequestAttempts,
+                static_cast<int>(result)
+            ));
+        }
+
+        logger.warn(
+            "{} request attempt #{}/{} to \"{}\" failed (return code: {}), retrying",
+            data.empty() ? "GET" : "POST",
+            attempt,
+            Curl::MaxRequestAttempts,
+            url,
+            result
+        );
     }
 
     result = curl_easy_getinfo(curl.get(), CURLINFO_RESPONSE_CODE, &response.code);

@@ -196,51 +196,57 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]", static_cast<int>(result)));
 
-#ifdef HTTP3_ENABLED
-        m_logger.info("Starting download with HTTP/3 and QUIC from position {}", startPosition);
+#if defined(DPI_WORKAROUND_ENABLED) && defined(HTTP3_ENABLED)
+    m_logger.info("Starting download with DPI workaround, HTTP/3 and QUIC from position {}", startPosition);
+#elif defined(DPI_WORKAROUND_ENABLED) && !defined(HTTP3_ENABLED)
+    m_logger.info("Starting download with DPI workaround from position {}", startPosition);
+#elif !defined(DPI_WORKAROUND_ENABLED) && defined(HTTP3_ENABLED)
+    m_logger.info("Starting download with HTTP/3 and QUIC from position {}", startPosition);
 #else
-        m_logger.info("Starting download from position {}", startPosition);
+    m_logger.info("Starting download from position {}", startPosition);
 #endif
 
-        for (int attempt = 1; true; ++attempt)
+        for (int requestAttempt = 1, downloadAttempt = 1; true;)
         {
             result = curl_easy_perform(curl.get());
-            switch (result)
-            {
-                case CURLE_WRITE_ERROR:
-                {
-                    // Thread is cancelled
-                    return;
-                }
-                case CURLE_OPERATION_TIMEDOUT:
-                case CURLE_SSL_CONNECT_ERROR:
-                case CURLE_RECV_ERROR:
-                {
-                    /*
-                    *   One of the following things happened:
-                    *       -> The download became too slow
-                    *       -> The download halted altogether
-                    *       -> The conection has closed
-                    *   We have to retry the download.
-                    */
-                    startPosition = m_positionOffset + m_buffer.size();
-                    m_logger.warn("Download attempt #{} failed, retrying at position {}", attempt, startPosition);
+            if (result == CURLE_OK)
+                break;
+            else if (result == CURLE_WRITE_ERROR)
+                return; // Thread is cancelled
 
-                    result = curl_easy_setopt(curl.get(), CURLOPT_RANGE, fmt::format("{}-", startPosition).c_str());
-                    if (result != CURLE_OK)
-                        throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]",static_cast<int>(result)));
-                    continue;
-                }
-                case CURLE_OK:
-                {
-                    break;
-                }
-                default:
-                {
-                    throw std::runtime_error(fmt::format("Couldn't perform request [return code: {}]", static_cast<int>(result)));
-                }
+            if (requestAttempt == MaxRequestAttempts)
+            {
+                m_logger.error("All {} request attempts failed (return code: {})", MaxRequestAttempts, result);
+                throw std::runtime_error(fmt::format(
+                    "Couldn't perform request in {} attempts [return code: {}]",
+                    MaxRequestAttempts,
+                    static_cast<int>(result))
+                );
             }
-            break;
+
+            startPosition = m_positionOffset + m_buffer.size();
+            if (result == CURLE_OPERATION_TIMEDOUT || result == CURLE_RECV_ERROR)
+            {
+                m_logger.warn(
+                    "Download attempt #{} failed, retrying at position {}",
+                    downloadAttempt++,
+                    startPosition
+                );
+            }
+            else
+            {
+                m_logger.warn(
+                    "Request attempt #{}/{} failed (return code: {}), retrying at position {}",
+                    requestAttempt++,
+                    MaxRequestAttempts,
+                    result,
+                    startPosition
+                );
+            }
+
+            result = curl_easy_setopt(curl.get(), CURLOPT_RANGE, fmt::format("{}-", startPosition).c_str());
+            if (result != CURLE_OK)
+                throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]", static_cast<int>(result)));
         }
 
         long responseCode = 0;
@@ -442,9 +448,9 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             break;
         stopThread();
 
-        if (attempt == MaxAttempts)
+        if (attempt == MaxExtractionAttempts)
             throw LocalError(LocalError::Type::CouldntDownload, m_videoId);
-        m_logger.warn("Extraction attempt {}/{} failed, retrying", attempt, MaxAttempts);
+        m_logger.warn("Extraction attempt {}/{} failed, retrying", attempt, MaxExtractionAttempts);
     }
 
     m_io = avio_alloc_context(nullptr, 0, 0, this, &Extractor::Read, nullptr, &Extractor::Seek);
