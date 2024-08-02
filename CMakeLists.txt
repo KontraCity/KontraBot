@@ -7,8 +7,17 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 include_directories("include/")
 
+## --- DPI workaround configuration --- ##
+option(ENABLE_DPI_WORKAROUND "Enable DPI workaround" YES)
+if (ENABLE_DPI_WORKAROUND)
+    add_compile_definitions(DPI_WORKAROUND_ENABLED)
+    message("DPI workaround is ENABLED")
+else()
+    message("DPI workaround is DISABLED")
+endif()
+
 ## --- HTTP/3 and QUIC configuration --- ##
-option(ENABLE_HTTP_3 "Enable HTTP/3 and QUIC support" ON)
+option(ENABLE_HTTP_3 "Enable HTTP/3 and QUIC support" YES)
 if (ENABLE_HTTP_3)
     set(CURL_LIBS_DIRECTORY "/usr/local/lib" CACHE STRING "Directory where custom built Curl and other libraries are installed")
     set(OPENSSL_LIBS_DIRECTORY "/usr/local/lib64" CACHE STRING "Directory where custom built OpenSSL libraries are installed")
@@ -73,7 +82,7 @@ add_executable(KontraBot "source/main.cpp")
 target_link_libraries(KontraBot PRIVATE "kontrabot")
 
 ## --- Testing configuration --- ##
-option(BUILD_TESTS "Build KontraBot tests" ON)
+option(BUILD_TESTS "Build KontraBot tests" YES)
 if (BUILD_TESTS)
     add_subdirectory("tests/")
 endif()
