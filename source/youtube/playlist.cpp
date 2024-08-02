@@ -55,11 +55,18 @@ void Youtube::Playlist::parseAuthor(const json& playlistHeaderRendererObject)
     m_author = matches.str(1);
 }
 
-void Youtube::Playlist::parseThumbnailUrl(const json& playlistHeaderRendererObject)
+void Youtube::Playlist::parseThumbnailUrlHeaderRenderer(const json& playlistHeaderRendererObject)
 {
     const json& heroPlaylistThumbnailRendererObject = playlistHeaderRendererObject["playlistHeaderBanner"]["heroPlaylistThumbnailRenderer"];
     if (heroPlaylistThumbnailRendererObject.contains("thumbnail"))
         m_thumbnailUrl = Utility::ExtractThumbnailUrl(heroPlaylistThumbnailRendererObject["thumbnail"]["thumbnails"]);
+}
+
+void Youtube::Playlist::parseThumbnailUrlSidebarRenderer(const json& playlistSidebarPrimaryInfoRendererObject)
+{
+    const json& playlistVideoThumbnailRendererObject = playlistSidebarPrimaryInfoRendererObject["thumbnailRenderer"]["playlistVideoThumbnailRenderer"];
+    if (playlistVideoThumbnailRendererObject.contains("thumbnail"))
+        m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistVideoThumbnailRendererObject["thumbnail"]["thumbnails"]);
 }
 
 void Youtube::Playlist::parseVideos(const json& videoContentsObject)
@@ -185,13 +192,27 @@ void Youtube::Playlist::downloadInfo()
         json browseResponseJson = json::parse(browseResponse.data);
         checkAlerts(browseResponseJson);
 
-        const json& playlistHeaderRendererObject = browseResponseJson["header"]["playlistHeaderRenderer"];
-        m_title = Utility::ExtractString(playlistHeaderRendererObject["title"]);
-        parseAuthor(playlistHeaderRendererObject);
-        parseThumbnailUrl(playlistHeaderRendererObject);
-        parseVideoCount(playlistHeaderRendererObject["byline"][0]["playlistBylineRenderer"]["text"]);
-        m_optionalKnown = true;
-        m_viewCount = Utility::ExtractViewCount(playlistHeaderRendererObject["viewCountText"]);
+        if (browseResponseJson["header"].contains("playlistHeaderRenderer"))
+        {
+            const json& playlistHeaderRendererObject = browseResponseJson["header"]["playlistHeaderRenderer"];
+            m_title = Utility::ExtractString(playlistHeaderRendererObject["title"]);
+            parseAuthor(playlistHeaderRendererObject);
+            parseThumbnailUrlHeaderRenderer(playlistHeaderRendererObject);
+            parseVideoCount(playlistHeaderRendererObject["byline"][0]["playlistBylineRenderer"]["text"]);
+            m_optionalKnown = true;
+            m_viewCount = Utility::ExtractViewCount(playlistHeaderRendererObject["viewCountText"]);
+        }
+        else
+        {
+            const json& playlistSidebarPrimaryInfoRendererObject = browseResponseJson["sidebar"]["playlistSidebarRenderer"]["items"][0]["playlistSidebarPrimaryInfoRenderer"];
+            const json& playlistSidebarSecondaryInfoRendererObject = browseResponseJson["sidebar"]["playlistSidebarRenderer"]["items"][1]["playlistSidebarSecondaryInfoRenderer"];
+            m_title = Utility::ExtractString(playlistSidebarPrimaryInfoRendererObject["title"]);
+            m_author = Utility::ExtractString(playlistSidebarSecondaryInfoRendererObject["videoOwner"]["videoOwnerRenderer"]["title"]);
+            parseThumbnailUrlSidebarRenderer(playlistSidebarPrimaryInfoRendererObject);
+            parseVideoCount(playlistSidebarPrimaryInfoRendererObject["stats"][0]);
+            m_optionalKnown = true;
+            m_viewCount = Utility::ExtractViewCount(playlistSidebarPrimaryInfoRendererObject["stats"][1]);
+        }
 
         const json& contentsObject = browseResponseJson["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][0]
             ["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]

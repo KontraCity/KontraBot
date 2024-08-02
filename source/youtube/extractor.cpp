@@ -197,13 +197,13 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
             throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]", static_cast<int>(result)));
 
 #if defined(DPI_WORKAROUND_ENABLED) && defined(HTTP3_ENABLED)
-    m_logger.info("Starting download with DPI workaround, HTTP/3 and QUIC from position {}", startPosition);
+        m_logger.info("Starting download with DPI workaround, HTTP/3 and QUIC from position {}", startPosition);
 #elif defined(DPI_WORKAROUND_ENABLED) && !defined(HTTP3_ENABLED)
-    m_logger.info("Starting download with DPI workaround from position {}", startPosition);
+        m_logger.info("Starting download with DPI workaround from position {}", startPosition);
 #elif !defined(DPI_WORKAROUND_ENABLED) && defined(HTTP3_ENABLED)
-    m_logger.info("Starting download with HTTP/3 and QUIC from position {}", startPosition);
+        m_logger.info("Starting download with HTTP/3 and QUIC from position {}", startPosition);
 #else
-    m_logger.info("Starting download from position {}", startPosition);
+        m_logger.info("Starting download from position {}", startPosition);
 #endif
 
         for (int requestAttempt = 1, downloadAttempt = 1; true;)

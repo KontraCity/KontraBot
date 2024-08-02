@@ -192,9 +192,13 @@ namespace Youtube
         /// @param playlistHeaderRendererObject API responsee JSON playlist header renderer object
         void parseAuthor(const json& playlistHeaderRendererObject);
 
-        /// @brief Parse API response playlist thumbnail URL
+        /// @brief Parse API response playlist thumbnail URL from playlist header renderer object
         /// @param playlistHeaderRendererObject API response JSON playlist header renderer object
-        void parseThumbnailUrl(const json& playlistHeaderRendererObject);
+        void parseThumbnailUrlHeaderRenderer(const json& playlistHeaderRendererObject);
+
+        /// @brief Parse API response playlist thumbnail URL from playlist sidebar primary info renderer object
+        /// @param playlistSidebarPrimaryInfoRendererObject API response JSON playlist sidebar primary info renderer object
+        void parseThumbnailUrlSidebarRenderer(const json& playlistSidebarPrimaryInfoRendererObject);
 
         /// @brief Parse API response playlist videos
         /// @param videoContentsObject API response JSON video contents object
