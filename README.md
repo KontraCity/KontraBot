@@ -14,7 +14,7 @@ Supports multiple languages, notices video chapters and shows playing items in v
 #### Command line
 ```sh
 $ mkdir build && cd build
-$ cmake .. -DENABLE_HTTP_3=OFF -DCMAKE_BUILD_TYPE=Release
+$ cmake .. -DENABLE_DPI_WORKAROUND=<option> -DENABLE_HTTP_3=OFF -DCMAKE_BUILD_TYPE=Release
 $ make -j
 ```
 
@@ -30,7 +30,7 @@ $ make -j
 #### Command line
 ```sh
 $ mkdir build && cd build
-$ cmake .. -DCURL_LIBS_DIRECTORY=<path> -DOPENSSL_LIBS_DIRECTORY=<path> -DENABLE_HTTP_3=ON -DCMAKE_BUILD_TYPE=Release
+$ cmake .. -DENABLE_DPI_WORKAROUND=<option> -DENABLE_HTTP_3=ON -DCURL_LIBS_DIRECTORY=<path> -DOPENSSL_LIBS_DIRECTORY=<path> -DCMAKE_BUILD_TYPE=Release
 $ make -j
 ```
 
