@@ -22,12 +22,12 @@ namespace kc {
 // Custom kc::Bot modules
 #include "bot/locale/locale.hpp"
 #include "bot/commands.hpp"
-#include "bot/config.hpp"
 #include "bot/info.hpp"
 #include "bot/player.hpp"
 #include "bot/session.hpp"
 
 // Other custom modules
+#include "common/config.hpp"
 #include "common/utility.hpp"
 
 // Custom kc::Youtube modules
@@ -130,9 +130,8 @@ namespace Bot
 
     public:
         /// @brief Initialize bot
-        /// @param config Initialized config
         /// @param registerCommands Wherther or not to register commands and exit
-        Bot(Config::Pointer config, bool registerCommands = false);
+        Bot(bool registerCommands = false);
 
         /// @brief Leave voice channel
         /// @param client Discord client serving guild

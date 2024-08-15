@@ -12,7 +12,6 @@ add_library(kontrabot
     # Bot modules
     "source/bot/commands.cpp"
     "source/bot/bot.cpp"
-    "source/bot/config.cpp"
     "source/bot/info.cpp"
     "source/bot/locale.cpp"
     "source/bot/player.cpp"
@@ -21,6 +20,7 @@ add_library(kontrabot
     "source/bot/types.cpp"
 
     # Common modules
+    "source/common/config.cpp"
     "source/common/curl.cpp"
     "source/common/interpreter.cpp"
     "source/common/stopwatch.cpp"

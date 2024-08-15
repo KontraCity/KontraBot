@@ -29,6 +29,7 @@ extern "C" {
 #include <fmt/format.h>
 
 // Custom modules
+#include "common/config.hpp"
 #include "youtube/client.hpp"
 #include "youtube/error.hpp"
 #include "youtube/video.hpp"

@@ -36,6 +36,7 @@ namespace kc {
 #include "bot/timeout.hpp"
 
 // Other custom modules
+#include "common/config.hpp"
 #include "common/utility.hpp"
 
 // Custom kc::Youtube modules

@@ -52,6 +52,33 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
         ));
     }
 
+    if (Config::Instance->proxyEnabled())
+    {
+        std::string endpoint = fmt::format("{}:{}", Config::Instance->proxyHost(), Config::Instance->proxyPort());
+        result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, endpoint.c_str());
+        if (result != CURLE_OK)
+        {
+            throw std::runtime_error(fmt::format(
+                "kc::Curl::Request(): "
+                "Couldn't configure request proxy [return code: {}]",
+                static_cast<int>(result)
+            ));
+        }
+
+        if (Config::Instance->proxyAuthRequired())
+        {
+            std::string credentials = fmt::format("{}:{}", Config::Instance->proxyAuthUser(), Config::Instance->proxyAuthPassword());
+            result = curl_easy_setopt(curl.get(), CURLOPT_PROXYUSERPWD, credentials.c_str());
+            if (result != CURLE_OK)
+            {
+                throw std::runtime_error(fmt::format("kc::Curl::Request(): "
+                    "Couldn't configure request proxy authentication [return code: {}]",
+                    static_cast<int>(result)
+                ));
+            }
+        }
+    }
+
     result = curl_easy_setopt(curl.get(), CURLOPT_HEADERDATA, &response.headers);
     if (result != CURLE_OK)
     {

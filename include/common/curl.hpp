@@ -13,6 +13,7 @@
 #include <fmt/format.h>
 
 // Custom modules
+#include "common/config.hpp"
 #include "common/utility.hpp"
 
 namespace kc {

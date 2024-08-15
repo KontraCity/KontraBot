@@ -122,11 +122,27 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request URL [return code: {}]", static_cast<int>(result)));
 
+        if (Config::Instance->proxyEnabled())
+        {
+            std::string endpoint = fmt::format("{}:{}", Config::Instance->proxyHost(), Config::Instance->proxyPort());
+            result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, endpoint.c_str());
+            if (result != CURLE_OK)
+                throw std::runtime_error(fmt::format("Couldn't configure request proxy [return code: {}]", static_cast<int>(result)));
+
+            if (Config::Instance->proxyAuthRequired())
+            {
+                std::string credentials = fmt::format("{}:{}", Config::Instance->proxyAuthUser(), Config::Instance->proxyAuthPassword());
+                result = curl_easy_setopt(curl.get(), CURLOPT_PROXYUSERPWD, credentials.c_str());
+                if (result != CURLE_OK)
+                    throw std::runtime_error(fmt::format("Couldn't configure request proxy authentication [return code: {}]", static_cast<int>(result)));
+            }
+        }
+
         result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_LIMIT, 15360);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request low speed limit [return code: {}]", static_cast<int>(result)));
 
-        result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_TIME, 1);
+        result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_TIME, 5);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request low speed timeout [return code: {}]", static_cast<int>(result)));
 

@@ -6,8 +6,8 @@
 
 // Custom modules
 #include "bot/bot.hpp"
-#include "bot/config.hpp"
 #include "bot/info.hpp"
+#include "common/config.hpp"
 #include "common/utility.hpp"
 using namespace kc;
 
@@ -109,12 +109,12 @@ static int ShowHelpMessage(const ParseResult& result)
 /// @return Executable exit code
 static int GenerateFiles()
 {
-    if (std::filesystem::is_regular_file(Bot::ConfigConst::ConfigFile))
+    if (std::filesystem::is_regular_file(ConfigConst::ConfigFile))
     {
         fmt::print(
             "Configuration file \"{}\" already exists.\n"
             "Delete it first to confirm that you don't care about its contents.\n",
-            Bot::ConfigConst::ConfigFile
+            ConfigConst::ConfigFile
         );
         return 1;
     }
@@ -131,14 +131,14 @@ static int GenerateFiles()
 
     try
     {
-        Bot::Config::GenerateSampleFile();
+        Config::GenerateSampleFile();
     }
     catch (...)
     {
         fmt::print(
             "Couldn't create configuration file \"{}\".\n"
             "Please check permissions.\n",
-            Bot::ConfigConst::ConfigFile
+            ConfigConst::ConfigFile
         );
         return 1;
     }
@@ -156,27 +156,21 @@ static int GenerateFiles()
     fmt::print(
         "Configuration file \"{}\" and information directory \"{}/\" were created.\n"
         "Please configure the file before starting KontraBot.\n",
-        Bot::ConfigConst::ConfigFile, Bot::InfoConst::InfoDirectory
+        ConfigConst::ConfigFile, Bot::InfoConst::InfoDirectory
     );
     return 0;
 }
 
-/// @brief Initialize config
-/// @return Initialized config
-static Bot::Config::Pointer Init(const ParseResult& result)
+static bool CheckConfig(const ParseResult& result)
 {
+    if (Config::Instance->error().empty())
+        return true;
+
     spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
-    try
-    {
-        return std::make_shared<Bot::Config>();
-    }
-    catch (const Bot::Config::Error& error)
-    {
-        logger.error("Configuration error: {}", error.what());
-        logger.info("Hint: Check configuration file \"{}\"", Bot::ConfigConst::ConfigFile);
-        logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
-        return {};
-    }
+    logger.error("Configuration error: {}", Config::Instance->error());
+    logger.info("Hint: Check configuration file \"{}\"", ConfigConst::ConfigFile);
+    logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
+    return false;
 }
 
 int main(int argc, char** argv)
@@ -194,13 +188,13 @@ int main(int argc, char** argv)
             break;
     }
 
-    Bot::Config::Pointer config = Init(result);
-    if (!config)
+    bool configCheck = CheckConfig(result);
+    if (!configCheck)
         return 1;
 
     if (result.result == ParseResult::Result::Register)
     {
-        Bot::Bot bot(config, true);
+        Bot::Bot bot(true);
         return 0;
     }
 
@@ -209,6 +203,6 @@ int main(int argc, char** argv)
         "GitHub repository: https://github.com/KontraCity/KontraBot\n"
     );
 
-    Bot::Bot bot(config);
+    Bot::Bot bot;
     bot.start(false);
 }
