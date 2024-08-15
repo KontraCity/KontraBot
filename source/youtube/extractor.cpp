@@ -118,51 +118,9 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (!curl.get())
             throw std::runtime_error("Couldn't initialize Curl");
 
-#ifdef DPI_WORKAROUND_ENABLED
-        boost::smatch matches;
-        if (!boost::regex_search(m_audioUrl, matches, boost::regex(R"(https:\/\/(.+\.googlevideo\.com)\/)")))
-            throw std::runtime_error(fmt::format("Couldn't extract domain from audio URL"));
-        std::string domain = matches.str(1);
-        m_audioUrl.replace(matches[1].begin(), matches[1].end(), "google.com");
-#endif
-
         CURLcode result = curl_easy_setopt(curl.get(), CURLOPT_URL, m_audioUrl.c_str());
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request URL [return code: {}]", static_cast<int>(result)));
-
-#ifdef DPI_WORKAROUND_ENABLED
-        result = curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYPEER, 0);
-        if (result != CURLE_OK)
-            throw std::runtime_error(fmt::format("Couldn't configure request peer verify policy [return code: {}]", static_cast<int>(result)));
-
-        result = curl_easy_setopt(curl.get(), CURLOPT_SSL_VERIFYHOST, 0);
-        if (result != CURLE_OK)
-            throw std::runtime_error(fmt::format("Couldn't configure request host verify policy [return code: {}]", static_cast<int>(result)));
-
-        std::unique_ptr<curl_slist, decltype(&curl_slist_free_all)> connectionList(nullptr, curl_slist_free_all);
-        connectionList.reset(curl_slist_append(nullptr, ("::" + domain).c_str()));
-        if (!connectionList)
-            throw std::runtime_error("Couldn't allocate request connection list");
-
-        result = curl_easy_setopt(curl.get(), CURLOPT_CONNECT_TO, connectionList.get());
-        if (result != CURLE_OK)
-            throw std::runtime_error(fmt::format("Couldn't configure request connection list [return code: {}]", static_cast<int>(result)));
-
-        std::unique_ptr<curl_slist, decltype(&curl_slist_free_all)> headerList(nullptr, curl_slist_free_all);
-        headerList.reset(curl_slist_append(nullptr, ("Host: " + domain).c_str()));
-        if (!headerList)
-            throw std::runtime_error("Couldn't allocate request header list");
-
-        result = curl_easy_setopt(curl.get(), CURLOPT_HTTPHEADER, headerList.get());
-        if (result != CURLE_OK)
-            throw std::runtime_error(fmt::format("Couldn't configure request header list [return code: {}]", static_cast<int>(result)));
-#endif
-
-#ifdef HTTP3_ENABLED
-        result = curl_easy_setopt(curl.get(), CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_3);
-        if (result != CURLE_OK)
-            throw std::runtime_error(fmt::format("Couldn't configure request HTTP version [return code: {}]", static_cast<int>(result)));
-#endif
 
         result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_LIMIT, 15360);
         if (result != CURLE_OK)
@@ -196,16 +154,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request range [return code: {}]", static_cast<int>(result)));
 
-#if defined(DPI_WORKAROUND_ENABLED) && defined(HTTP3_ENABLED)
-        m_logger.info("Starting download with DPI workaround, HTTP/3 and QUIC from position {}", startPosition);
-#elif defined(DPI_WORKAROUND_ENABLED) && !defined(HTTP3_ENABLED)
-        m_logger.info("Starting download with DPI workaround from position {}", startPosition);
-#elif !defined(DPI_WORKAROUND_ENABLED) && defined(HTTP3_ENABLED)
-        m_logger.info("Starting download with HTTP/3 and QUIC from position {}", startPosition);
-#else
         m_logger.info("Starting download from position {}", startPosition);
-#endif
-
         for (int requestAttempt = 1, downloadAttempt = 1; true;)
         {
             result = curl_easy_perform(curl.get());

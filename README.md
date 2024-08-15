@@ -2,35 +2,19 @@
 Yet another music bot for Discord that can play videos and playlists from YouTube.
 Supports multiple languages, notices video chapters and shows playing items in voice channel status.
 
-## Build without HTTP/3 and QUIC
+## Build
 #### Dependencies
-* [libfmt](https://github.com/fmtlib/fmt)
-* [libdpp](https://github.com/brainboxdotcc/DPP)
-* [libspdlog](https://github.com/gabime/spdlog)
-* [libmujs](https://github.com/ccxvii/mujs)
-* [libboost_regex](https://github.com/boostorg/regex)
-* [libavcodec, libavformat, libavutil, libswresample](https://github.com/FFmpeg/FFmpeg)
 * [libcurl](https://github.com/curl/curl)
-#### Command line
-```sh
-$ mkdir build && cd build
-$ cmake .. -DENABLE_DPI_WORKAROUND=<option> -DENABLE_HTTP_3=OFF -DCMAKE_BUILD_TYPE=Release
-$ make -j
-```
-
-## Build with HTTP/3 and QUIC
-#### Dependencies
 * [libfmt](https://github.com/fmtlib/fmt)
 * [libdpp](https://github.com/brainboxdotcc/DPP)
 * [libspdlog](https://github.com/gabime/spdlog)
 * [libmujs](https://github.com/ccxvii/mujs)
 * [libboost_regex](https://github.com/boostorg/regex)
 * [libavcodec, libavformat, libavutil, libswresample](https://github.com/FFmpeg/FFmpeg)
-* [Custom libcurl build](https://curl.se/docs/http3.html)
 #### Command line
 ```sh
 $ mkdir build && cd build
-$ cmake .. -DENABLE_DPI_WORKAROUND=<option> -DENABLE_HTTP_3=ON -DCURL_LIBS_DIRECTORY=<path> -DOPENSSL_LIBS_DIRECTORY=<path> -DCMAKE_BUILD_TYPE=Release
+$ cmake .. -DCMAKE_BUILD_TYPE=Release
 $ make -j
 ```
 
