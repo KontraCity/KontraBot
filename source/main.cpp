@@ -163,10 +163,10 @@ static int GenerateFiles()
 
 static bool CheckConfig(const ParseResult& result)
 {
+    spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
     if (Config::Instance->error().empty())
         return true;
 
-    spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
     logger.error("Configuration error: {}", Config::Instance->error());
     logger.info("Hint: Check configuration file \"{}\"", ConfigConst::ConfigFile);
     logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
