@@ -28,6 +28,7 @@ void Config::GenerateSampleFile()
 
     json configJson;
     configJson[Objects::DiscordBotApiToken] = Defaults::DiscordBotApiToken;
+    configJson[Objects::YoutubeAuthEnabled] = Defaults::YoutubeAuthEnabled;
     configJson[Objects::Proxy::Object] = proxyObject;
     configFile << configJson.dump(4) << '\n';
 }
@@ -37,28 +38,29 @@ Config::Config()
     std::ifstream configFile(ConfigFile);
     if (!configFile)
     {
-        m_error = fmt::format("Couldn't open configuration file \"{}\"", ConfigFile);
+        m_error = "Couldn't open configuration file";
         return;
     }
 
     try
     {
         json configJson = json::parse(configFile);
-        m_discordBotApiToken = configJson[Objects::DiscordBotApiToken];
+        m_discordBotApiToken = configJson.at(Objects::DiscordBotApiToken);
+        m_youtubeAuthEnabled = configJson.at(Objects::YoutubeAuthEnabled);
 
-        json proxyObject = configJson[Objects::Proxy::Object];
-        m_proxyEnabled = proxyObject[Objects::Proxy::Enabled];
-        m_proxyHost = proxyObject[Objects::Proxy::Host];
-        m_proxyPort = proxyObject[Objects::Proxy::Port];
+        json proxyObject = configJson.at(Objects::Proxy::Object);
+        m_proxyEnabled = proxyObject.at(Objects::Proxy::Enabled);
+        m_proxyHost = proxyObject.at(Objects::Proxy::Host);
+        m_proxyPort = proxyObject.at(Objects::Proxy::Port);
 
-        json proxyAuthObject = proxyObject[Objects::Proxy::Auth::Object];
-        m_proxyAuthRequired = proxyAuthObject[Objects::Proxy::Auth::Required];
-        m_proxyAuthUser = proxyAuthObject[Objects::Proxy::Auth::User];
-        m_proxyAuthPassword = proxyAuthObject[Objects::Proxy::Auth::Password];
+        json proxyAuthObject = proxyObject.at(Objects::Proxy::Auth::Object);
+        m_proxyAuthRequired = proxyAuthObject.at(Objects::Proxy::Auth::Required);
+        m_proxyAuthUser = proxyAuthObject.at(Objects::Proxy::Auth::User);
+        m_proxyAuthPassword = proxyAuthObject.at(Objects::Proxy::Auth::Password);
     }
     catch (const json::exception&)
     {
-        m_error = fmt::format("Couldn't parse configuration JSON file \"{}\"", ConfigFile);
+        m_error = "Couldn't parse configuration file JSON";
         return;
     }
 

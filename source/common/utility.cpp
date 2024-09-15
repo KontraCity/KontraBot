@@ -84,4 +84,16 @@ int64_t Utility::RandomNumber(int64_t min, int64_t max)
     return std::uniform_int_distribution(min, max)(generator);
 }
 
+void Utility::Sleep(double seconds)
+{
+    std::this_thread::sleep_for(std::chrono::microseconds(static_cast<size_t>(seconds * 1'000'000)));
+}
+
+int Utility::GetUnixTimestamp()
+{
+    constexpr pt::ptime epoch(dt::date(1970, 1, 1));
+    pt::ptime now = pt::second_clock::local_time();
+    return static_cast<int>((now - epoch).total_seconds());
+}
+
 } // namespace kc

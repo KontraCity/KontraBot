@@ -7,6 +7,7 @@
 // Custom modules
 #include "bot/bot.hpp"
 #include "bot/info.hpp"
+#include "common/cache.hpp"
 #include "common/config.hpp"
 #include "common/utility.hpp"
 using namespace kc;
@@ -30,7 +31,7 @@ struct ParseResult
 /// @brief Parse commmandline arguments
 /// @param argc Count of arguments
 /// @param argv Values of arguments
-/// @return Parse result
+/// @return Commandline arguments parse result
 static ParseResult ParseOptions(int argc, char** argv)
 {
     ParseResult result;
@@ -87,7 +88,7 @@ static ParseResult ParseOptions(int argc, char** argv)
 }
 
 /// @brief Show help message
-/// @param executableName Executable name
+/// @param result Commandline arguments parse result
 static int ShowHelpMessage(const ParseResult& result)
 {
     fmt::print(
@@ -161,16 +162,52 @@ static int GenerateFiles()
     return 0;
 }
 
-static bool CheckConfig(const ParseResult& result)
+/// @brief Check singletons initialization
+/// @param result Commandline arguments parse result
+/// @return True if all singletons initialized successfully
+static bool CheckSingletons(const ParseResult& result)
 {
     spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
-    if (Config::Instance->error().empty())
-        return true;
 
-    logger.error("Configuration error: {}", Config::Instance->error());
-    logger.info("Hint: Check configuration file \"{}\"", ConfigConst::ConfigFile);
-    logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
-    return false;
+    if (!Cache::Instance->error().empty())
+    {
+        logger.error("Cache error: {}", Cache::Instance->error());
+        logger.info("Hint: Check or delete cache file \"{}\"", CacheConst::CacheFile);
+        return false;
+    }
+
+    if (!Config::Instance->error().empty())
+    {
+        logger.error("Configuration error: {}", Config::Instance->error());
+        logger.info("Hint: Check configuration file \"{}\"", ConfigConst::ConfigFile);
+        logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
+        return false;
+    }
+
+    if (!Youtube::Client::Instance->error().empty())
+    {
+        logger.error("YouTube client error: {}", Youtube::Client::Instance->error());
+        return false;
+    }
+
+    return true;
+}
+
+/// @brief Check YouTube client authorization
+/// @return True if no errors occured
+static bool CheckClientAuthorization()
+{
+    spdlog::logger logger = Utility::CreateLogger("auth");
+    try
+    {
+        Youtube::Client::Instance->checkAuthorization();
+        return true;
+    }
+    catch (const std::runtime_error& error)
+    {
+        logger.error("Couldn't authenticate: \"{}\"", error.what());
+        return false;
+    }
 }
 
 int main(int argc, char** argv)
@@ -188,8 +225,8 @@ int main(int argc, char** argv)
             break;
     }
 
-    bool configCheck = CheckConfig(result);
-    if (!configCheck)
+    bool singletonsCheck = CheckSingletons(result);
+    if (!singletonsCheck)
         return 1;
 
     if (result.result == ParseResult::Result::Register)
@@ -197,6 +234,10 @@ int main(int argc, char** argv)
         Bot::Bot bot(true);
         return 0;
     }
+
+    bool authorizationCheck = CheckClientAuthorization();
+    if (!authorizationCheck)
+        return 1;
 
     fmt::print(
         "Welcome to KontraBot NG\n"

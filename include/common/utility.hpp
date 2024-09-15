@@ -4,6 +4,8 @@
 #include <optional>
 #include <string>
 #include <random>
+#include <chrono>
+#include <thread>
 
 // Library DPP
 #include <dpp/dpp.h>
@@ -73,6 +75,14 @@ namespace Utility
     /// @param max Max number value
     /// @return Generated number
     int64_t RandomNumber(int64_t min, int64_t max);
+
+    /// @brief Perform execution delay
+    /// @param seconds Amount of seconds to delay for
+    void Sleep(double seconds);
+
+    /// @brief Get Unix timestamp
+    /// @return Unix timestamp
+    int GetUnixTimestamp();
 }
 
 } // namespace kc

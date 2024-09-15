@@ -3,19 +3,24 @@
 // STL modules
 #include <string>
 #include <memory>
+#include <algorithm>
 #include <mutex>
 #include <stdexcept>
 
 // Library nlohmann/json
 #include <nlohmann/json.hpp>
 
-// Library Boost.Regex
+// Libraries Boost.Regex, Boost.Uuid
 #include <boost/regex.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
 
 // Library {fmt}
 #include <fmt/format.h>
 
 // Custom modules
+#include "common/cache.hpp"
 #include "common/curl.hpp"
 #include "common/interpreter.hpp"
 #include "common/utility.hpp"
@@ -170,8 +175,22 @@ namespace Youtube
             )_delimeter"
         };
 
+        // Constants for YouTube OAuth2 authorization
+        namespace Auth
+        {
+            constexpr const char* ClientId = "861556708454-d6dlm3lh05idd8npek18k6be8ba3oc68.apps.googleusercontent.com";
+            constexpr const char* ClientSecret = "SboVhoG9s0rNafixCSGGKXAT";
+            constexpr const char* ClientScopes = "http://gdata.youtube.com https://www.googleapis.com/auth/youtube";
+        }
+
         namespace Urls
         {
+            // YouTube OAuth2 authorization code URL
+            constexpr const char* AuthCode = "https://www.youtube.com/o/oauth2/device/code";
+
+            // YouTube OAuth2 authorization token URL
+            constexpr const char* AuthToken = "https://www.youtube.com/o/oauth2/token";
+
             // YouTube iframe API URL
             constexpr const char* IframeApi = "https://www.youtube.com/iframe_api";
 
@@ -221,6 +240,11 @@ namespace Youtube
         static const std::unique_ptr<Client> Instance;
 
     private:
+        /// @brief Generate UUID string
+        /// @param withoutDashes Whether to remove dashes from UUID or not
+        /// @return Generated UUID string
+        static std::string GenerateUuid(bool withoutDashes = false);
+
         /// @brief Get current YouTube player ID
         /// @throw std::runtime_error if internal error occurs
         /// @return Current YouTube player ID
@@ -235,7 +259,7 @@ namespace Youtube
     private:
         spdlog::logger m_logger;
         std::mutex m_mutex;
-        bool m_initialized;
+        std::string m_error;
         json m_clients;
         std::string m_playerId;
         std::unique_ptr<Interpreter> m_interpreter;
@@ -244,17 +268,25 @@ namespace Youtube
         /// @brief Initialize client
         Client();
 
-        /// @brief Update client interpreter
+        /// @brief Update client interpreter and data
         /// @throw std::runtime_error if internal error occurs
-        void update();
+        void updatePlayer();
+
+        /// @brief Update YouTube authorization token
+        /// @throw std::runtime_error if internal error occurs
+        void updateToken();
 
     public:
-        /// @brief Check if client initialized
-        /// @return True if client initialized
-        inline bool initialized() const
+        /// @brief Get YouTube client error message
+        /// @return YouTube client error message (empty if no error)
+        inline const std::string& error() const
         {
-            return m_initialized;
+            return m_error;
         }
+
+        /// @brief Check YouTube user authorization and authorize if needed
+        /// @throw std::runtime_error if internal error occurs
+        void checkAuthorization();
 
         /// @brief Perform YouTube API request
         /// @param clientType Client type to use

@@ -27,6 +27,7 @@ namespace ConfigConst
     namespace Objects
     {
         constexpr const char* DiscordBotApiToken = "discord_bot_api_token";
+        constexpr const char* YoutubeAuthEnabled = "youtube_auth_enabled";
 
         namespace Proxy
         {
@@ -48,6 +49,7 @@ namespace ConfigConst
     namespace Defaults
     {
         constexpr const char* DiscordBotApiToken = "Enter Discord bot API token here";
+        constexpr bool YoutubeAuthEnabled = false;
 
         namespace Proxy
         {
@@ -78,7 +80,9 @@ public:
 
 private:
     std::string m_error;
+
     std::string m_discordBotApiToken;
+    bool m_youtubeAuthEnabled;
 
     bool m_proxyEnabled;
     std::string m_proxyHost;
@@ -93,8 +97,8 @@ private:
     Config();
 
 public:
-    /// @brief Get configuration file read and parse error message
-    /// @return Configuration file read and parse error message (empty if no error)
+    /// @brief Get configuration file error message
+    /// @return Configuration file error message (empty if no error)
     inline const std::string& error() const
     {
         return m_error;
@@ -105,6 +109,13 @@ public:
     inline const std::string& discordBotApiToken() const
     {
         return m_discordBotApiToken;
+    }
+
+    /// @brief Check if youtube authentication is enabled
+    /// @return True if youtube authentication is enabled
+    inline bool youtubeAuthEnabled() const
+    {
+        return m_youtubeAuthEnabled;
     }
 
     /// @brief Check if proxy is enabled

@@ -20,6 +20,7 @@ add_library(libkontrabot
     "source/bot/types.cpp"
 
     # Common modules
+    "source/common/cache.cpp"
     "source/common/config.cpp"
     "source/common/curl.cpp"
     "source/common/interpreter.cpp"
@@ -57,6 +58,7 @@ if (WIN32)
         CURL::libcurl
         dpp::dpp
         Boost::boost
+        "bcrypt"
         ${FFMPEG_LIBRARIES}
         PkgConfig::MUJS
     )
