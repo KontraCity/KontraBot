@@ -8,7 +8,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 include_directories("include/")
 
 ## --- KontraBot library configuration --- ##
-add_library(libkontrabot
+add_library(kontrabotbase
     # Bot modules
     "source/bot/commands.cpp"
     "source/bot/bot.cpp"
@@ -50,9 +50,9 @@ if (WIN32)
     pkg_check_modules(MUJS REQUIRED IMPORTED_TARGET mujs)
 
     ## --- KontraBot library dependencies configuration --- ##
-    target_include_directories(libkontrabot PRIVATE ${FFMPEG_INCLUDE_DIRS})
-    target_link_directories(libkontrabot PRIVATE ${FFMPEG_LIBRARY_DIRS})
-    target_link_libraries(libkontrabot PRIVATE
+    target_include_directories(kontrabotbase PRIVATE ${FFMPEG_INCLUDE_DIRS})
+    target_link_directories(kontrabotbase PRIVATE ${FFMPEG_LIBRARY_DIRS})
+    target_link_libraries(kontrabotbase PRIVATE
         fmt::fmt
         spdlog::spdlog
         CURL::libcurl
@@ -64,7 +64,7 @@ if (WIN32)
     )
 elseif (UNIX)
     ## --- KontraBot library dependencies configuration --- ##
-    target_link_libraries(libkontrabot PRIVATE
+    target_link_libraries(kontrabotbase PRIVATE
         "fmt"
         "spdlog"
         "curl"
@@ -77,7 +77,7 @@ endif()
 
 ## --- KontraBot executable configuration --- ##
 add_executable(KontraBot "source/main.cpp")
-target_link_libraries(KontraBot PRIVATE "libkontrabot")
+target_link_libraries(KontraBot PRIVATE "kontrabotbase")
 if (WIN32)
     target_link_libraries(KontraBot PRIVATE fmt::fmt spdlog::spdlog)
 endif()

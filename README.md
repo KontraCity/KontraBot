@@ -44,7 +44,8 @@ $ ./KontraBot -g
 KontraBot's `config.json` file needs to be configured before the bot can start. Configuration fields:
 
 * `discord_bot_api_token`: The token used to connect to Discord. Can be obtained [here](https://discord.com/developers/docs/quick-start/getting-started).
-* `proxy` - proxy server configuration:
+* `youtube_auth_enabled`: Whether to authorize with Google account when accessing YouTube or not.
+* * `proxy` - proxy server configuration:
   + `enabled`: Whether to use proxy when accessing YouTube servers or not.
   + `host`: Proxy server IP or domain.
   + `port`: Proxy server port.
@@ -59,7 +60,12 @@ KontraBot uses slashcommands. They have to be registered before Discord users ca
 $ ./KontraBot -r
 ```
 
-### 4. Start
+### 4. YouTube authorization
+You can skip this step if you chose not to use this feature.
+Authorization instructions will be shown when bot is launched for the first time.
+Follow them to authorize KontraBot with your Google account. This only needs to be done once.
+
+### 5. Start
 Everything is ready and the bot can start now. To start normally, no arguments have to be provided:
 ```sh
 $ ./KontraBot

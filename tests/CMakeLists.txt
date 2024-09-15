@@ -8,7 +8,7 @@ add_executable(Test
     "source/main.cpp"
     "source/video.cpp"
 )
-target_link_libraries(Test PRIVATE "libkontrabot")
+target_link_libraries(Test PRIVATE "kontrabotbase")
 if (WIN32)
     target_link_libraries(Test PRIVATE fmt::fmt spdlog::spdlog)
 endif()
