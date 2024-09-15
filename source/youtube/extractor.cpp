@@ -181,7 +181,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
 
             if (requestAttempt == MaxRequestAttempts)
             {
-                m_logger.error("All {} request attempts failed (return code: {})", MaxRequestAttempts, result);
+                m_logger.error("All {} request attempts failed (return code: {})", MaxRequestAttempts, static_cast<int>(result));
                 throw std::runtime_error(fmt::format(
                     "Couldn't perform request in {} attempts [return code: {}]",
                     MaxRequestAttempts,
@@ -204,7 +204,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
                     "Request attempt #{}/{} failed (return code: {}), retrying at position {}",
                     requestAttempt++,
                     MaxRequestAttempts,
-                    result,
+                    static_cast<int>(result),
                     startPosition
                 );
             }
@@ -526,7 +526,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     }
 
     result = avcodec_open2(m_codec, decoder, nullptr);
-    if (result != 0)
+    if (result < 0)
     {
         avcodec_free_context(&m_codec);
         avformat_close_input(&m_format);
@@ -545,17 +545,18 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     *       - Has 16 bit depth;
     *       - Has 48kHz sample rate.
     */
-    m_resampler = swr_alloc_set_opts(
-        nullptr,
-        OutputLayout,
+    AVChannelLayout outputLayout = OutputChannelLayout;
+    result = swr_alloc_set_opts2(
+        &m_resampler,
+        &outputLayout,
         OutputFormat,
         OutputSampleRate,
-        parameters->channel_layout,
+        &parameters->ch_layout,
         static_cast<AVSampleFormat>(parameters->format),
         parameters->sample_rate,
         0, nullptr
     );
-    if (!m_resampler)
+    if (result < 0)
     {
         avcodec_free_context(&m_codec);
         avformat_close_input(&m_format);
@@ -563,8 +564,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         stopThread();
         throw std::runtime_error(fmt::format(
             "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't allocate resampler context [video: \"{}\"]",
-            m_videoId
+            "Couldn't allocate resampler context [video: \"{}\", return code: {}]",
+            m_videoId, result
         ));
     }
 
@@ -616,7 +617,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 return rawFrame;
             }
 
-            if (m_seekPosition != 0 && static_cast<uint64_t>(packet.dts) < m_seekPosition)
+            if (m_seekPosition != 0 && packet.dts < m_seekPosition)
             {
                 av_packet_unref(&packet);
                 continue;
@@ -627,7 +628,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         }
 
         if (rawFrame.timestamp() == -1)
-            rawFrame.setTimestamp(static_cast<double>(packet.dts) / m_unitsPerSecond * 1'000);
+            rawFrame.setTimestamp(static_cast<int64_t>(static_cast<double>(packet.dts) / m_unitsPerSecond * 1'000));
 
         int result = avcodec_send_packet(m_codec, &packet);
         if (result < 0)
@@ -654,7 +655,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         while (avcodec_receive_frame(m_codec, frame) >= 0)
         {
             uint8_t* buffer = nullptr;
-            int bytesAllocated = av_samples_alloc(&buffer, nullptr, OutputChannelCount, frame->nb_samples, OutputFormat, 0);
+            int bytesAllocated = av_samples_alloc(&buffer, nullptr, OutputChannelLayout.nb_channels, frame->nb_samples, OutputFormat, 0);
             if (bytesAllocated < 0)
             {
                 av_frame_free(&frame);
@@ -679,7 +680,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 ));
             }
 
-            int bytesConverted = av_samples_get_buffer_size(nullptr, OutputChannelCount, samplesConverted, OutputFormat, 0);
+            int bytesConverted = av_samples_get_buffer_size(nullptr, OutputChannelLayout.nb_channels, samplesConverted, OutputFormat, 0);
             if (bytesConverted < 0)
             {
                 av_freep(&buffer);

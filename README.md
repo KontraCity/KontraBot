@@ -4,14 +4,29 @@ Supports multiple languages, video chapters and shows playing items in voice cha
 
 ## Build
 #### Dependencies
-* [libcurl](https://github.com/curl/curl)
 * [libfmt](https://github.com/fmtlib/fmt)
-* [libdpp](https://github.com/brainboxdotcc/DPP)
 * [libspdlog](https://github.com/gabime/spdlog)
-* [libmujs](https://github.com/ccxvii/mujs)
-* [libboost_regex](https://github.com/boostorg/regex)
+* [libcurl](https://github.com/curl/curl)
+* [libdpp](https://github.com/brainboxdotcc/DPP)
+* [libboost_regex](https://github.com/boostorg)
 * [libavcodec, libavformat, libavutil, libswresample](https://github.com/FFmpeg/FFmpeg)
-#### Command line
+* [libmujs](https://github.com/ccxvii/mujs)
+#### Windows
+Using [vcpkg](https://vcpkg.io) to install dependencies:
+```ps
+> vcpkg install fmt
+> vcpkg install spdlog
+> vcpkg install curl
+> vcpkg install dpp
+> vcpkg install boost
+> vcpkg install ffmpeg
+> vcpkg install mujs
+```
+Environment variable `REAL_VCPKG_ROOT` should be set to the root directory of `vcpkg`.
+KontraBot can then be built using Visual Studio IDE.
+#### Linux
+The dependencies can be installed using package managers like apt, yum, etc.
+They also can be built and installed from source. KontraBot can then be built like this:
 ```sh
 $ mkdir build && cd build
 $ cmake .. -DCMAKE_BUILD_TYPE=Release

@@ -53,8 +53,7 @@ namespace Youtube
         constexpr int FrameSize = 11520;
 
         // Output PCM data properties
-        constexpr int OutputLayout = AV_CH_LAYOUT_STEREO;
-        constexpr int OutputChannelCount = 2;
+        constexpr AVChannelLayout OutputChannelLayout = AV_CHANNEL_LAYOUT_STEREO;
         constexpr AVSampleFormat OutputFormat = AV_SAMPLE_FMT_S16P;
         constexpr int OutputSampleRate = 48000;
     }

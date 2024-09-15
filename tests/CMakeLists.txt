@@ -4,11 +4,15 @@ set(CMAKE_CXX_STANDARD_REQUIRED YES)
 include_directories("include/")
 
 ## --- Test executable configuration --- ##
-add_executable(Test "source/main.cpp"
+add_executable(Test
+    "source/main.cpp"
     "source/video.cpp"
 )
-target_link_libraries(Test PRIVATE "kontrabot")
+target_link_libraries(Test PRIVATE "libkontrabot")
+if (WIN32)
+    target_link_libraries(Test PRIVATE fmt::fmt spdlog::spdlog)
+endif()
 
-## --- Testing configuration--- ##
+## --- Testing configuration --- ##
 enable_testing()
 add_test(NAME "Video" COMMAND "Test" "--video")

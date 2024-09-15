@@ -158,7 +158,7 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
                 Curl::MaxRequestAttempts,
                 data.empty() ? "GET" : "POST",
                 url,
-                result
+                static_cast<int>(result)
             );
             throw std::invalid_argument(fmt::format(
                 "kc::Curl::Request(): "
@@ -174,7 +174,7 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
             attempt,
             Curl::MaxRequestAttempts,
             url,
-            result
+            static_cast<int>(result)
         );
     }
 
