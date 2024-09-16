@@ -123,7 +123,7 @@ void Youtube::Client::updatePlayer()
     m_logger.info("Updated to player \"{}\"", m_playerId);
 }
 
-void Youtube::Client::updateToken()
+Cache::YoutubeAuth Youtube::Client::updateToken()
 {
     const Curl::Response authTokenResponse = Curl::Post(
         Urls::AuthToken, { "Content-Type: application/json", "__Youtube_Oauth__: True" },
@@ -161,7 +161,9 @@ void Youtube::Client::updateToken()
         youtubeAuth.accessTokenType = authTokenJson.at("token_type");
         youtubeAuth.expiresAt = Utility::GetUnixTimestamp() + authTokenJson.at("expires_in").get<int>();
         Cache::Instance->setYoutubeAuth(youtubeAuth);
+
         m_logger.info("Access token refreshed successfully");
+        return youtubeAuth;
     }
     catch (const json::exception& error)
     {
@@ -301,7 +303,7 @@ Curl::Response Youtube::Client::requestApi(Type clientType, const std::string& r
         {
             // 10 second time reserve
             if (Utility::GetUnixTimestamp() + 10 >= youtubeAuth.expiresAt)
-                updateToken();
+                youtubeAuth = updateToken();
 
             headers.push_back(fmt::format(
                 "Authorization: {} {}",

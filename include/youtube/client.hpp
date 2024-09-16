@@ -274,7 +274,8 @@ namespace Youtube
 
         /// @brief Update YouTube authorization token
         /// @throw std::runtime_error if internal error occurs
-        void updateToken();
+        /// @return Updated YouTube authorization info
+        Cache::YoutubeAuth updateToken();
 
     public:
         /// @brief Get YouTube client error message
