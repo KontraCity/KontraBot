@@ -10,32 +10,55 @@ size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake chann
     return count;
 }
 
+void Bot::Bot::presenceFunction()
+{
+    enum class PresenceType {
+        SessionsConducted,
+        TracksPlayed,
+        MaxPresenceTypes,
+    };
+
+    for (PresenceType type = PresenceType::SessionsConducted; true; type = static_cast<PresenceType>((int)type + 1))
+    {
+        if (type == PresenceType::MaxPresenceTypes)
+            type = PresenceType::TracksPlayed;
+
+        Stats globalStats = Info::GetGlobalStats();
+        switch (type)
+        {
+            case PresenceType::SessionsConducted:
+            {
+                set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
+                    "{} session{} conducted",
+                    Utility::NiceString(globalStats.tracksPlayed),
+                    LocaleEn::Cardinal(globalStats.tracksPlayed)
+                )));
+                break;
+            }
+            case PresenceType::TracksPlayed:
+            {
+                set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
+                    "{} track{} played",
+                    Utility::NiceString(globalStats.tracksPlayed),
+                    LocaleEn::Cardinal(globalStats.tracksPlayed)
+                )));
+                break;
+            }
+        }
+
+        pt::time_duration toNextMinute = Utility::TimeToNextMinute();
+        if (toNextMinute.total_seconds() < 10)
+            toNextMinute += pt::minutes(1);
+        Utility::Sleep(toNextMinute.total_milliseconds() / 1000.0);
+    }
+}
+
 Bot::Bot::PlayerEntry Bot::Bot::updatePlayerTextChannelId(dpp::snowflake guildId, dpp::snowflake channelId)
 {
     PlayerEntry player = m_players.find(guildId);
     if (player != m_players.end())
         player->second.updateTextChannel(channelId);
     return player;
-}
-
-void Bot::Bot::updatePresence()
-{
-    size_t playerCount = m_players.size();
-    if (playerCount == m_previousPresencePlayerCount)
-        return;
-    m_previousPresencePlayerCount = playerCount;
-
-    if (!playerCount)
-    {
-        set_presence(dpp::presence(dpp::ps_idle, dpp::at_custom, ""));
-        return;
-    }
-
-    set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
-        "Sitting in {} guild{}",
-        playerCount,
-        LocaleEn::Cardinal(playerCount)
-    )));
 }
 
 bool Bot::Bot::playerControlsLocked(const dpp::guild& guild, dpp::snowflake userId)
@@ -86,7 +109,6 @@ Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const 
     );
     if (item)
         emplacedPlayerEntry.first->second.addItem(item, user, info);
-    updatePresence();
     return { JoinStatus::Result::Joined, userVoice };
 }
 
@@ -245,6 +267,9 @@ Bot::Bot::Bot(bool registerCommands)
 
     on_ready([this](const dpp::ready_t& event)
     {
+        // Start presence thread
+        m_presenceThread = std::thread(&Bot::presenceFunction, this);
+
         if (dpp::run_once<struct ReadyMessage>())
         {
             global_commands_get([this](const dpp::confirmation_callback_t& event)
@@ -295,7 +320,6 @@ Bot::Bot::Bot(bool registerCommands)
                     for (const auto& guild : guilds)
                         m_logger.info("    \"{}\" [{}]", guild.second.name, static_cast<uint64_t>(guild.second.id));
                 });
-                updatePresence();
             });
         }
     });
@@ -1114,7 +1138,6 @@ Bot::Bot::Bot(bool registerCommands)
             ++info.stats().timesKicked;
             playerEntry->second.endSession(info, Locale::EndReason::Kicked);
             m_players.erase(event.state.guild_id);
-            updatePresence();
         }
     });
 
@@ -1164,7 +1187,6 @@ Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dp
     const dpp::channel* disconnectedChannel = dpp::find_channel(botVoice->channel_id);
     m_players.find(guild.id)->second.endSession(info, reason);
     m_players.erase(guild.id);
-    updatePresence();
     return { LeaveStatus::Result::Left, disconnectedChannel };
 }
 

@@ -96,4 +96,11 @@ int Utility::GetUnixTimestamp()
     return static_cast<int>((now - epoch).total_seconds());
 }
 
+pt::time_duration Utility::TimeToNextMinute()
+{
+    pt::ptime now = pt::microsec_clock::local_time();
+    pt::ptime nextMinute = now + pt::minutes(1);
+    return pt::ptime(nextMinute.date(), pt::time_duration(nextMinute.time_of_day().hours(), nextMinute.time_of_day().minutes(), 0)) - now;
+}
+
 } // namespace kc

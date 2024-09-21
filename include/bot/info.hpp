@@ -15,6 +15,9 @@
 // Library nlohmann::json
 #include <nlohmann/json.hpp>
 
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
 // Library {fmt}
 #include <fmt/format.h>
 
@@ -54,6 +57,11 @@ namespace Bot
 
     class Info
     {
+    public:
+        /// @brief Get global stats
+        /// @return Global stats
+        static Stats GetGlobalStats();
+
     private:
         spdlog::logger m_logger;
         std::string m_filePath;

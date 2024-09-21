@@ -25,7 +25,7 @@ namespace Bot
         bool changeStatus = true;
 
         /// @brief Copy data from other settings
-        /// @param other Othe settings to copy data from
+        /// @param other Other settings to copy data from
         /// @return Reference to these settings
         Settings& operator=(const Settings& other);
 
@@ -42,6 +42,11 @@ namespace Bot
         uint64_t tracksPlayed = 0;
         uint64_t timesKicked = 0;
         uint64_t timesMoved = 0;
+
+        /// @brief Add other stats
+        /// @param other Other stats to add
+        /// @return Reference to these stats
+        Stats& operator+=(const Stats& other);
 
         /// @brief Check if stats are equal
         /// @param other Other stats to check against

@@ -83,6 +83,10 @@ namespace Utility
     /// @brief Get Unix timestamp
     /// @return Unix timestamp
     int GetUnixTimestamp();
+
+    /// @brief Get time to next minute
+    /// @return Time to next minute
+    pt::time_duration TimeToNextMinute();
 }
 
 } // namespace kc
