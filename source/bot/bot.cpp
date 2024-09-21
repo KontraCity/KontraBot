@@ -12,21 +12,22 @@ size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake chann
 
 void Bot::Bot::presenceFunction()
 {
-    enum class PresenceType {
-        GuildsCount,
+    enum class PresenceType
+    {
+        GuildsServed,
         SessionsConducted,
         TracksPlayed,
         MaxPresenceTypes,
     };
 
-    for (PresenceType type = PresenceType::GuildsCount; true; type = static_cast<PresenceType>((int)type + 1))
+    for (PresenceType type = PresenceType::GuildsServed; true; type = static_cast<PresenceType>(static_cast<int>(type) + 1))
     {
         if (type == PresenceType::MaxPresenceTypes)
-            type = PresenceType::GuildsCount;
+            type = PresenceType::GuildsServed;
 
         switch (type)
         {
-            case PresenceType::GuildsCount:
+            case PresenceType::GuildsServed:
             {
                 current_application_get([this](const dpp::confirmation_callback_t& event)
                 {
