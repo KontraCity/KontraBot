@@ -24,6 +24,10 @@ namespace Bot
         uint64_t timeoutMinutes = 60;
         bool changeStatus = true;
 
+        Settings() = default;
+
+        Settings(const Settings& other);
+
         /// @brief Copy data from other settings
         /// @param other Other settings to copy data from
         /// @return Reference to these settings

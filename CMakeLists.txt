@@ -9,6 +9,19 @@ include_directories("include/")
 
 ## --- KontraBot library configuration --- ##
 add_library(kontrabotbase
+    # Bot handlers
+    "source/bot/handlers/on_autocomplete.cpp"
+    "source/bot/handlers/on_button_click.cpp"
+    "source/bot/handlers/on_log.cpp"
+    "source/bot/handlers/on_message_create.cpp"
+    "source/bot/handlers/on_ready.cpp"
+    "source/bot/handlers/on_select_click.cpp"
+    "source/bot/handlers/on_slashcommand.cpp"
+    "source/bot/handlers/on_voice_ready.cpp"
+    "source/bot/handlers/on_voice_server_update.cpp"
+    "source/bot/handlers/on_voice_state_update.cpp"
+    "source/bot/handlers/on_voice_track_marker.cpp"
+
     # Bot modules
     "source/bot/commands.cpp"
     "source/bot/bot.cpp"

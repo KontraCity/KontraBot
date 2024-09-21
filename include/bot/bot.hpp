@@ -5,6 +5,7 @@
 #include <vector>
 #include <functional>
 #include <optional>
+#include <mutex>
 
 // Library DPP
 #include <dpp/dpp.h>
@@ -90,6 +91,7 @@ namespace Bot
 
     private:
         spdlog::logger m_logger;
+        std::mutex m_mutex;
         std::thread m_presenceThread;
         std::map<dpp::snowflake, Player> m_players;
         std::map<dpp::snowflake, std::string> m_ephemeralTokens;
@@ -98,11 +100,18 @@ namespace Bot
         /// @brief Presence thread implementation
         void presenceFunction();
 
+        void updateEphemeralToken(const dpp::confirmation_callback_t& confirmationEvent, std::string token);
+
         /// @brief Update player's text channel ID
         /// @param guildId ID of player's guild
         /// @param channelId ID of text channel to update
         /// @return Updated player entry
         PlayerEntry updatePlayerTextChannelId(dpp::snowflake guildId, dpp::snowflake channelId);
+
+        /// @brief Update info's processed interactions
+        /// @param guildId ID of info's guild
+        /// @return Updated info
+        Info updateInfoProcessedInteractions(dpp::snowflake guildId);
 
         /// @brief Check if bot's player controls are locked for user (only users sitting in the same voice channel with bot can control player)
         /// @param guild User's guild
@@ -127,6 +136,52 @@ namespace Bot
         /// @param showRequester Whether or not to show requester in result message
         /// @return Result message
         dpp::message addItem(dpp::discord_client* client, const dpp::interaction& interaction, const std::string& itemId, const LogMessageFunction& logMessage, Info& info, bool showRequester = false);
+
+    private:
+        /// @brief Handle autocomplete event
+        /// @param event The event to handle
+        void onAutocomplete(const dpp::autocomplete_t& event);
+
+        /// @brief Handle button click event
+        /// @param event The event to handle
+        void onButtonClick(const dpp::button_click_t& event);
+
+        /// @brief Handle log event
+        /// @param event The event to handle
+        /// @param registerCommands Whether bot was launched in command registration mode or not
+        void onLog(const dpp::log_t& event, bool registerCommands);
+
+        /// @brief Handle message create event
+        /// @param event The event to handle
+        void onMessageCreate(const dpp::message_create_t& event);
+
+        /// @brief Handle ready event
+        /// @param event The event to handle
+        void onReady(const dpp::ready_t& event);
+
+        /// @brief Handle select click event
+        /// @param event The event to handle
+        void onSelectClick(const dpp::select_click_t& event);
+
+        /// @brief Handle slashcommand event
+        /// @param event The event to handle
+        void onSlashcommand(const dpp::slashcommand_t& event);
+
+        /// @brief Handle voice ready event
+        /// @param event The event to handle
+        void onVoiceReady(const dpp::voice_ready_t& event);
+
+        /// @brief Handle voice server update event
+        /// @param event The event to handle
+        void onVoiceServerUpdate(const dpp::voice_server_update_t& event);
+
+        /// @brief Handle voice state update event
+        /// @param event The event to handle
+        void onVoiceStateUpdate(const dpp::voice_state_update_t& event);
+
+        /// @brief Handle voice track marker event
+        /// @param event The event to handle
+        void onVoiceTrackMarker(const dpp::voice_track_marker_t& event);
 
     public:
         /// @brief Initialize bot

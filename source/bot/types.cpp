@@ -2,6 +2,12 @@
 
 namespace kc {
 
+Bot::Settings::Settings(const Settings& other)
+    : locale(Locale::Create(other.locale->type()))
+    , timeoutMinutes(other.timeoutMinutes)
+    , changeStatus(other.changeStatus)
+{}
+
 Bot::Settings& Bot::Settings::operator=(const Bot::Settings& other)
 {
     if (*this == other)
