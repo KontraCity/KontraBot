@@ -13,23 +13,43 @@ size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake chann
 void Bot::Bot::presenceFunction()
 {
     enum class PresenceType {
+        GuildsCount,
         SessionsConducted,
         TracksPlayed,
         MaxPresenceTypes,
     };
 
-    for (PresenceType type = PresenceType::SessionsConducted; true; type = static_cast<PresenceType>((int)type + 1))
+    for (PresenceType type = PresenceType::GuildsCount; true; type = static_cast<PresenceType>((int)type + 1))
     {
         if (type == PresenceType::MaxPresenceTypes)
-            type = PresenceType::SessionsConducted;
+            type = PresenceType::GuildsCount;
 
-        Stats globalStats = Info::GetGlobalStats();
         switch (type)
         {
+            case PresenceType::GuildsCount:
+            {
+                current_application_get([this](const dpp::confirmation_callback_t& event)
+                {
+                    if (event.is_error())
+                    {
+                        m_logger.error("Couldn't get current application for presence update");
+                        return;
+                    }
+
+                    const dpp::application& application = std::get<dpp::application>(event.value);
+                    set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
+                        "{} guild{} served",
+                        Utility::NiceString(application.approximate_guild_count),
+                        LocaleEn::Cardinal(application.approximate_guild_count)
+                    )));
+                });
+                break;
+            }
             case PresenceType::SessionsConducted:
             {
+                Stats globalStats = Info::GetGlobalStats();
                 set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
-                    "{} session{} conducted globally",
+                    "{} session{} conducted",
                     Utility::NiceString(globalStats.sessionsConducted),
                     LocaleEn::Cardinal(globalStats.sessionsConducted)
                 )));
@@ -37,8 +57,9 @@ void Bot::Bot::presenceFunction()
             }
             case PresenceType::TracksPlayed:
             {
+                Stats globalStats = Info::GetGlobalStats();
                 set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
-                    "{} track{} played globally",
+                    "{} track{} played",
                     Utility::NiceString(globalStats.tracksPlayed),
                     LocaleEn::Cardinal(globalStats.tracksPlayed)
                 )));
