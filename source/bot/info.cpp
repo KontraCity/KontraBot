@@ -50,17 +50,17 @@ Bot::Info::Info(dpp::snowflake guildId)
     {
         json infoJson = json::parse(infoFile);
 
-        json settingsJson = infoJson[Fields::Settings];
-        m_settings.locale = Locale::Create(settingsJson[Fields::Locale].get<std::string>());
-        m_settings.timeoutMinutes = settingsJson[Fields::Timeout];
-        m_settings.changeStatus = settingsJson[Fields::ChangeStatus];
+        json settingsJson = infoJson.at(Fields::Settings);
+        m_settings.locale = Locale::Create(settingsJson.at(Fields::Locale).get<std::string>());
+        m_settings.timeoutMinutes = settingsJson.at(Fields::Timeout);
+        m_settings.changeStatus = settingsJson.at(Fields::ChangeStatus);
 
-        json statsJson = infoJson[Fields::Stats];
-        m_stats.interactionsProcessed = statsJson[Fields::InteractionsProcessed];
-        m_stats.sessionsCount = statsJson[Fields::SessionsCount];
-        m_stats.tracksPlayed = statsJson[Fields::TracksPlayed];
-        m_stats.timesKicked = statsJson[Fields::TimesKicked];
-        m_stats.timesMoved = statsJson[Fields::TimesMoved];
+        json statsJson = infoJson.at(Fields::Stats);
+        m_stats.interactionsProcessed = statsJson.at(Fields::InteractionsProcessed);
+        m_stats.sessionsConducted = statsJson.at(Fields::SessionsConducted);
+        m_stats.tracksPlayed = statsJson.at(Fields::TracksPlayed);
+        m_stats.timesKicked = statsJson.at(Fields::TimesKicked);
+        m_stats.timesMoved = statsJson.at(Fields::TimesMoved);
 
         m_previousSettings = m_settings;
         m_previousStats = m_stats;
@@ -84,7 +84,7 @@ Bot::Info::~Info()
 
     json statsJson;
     statsJson[Fields::InteractionsProcessed] = m_stats.interactionsProcessed;
-    statsJson[Fields::SessionsCount] = m_stats.sessionsCount;
+    statsJson[Fields::SessionsConducted] = m_stats.sessionsConducted;
     statsJson[Fields::TracksPlayed] = m_stats.tracksPlayed;
     statsJson[Fields::TimesKicked] = m_stats.timesKicked;
     statsJson[Fields::TimesMoved] = m_stats.timesMoved;

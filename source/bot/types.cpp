@@ -23,7 +23,7 @@ bool Bot::Settings::operator==(const Settings& other)
 Bot::Stats& Bot::Stats::operator+=(const Stats& other)
 {
     interactionsProcessed += other.interactionsProcessed;
-    sessionsCount += other.sessionsCount;
+    sessionsConducted += other.sessionsConducted;
     tracksPlayed += other.tracksPlayed;
     timesKicked += other.timesKicked;
     timesMoved += other.timesMoved;
@@ -33,7 +33,7 @@ Bot::Stats& Bot::Stats::operator+=(const Stats& other)
 bool Bot::Stats::operator==(const Stats& other)
 {
     return interactionsProcessed == other.interactionsProcessed
-        && sessionsCount == other.sessionsCount
+        && sessionsConducted == other.sessionsConducted
         && tracksPlayed == other.tracksPlayed
         && timesKicked == other.timesKicked
         && timesMoved == other.timesMoved;

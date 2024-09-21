@@ -21,7 +21,7 @@ void Bot::Bot::presenceFunction()
     for (PresenceType type = PresenceType::SessionsConducted; true; type = static_cast<PresenceType>((int)type + 1))
     {
         if (type == PresenceType::MaxPresenceTypes)
-            type = PresenceType::TracksPlayed;
+            type = PresenceType::SessionsConducted;
 
         Stats globalStats = Info::GetGlobalStats();
         switch (type)
@@ -29,16 +29,16 @@ void Bot::Bot::presenceFunction()
             case PresenceType::SessionsConducted:
             {
                 set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
-                    "{} session{} conducted",
-                    Utility::NiceString(globalStats.tracksPlayed),
-                    LocaleEn::Cardinal(globalStats.tracksPlayed)
+                    "{} session{} conducted globally",
+                    Utility::NiceString(globalStats.sessionsConducted),
+                    LocaleEn::Cardinal(globalStats.sessionsConducted)
                 )));
                 break;
             }
             case PresenceType::TracksPlayed:
             {
                 set_presence(dpp::presence(dpp::ps_online, dpp::at_custom, fmt::format(
-                    "{} track{} played",
+                    "{} track{} played globally",
                     Utility::NiceString(globalStats.tracksPlayed),
                     LocaleEn::Cardinal(globalStats.tracksPlayed)
                 )));

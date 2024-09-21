@@ -380,7 +380,7 @@ dpp::message Bot::Locale::StatsMessage(const StatsStrings& strings, const Stats&
     embed.color = Colors::Success;
     embed.add_field(fmt::format("{} {}:", Emojis::Success, strings.hereAreTheStats), "");
     embed.fields[0].value = fmt::format("{}: **`{}`**\n", strings.interactionsProcessed, Utility::NiceString(stats.interactionsProcessed));
-    embed.fields[0].value += fmt::format("{}: **`{}`**\n", strings.sessionsCount, Utility::NiceString(stats.sessionsCount));
+    embed.fields[0].value += fmt::format("{}: **`{}`**\n", strings.sessionsConducted, Utility::NiceString(stats.sessionsConducted));
     embed.fields[0].value += fmt::format("{}: **`{}`**", strings.tracksPlayed, Utility::NiceString(stats.tracksPlayed));
     if (stats.timesKicked)
         embed.fields[0].value += fmt::format("\n{}: **`{}`**", strings.timesKicked, Utility::NiceString(stats.timesKicked));

@@ -83,7 +83,7 @@ namespace Bot
                 "A session is a state where I am sitting in a voice channel. It starts when I join and ends when I leave the channel."
             };
             strings.settingsDescription = "Show settings of this guild: language, inactivity timeout duration and more.";
-            strings.statsDescription = "Show statistics of this guild: count of commands issued, buttons clicked, sessions, tracks played and more.";
+            strings.statsDescription = "Show statistics of this guild: count of commands issued, buttons clicked, sessions conducted, tracks played and more.";
             strings.setDescription = "Configure settings of this guild: language, inactivity timeout duration and whether I should change voice channel status or not.";
             strings.setFaq = {
                 ">>> ***What is an inactivity timeout?***\n"
@@ -191,7 +191,7 @@ namespace Bot
             StatsStrings strings = {};
             strings.hereAreTheStats = "Here are this guild's stats";
             strings.interactionsProcessed = "Commands issued and buttons clicked";
-            strings.sessionsCount = "Sessions count";
+            strings.sessionsConducted = "Sessions conducted";
             strings.tracksPlayed = "Tracks played";
             strings.timesKicked = "Times I was kicked";
             strings.timesMoved = "Times I was moved";

@@ -38,7 +38,7 @@ namespace Bot
     struct Stats
     {
         uint64_t interactionsProcessed = 0;
-        uint64_t sessionsCount = 0;
+        uint64_t sessionsConducted = 0;
         uint64_t tracksPlayed = 0;
         uint64_t timesKicked = 0;
         uint64_t timesMoved = 0;

@@ -362,7 +362,7 @@ Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interacti
         interaction.get_guild().id,
         voiceChannelId,
         interaction.channel_id,
-        ++info.stats().sessionsCount,
+        ++info.stats().sessionsConducted,
         interaction.get_issuing_user()
     })
 {}

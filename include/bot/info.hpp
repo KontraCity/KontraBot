@@ -48,7 +48,7 @@ namespace Bot
 
             constexpr const char* Stats = "stats";
             constexpr const char* InteractionsProcessed = "interactions_processed";
-            constexpr const char* SessionsCount = "sessions_count";
+            constexpr const char* SessionsConducted = "sessions_conducted";
             constexpr const char* TracksPlayed = "tracks_played";
             constexpr const char* TimesKicked = "times_kicked";
             constexpr const char* TimesMoved = "times_moved";
