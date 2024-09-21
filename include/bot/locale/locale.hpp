@@ -199,14 +199,6 @@ namespace Bot
             const char* whatAreWePlaying;       // "What are we playing?" string
         };
 
-        struct ItemAutocompleteStrings
-        {
-            const char* videoDescription;       // " - video by {}, [{}]" string
-            const char* livestreamDescription;  // " - livestream by {}" string
-            const char* premiereDescription;    // " - premiere by {}" string
-            const char* playlistDescription;    // " - playlist by {}, [{} video{}]" string
-        };
-
         struct EndStrings
         {
             const char* sessionInfo;            // "{}'s session #{} ended" string
@@ -302,14 +294,6 @@ namespace Bot
         /// @param results Search results
         /// @return Ephemeral message
         static dpp::message SearchMessage(const SearchStrings& strings, CardinalFunction cardinalFunction, const Youtube::Results& results);
-
-        /// @brief Create item autocomplete choice
-        /// @param strings Locale's item autocomplete strings
-        /// @param cardinalFunction Locale's cardinal ending function
-        /// @param item Item to create autocomplete choice for
-        /// @throw std::runtime_error if item type is unknown
-        /// @return Item autocomplete choice
-        static dpp::command_option_choice ItemAutocompleteChoice(const ItemAutocompleteStrings& strings, CardinalFunction cardinalFunction, const Youtube::Item& item);
 
         /// @brief Create session end message
         /// @param strings Locale's session end strings
@@ -528,12 +512,6 @@ namespace Bot
         /// @brief Add paused player warning to embed
         /// @param embed Embed to add paused player warning to
         virtual inline void pausedWarning(dpp::embed& embed) = 0;
-
-        /// @brief Create item autocomplete choice
-        /// @param item Item to create autocomplete choice for
-        /// @throw std::runtime_error if item type is unknown
-        /// @return Item autocomplete choice
-        virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item) = 0;
 
         /// @brief Create "Sorry, this button is no longer supported: use slashcommands instead" messagee
         /// @return Ephemeral message

@@ -353,7 +353,8 @@ Bot::Bot::Bot(bool registerCommands)
 
                 if (interaction.name == Set::Name)
                 {
-                    if (interaction.options[0].options[0].name == Set::Language::Language::Name)
+                    if (interaction.options[0].options[0].name == Set::Language::Language::Name ||
+                        interaction.options[0].options[0].name == Set::ChangeStatus::Change::Name)
                     {
                         return fmt::format(
                             "\"{}\" / \"{}\": /{} {} \"{}\": {}",
@@ -375,19 +376,6 @@ Bot::Bot::Bot(bool registerCommands)
                             interaction.name,
                             interaction.options[0].name,
                             std::get<int64_t>(interaction.options[0].options[0].value),
-                            message
-                        );
-                    }
-
-                    if (interaction.options[0].options[0].name == Set::ChangeStatus::Change::Name)
-                    {
-                        return fmt::format(
-                            "\"{}\" / \"{}\": /{} {} {}: {}",
-                            guild.name,
-                            event.command.usr.format_username(),
-                            interaction.name,
-                            interaction.options[0].name,
-                            std::get<bool>(interaction.options[0].options[0].value),
                             message
                         );
                     }
@@ -478,11 +466,11 @@ Bot::Bot::Bot(bool registerCommands)
 
             if (subcommand == Set::ChangeStatus::Name)
             {
-                info.settings().changeStatus = std::get<bool>(interaction.options[0].options[0].value);
+                info.settings().changeStatus = std::get<std::string>(interaction.options[0].options[0].value) == "yes";
                 if (playerEntry != m_players.end())
                     playerEntry->second.updateVoiceStatus(info);
                 event.reply(info.settings().locale->soBeIt());
-                m_logger.info(logMessage(fmt::format("Change status set to {}", info.settings().changeStatus)));
+                m_logger.info(logMessage(fmt::format("Change status set to [{}]", info.settings().changeStatus ? "yes" : "no")));
                 return;
             }
 
@@ -913,86 +901,6 @@ Bot::Bot::Bot(bool registerCommands)
                 "Displaying {} chapter{}",
                 response.autocomplete_choices.size(),
                 LocaleEn::Cardinal(response.autocomplete_choices.size())
-            )));
-            return;
-        }
-
-        if (option.name == Play::What::Name)
-        {
-            value = std::get<std::string>(option.value);
-            if (value.empty() || value.find_first_not_of(' ') == std::string::npos)
-            {
-                interaction_response_create(event.command.id, event.command.token, dpp::interaction_response(dpp::ir_autocomplete_reply));
-                m_logger.info(logMessage("Option is empty"));
-                return;
-            }
-
-            try
-            {
-                boost::smatch videoMatches;
-                bool videoMatched = boost::regex_search(value, videoMatches, boost::regex(Youtube::VideoConst::ExtractId));
-                if (!videoMatched)
-                    videoMatched = boost::regex_match(value, videoMatches, boost::regex(Youtube::VideoConst::ValidateId));
-
-                boost::smatch playlistMatches;
-                bool playlistMatched = boost::regex_search(value, playlistMatches, boost::regex(Youtube::PlaylistConst::ExtractId));
-                if (!playlistMatched)
-                    playlistMatched = boost::regex_match(value, playlistMatches, boost::regex(Youtube::PlaylistConst::ValidateId));
-
-                if (videoMatched && playlistMatched)
-                {
-                    Youtube::Video video(videoMatches.str(1));
-                    Youtube::Playlist playlist(playlistMatches.str(1));
-
-                    dpp::interaction_response response(dpp::ir_autocomplete_reply);
-                    response.add_autocomplete_choice(info.settings().locale->itemAutocomplete(video));
-                    response.add_autocomplete_choice(info.settings().locale->itemAutocomplete(playlist));
-
-                    interaction_response_create(event.command.id, event.command.token, response);
-                    m_logger.info(logMessage("Displaying video and playlist suggestions"));
-                    return;
-                }
-
-                if (videoMatched)
-                {
-                    Youtube::Video video(videoMatches.str(1));
-                    dpp::interaction_response response(dpp::ir_autocomplete_reply);
-                    response.add_autocomplete_choice(info.settings().locale->itemAutocomplete(video));
-
-                    interaction_response_create(event.command.id, event.command.token, response);
-                    m_logger.info(logMessage("Displaying video suggestion"));
-                    return;
-                }
-
-                if (playlistMatched)
-                {
-                    Youtube::Playlist playlist(playlistMatches.str(1));
-                    dpp::interaction_response response(dpp::ir_autocomplete_reply);
-                    response.add_autocomplete_choice(info.settings().locale->itemAutocomplete(playlist));
-
-                    interaction_response_create(event.command.id, event.command.token, response);
-                    m_logger.info(logMessage("Displaying playlist suggestion"));
-                    return;
-                }
-            }
-            catch (...)
-            {
-                /*
-                *   Some error happened when generating video or playlist suggestions.
-                *   We'll proceed with search with option as query.
-                */
-            }
-
-            dpp::interaction_response response(dpp::ir_autocomplete_reply);
-            Youtube::Results result = Youtube::Search(value);
-            for (size_t index = 0, size = result.size(); index < size && index < 25; ++index)
-                response.add_autocomplete_choice(info.settings().locale->itemAutocomplete(result[index]));
-
-            interaction_response_create(event.command.id, event.command.token, response);
-            m_logger.info(logMessage(fmt::format(
-                "{} result{}",
-                result.size(),
-                LocaleEn::Cardinal(result.size())
             )));
             return;
         }

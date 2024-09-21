@@ -581,20 +581,6 @@ namespace Bot
             embed.set_footer({ u8"Ничего не играет, потому что плеер стоит на паузе! Используй /pause, чтобы продолжить" });
         }
 
-        /// @brief Create item autocomplete choice
-        /// @param item Item to create autocomplete choice for
-        /// @throw std::runtime_error if item type is unknown
-        /// @return Item autocomplete choice
-        virtual inline dpp::command_option_choice itemAutocomplete(const Youtube::Item& item)
-        {
-            ItemAutocompleteStrings strings = {};
-            strings.videoDescription = u8" - видео от {}, [{}]";
-            strings.livestreamDescription = u8" - стрим от {}";
-            strings.premiereDescription = u8" - премьера от {}";
-            strings.playlistDescription = u8" - плейлист от {}, [{} видео{:.0}]";
-            return ItemAutocompleteChoice(strings, &Cardinal, item);
-        }
-
         /// @brief Create "Sorry, this button is no longer supported: use slashcommands instead" messagee
         /// @return Ephemeral message
         virtual inline dpp::message unsupportedButton()

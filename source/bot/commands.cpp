@@ -44,8 +44,12 @@ std::vector<dpp::slashcommand> Bot::Commands::GetCommands(dpp::snowflake botId)
                 .add_localization(Russian::LocaleName, Russian::Set::Timeout::Duration::Name, Russian::Set::Timeout::Duration::Description)))
         .add_option(dpp::command_option(dpp::co_sub_command, Set::ChangeStatus::Name, Set::ChangeStatus::Description)
            .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Name, Russian::Set::ChangeStatus::Description)
-           .add_option(dpp::command_option(dpp::co_boolean, Set::ChangeStatus::Change::Name, Set::ChangeStatus::Change::Description, true)
-               .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Change::Name, Russian::Set::ChangeStatus::Change::Description))));
+           .add_option(dpp::command_option(dpp::co_string, Set::ChangeStatus::Change::Name, Set::ChangeStatus::Change::Description, true)
+               .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Change::Name, Russian::Set::ChangeStatus::Change::Description)
+               .add_choice(dpp::command_option_choice(Set::ChangeStatus::Change::Yes::Label, std::string(Set::ChangeStatus::Change::Yes::Id))
+                   .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Change::Yes::Label))
+               .add_choice(dpp::command_option_choice(Set::ChangeStatus::Change::No::Label, std::string(Set::ChangeStatus::Change::No::Id))
+                   .add_localization(Russian::LocaleName, Russian::Set::ChangeStatus::Change::No::Label)))));
 
     /* /join */
     commands.push_back(dpp::slashcommand(Join::Name, Join::Description, botId)
@@ -59,8 +63,7 @@ std::vector<dpp::slashcommand> Bot::Commands::GetCommands(dpp::snowflake botId)
     commands.push_back(dpp::slashcommand(Play::Name, Play::Description, botId)
         .add_localization(Russian::LocaleName, Russian::Play::Name, Russian::Play::Description)
         .add_option(dpp::command_option(dpp::co_string, Play::What::Name, Play::What::Description, true)
-            .add_localization(Russian::LocaleName, Russian::Play::What::Name, Russian::Play::What::Description)
-            .set_auto_complete(true)));
+            .add_localization(Russian::LocaleName, Russian::Play::What::Name, Russian::Play::What::Description)));
 
     /* /pause */
     commands.push_back(dpp::slashcommand(Pause::Name, Pause::Description, botId)

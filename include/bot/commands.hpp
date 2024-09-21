@@ -26,7 +26,7 @@ namespace Bot
         namespace Session
         {
             constexpr const char* Name = "session";
-            constexpr const char* Description = "Show information about current session";
+            constexpr const char* Description = "Show current session information";
         }
 
         namespace Settings
@@ -53,7 +53,7 @@ namespace Bot
                 namespace Language
                 {
                     constexpr const char* Name = "language";
-                    constexpr const char* Description = "What language to set?";
+                    constexpr const char* Description = "What language do you want me to speak?";
                     constexpr const char* Id = "en";
                     constexpr const char* Label = "English";
                 }
@@ -79,14 +79,26 @@ namespace Bot
                 namespace Change
                 {
                     constexpr const char* Name = "change";
-                    constexpr const char* Description = "Am I allowed to modify voice channel status or not?";
+                    constexpr const char* Description = "Am I allowed to change voice channel status or not?";
+
+                    namespace Yes
+                    {
+                        constexpr const char* Id = "yes";
+                        constexpr const char* Label = "Yes";
+                    }
+
+                    namespace No
+                    {
+                        constexpr const char* Id = "no";
+                        constexpr const char* Label = "No";
+                    }
                 }
             }
         }
         
         /*
         *   The following commands control music player.
-        *   Bot processes them only if issuing user is a listener (sitting with bot).
+        *   Bot processes them only if issuing user is a listener (sitting with bot in a voice channel).
         */
 
         namespace Join
@@ -109,14 +121,14 @@ namespace Bot
             namespace What
             {
                 constexpr const char* Name = "what";
-                constexpr const char* Description = "What do you want me to play?";
+                constexpr const char* Description = "What video or playlist do you want me to play?";
             }
         }
 
         namespace Pause
         {
             constexpr const char* Name = "pause";
-            constexpr const char* Description = "Pause playing video or resume playing it if it is already paused";
+            constexpr const char* Description = "Pause playing video or resume playing if it's already paused";
         }
 
         namespace Seek
@@ -208,7 +220,7 @@ namespace Bot
                     namespace Language
                     {
                         constexpr const char* Name = u8"язык";
-                        constexpr const char* Description = u8"Какой язык установить?";
+                        constexpr const char* Description = u8"На каком языке мне говорить?";
                         constexpr const char* Id = "ru";
                         constexpr const char* Label = u8"Русский";
                     }
@@ -235,6 +247,16 @@ namespace Bot
                     {
                         constexpr const char* Name = u8"изменять";
                         constexpr const char* Description = u8"Можно ли мне изменять статус голосового канала или нет?";
+
+                        namespace Yes
+                        {
+                            constexpr const char* Label = u8"Да";
+                        }
+
+                        namespace No
+                        {
+                            constexpr const char* Label = u8"Нет";
+                        }
                     }
                 }
             }
@@ -259,7 +281,7 @@ namespace Bot
                 namespace What
                 {
                     constexpr const char* Name = u8"что";
-                    constexpr const char* Description = u8"Что ты хочешь сыграть?";
+                    constexpr const char* Description = u8"Какое видео или плейлист ты хочешь сыграть?";
                 }
             }
 
