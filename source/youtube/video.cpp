@@ -41,7 +41,7 @@ void Youtube::Video::parseViewCount(const json& videoInfoObject)
         return;
     }
 
-    std::string accessibilityString = videoInfoObject["title"]["accessibility"]["accessibilityData"]["label"];
+    std::string accessibilityString = videoInfoObject.at("title").at("accessibility").at("accessibilityData").at("label");
     boost::smatch matches;
     if (!boost::regex_search(accessibilityString, matches, boost::regex(R"(([\d,]+ view|No views))")))
     {
@@ -114,7 +114,7 @@ void Youtube::Video::parseChapters(const std::string& description)
 
 void Youtube::Video::checkPlayabilityStatus(const json& playabilityStatusObject)
 {
-    std::string playabilityStatusString = playabilityStatusObject["status"];
+    std::string playabilityStatusString = playabilityStatusObject.at("status");
     if (playabilityStatusString == "OK")
         return;
 
@@ -130,7 +130,7 @@ void Youtube::Video::checkPlayabilityStatus(const json& playabilityStatusObject)
     if (playabilityStatusString == "LIVE_STREAM_OFFLINE")
     {
         /*
-        *   Video is a premiere and is not available not.
+        *   Video is a premiere and is not available yet.
         *   Although premieres are not supported, they are not handled as exceptions.
         *   Can be ignored.
         */
@@ -147,11 +147,11 @@ void Youtube::Video::checkPlayabilityStatus(const json& playabilityStatusObject)
     else
         throw YoutubeError(YoutubeError::Type::Unknown, m_id, playabilityStatusString);
 
-    if (!playabilityStatusObject["errorScreen"].contains("playerErrorMessageRenderer"))
-        throw YoutubeError(type, m_id, playabilityStatusObject["reason"].get<std::string>());
+    if (!playabilityStatusObject.at("errorScreen").contains("playerErrorMessageRenderer"))
+        throw YoutubeError(type, m_id, playabilityStatusObject.at("reason").get<std::string>());
 
     const json& playerErrorMessageRendererObject = playabilityStatusObject["errorScreen"]["playerErrorMessageRenderer"];
-    std::string reason = Utility::ExtractString(playerErrorMessageRendererObject["reason"]);
+    std::string reason = Utility::ExtractString(playerErrorMessageRendererObject.at("reason"));
     if (reason == "Sign in to confirm your age")
     {
         /*
@@ -184,17 +184,17 @@ void Youtube::Video::downloadInfo()
     try
     {
         json playerResponseJson = json::parse(playerResponse.data);
-        checkPlayabilityStatus(playerResponseJson["playabilityStatus"]);
+        checkPlayabilityStatus(playerResponseJson.at("playabilityStatus"));
 
-        const json& videoDetailsObject = playerResponseJson["videoDetails"];
-        m_title = videoDetailsObject["title"];
-        m_author = videoDetailsObject["author"];
-        m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoDetailsObject["thumbnail"]["thumbnails"]);
+        const json& videoDetailsObject = playerResponseJson.at("videoDetails");
+        m_title = videoDetailsObject.at("title");
+        m_author = videoDetailsObject.at("author");
+        m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoDetailsObject.at("thumbnail").at("thumbnails"));
 
-        json playerMicroformatRendererObject = playerResponseJson["microformat"]["playerMicroformatRenderer"];
+        json playerMicroformatRendererObject = playerResponseJson.at("microformat").at("playerMicroformatRenderer");
         m_optionalKnown = true;
-        m_category = playerMicroformatRendererObject["category"];
-        parseUploadDate(playerMicroformatRendererObject["uploadDate"]);
+        m_category = playerMicroformatRendererObject.at("category");
+        parseUploadDate(playerMicroformatRendererObject.at("uploadDate"));
 
         if (videoDetailsObject.contains("isUpcoming") && videoDetailsObject["isUpcoming"])
         {
@@ -205,8 +205,8 @@ void Youtube::Video::downloadInfo()
         if (videoDetailsObject.contains("isLive") && videoDetailsObject["isLive"])
             m_type = Type::Livestream;
 
-        m_duration = pt::time_duration(0, 0, std::stoull(videoDetailsObject["lengthSeconds"].get<std::string>()));
-        m_viewCount = std::stoull(videoDetailsObject["viewCount"].get<std::string>());
+        m_duration = pt::time_duration(0, 0, std::stoull(videoDetailsObject.at("lengthSeconds").get<std::string>()));
+        m_viewCount = std::stoull(videoDetailsObject.at("viewCount").get<std::string>());
         if (playerMicroformatRendererObject.contains("description"))
             parseChapters(Utility::ExtractString(playerMicroformatRendererObject["description"]));
     }
@@ -255,10 +255,10 @@ Youtube::Video::Video(const std::string& idUrl)
 
 Youtube::Video::Video(const json& videoInfoObject)
 {
-    m_id = videoInfoObject["videoId"];
-    m_title = Utility::ExtractString(videoInfoObject["title"]);
-    m_author = Utility::ExtractString(videoInfoObject["shortBylineText"]);
-    m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoInfoObject["thumbnail"]["thumbnails"]);
+    m_id = videoInfoObject.at("videoId");
+    m_title = Utility::ExtractString(videoInfoObject.at("title"));
+    m_author = Utility::ExtractString(videoInfoObject.at("shortBylineText"));
+    m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoInfoObject.at("thumbnail").at("thumbnails"));
 
     if (videoInfoObject.contains("upcomingEventData"))
     {

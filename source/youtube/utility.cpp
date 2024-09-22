@@ -8,11 +8,11 @@ std::string Youtube::Utility::ExtractThumbnailUrl(const json& thumbnailsObject)
     std::string bestThumbnailUrl;
     for (const json& thumbnailObject : thumbnailsObject)
     {
-        int currentResolution = thumbnailObject["width"].get<int>() * thumbnailObject["height"].get<int>();
+        int currentResolution = thumbnailObject.at("width").get<int>() * thumbnailObject.at("height").get<int>();
         if (currentResolution > bestResolution)
         {
             bestResolution = currentResolution;
-            bestThumbnailUrl = thumbnailObject["url"];
+            bestThumbnailUrl = thumbnailObject.at("url");
         }
     }
     return bestThumbnailUrl;
@@ -24,8 +24,8 @@ std::string Youtube::Utility::ExtractString(const json& stringObject)
         return stringObject["simpleText"];
 
     std::string string;
-    for (const json& runObject : stringObject["runs"])
-        string += runObject["text"];
+    for (const json& runObject : stringObject.at("runs"))
+        string += runObject.at("text");
     return string;
 }
 

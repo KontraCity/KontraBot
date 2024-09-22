@@ -337,9 +337,9 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         try
         {
             json playerResponseJson = json::parse(playerResponse.data);
-            bool clientFallback = (playerResponseJson["playabilityStatus"]["status"] != "OK");
+            bool clientFallback = (playerResponseJson.at("playabilityStatus").at("status") != "OK");
 
-            std::string responseVideoId = playerResponseJson["videoDetails"]["videoId"];
+            std::string responseVideoId = playerResponseJson.at("videoDetails").at("videoId");
             if (responseVideoId != videoId)
             {
                 m_logger.warn("API response is for wrong video \"{}\", trying \"tv_embedded\" client", responseVideoId);
@@ -358,20 +358,20 @@ Youtube::Extractor::Extractor(const std::string& videoId)
                 }
 
                 playerResponseJson = json::parse(playerResponse.data);
-                if (playerResponseJson["playabilityStatus"]["status"] != "OK")
+                if (playerResponseJson.at("playabilityStatus").at("status") != "OK")
                     throw YoutubeError(YoutubeError::Type::Unknown, m_videoId, "unknown error");
             }
 
             bool urlResolved = false;
             int bestBitrate = 0;
             std::string bestMimeType;
-            for (const json& formatObject : playerResponseJson["streamingData"]["adaptiveFormats"])
+            for (const json& formatObject : playerResponseJson.at("streamingData").at("adaptiveFormats"))
             {
-                std::string mimeType = formatObject["mimeType"];
+                std::string mimeType = formatObject.at("mimeType");
                 if (mimeType.find("audio/") == std::string::npos)
                     continue;
 
-                int bitrate = formatObject["bitrate"];
+                int bitrate = formatObject.at("bitrate");
                 if (bitrate < bestBitrate)
                     continue;
                 bestBitrate = bitrate;
@@ -379,12 +379,12 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 
                 if (formatObject.contains("url"))
                 {
-                    m_audioUrl = formatObject["url"];
+                    m_audioUrl = formatObject.at("url");
                     urlResolved = true;
                 }
                 else
                 {
-                    m_audioUrl = formatObject["signatureCipher"];
+                    m_audioUrl = formatObject.at("signatureCipher");
                     urlResolved = false;
                 }
             }

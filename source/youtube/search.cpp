@@ -19,7 +19,12 @@ static Youtube::Results ParseSearchContents(const json& contentsObject, Youtube:
 
     for (const json& contentObject : contentsObject)
     {
-        if (contentObject.contains("compactVideoRenderer"))
+        /*
+        *   Search contents may contain movies and shows.
+        *   They don't have author field and can't be played anyway.
+        *   Ignore them.
+        */
+        if (contentObject.contains("compactVideoRenderer") && contentObject["compactVideoRenderer"].contains("shortBylineText"))
         {
             Youtube::Video video(contentObject["compactVideoRenderer"]);
             if (video.type() == Youtube::Video::Type::Normal)
@@ -61,8 +66,8 @@ Youtube::Results Youtube::Search(const std::string& query)
 
     try
     {
-        json contentsObject = json::parse(searchResponse.data)["contents"]
-            ["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"];
+        json contentsObject = json::parse(searchResponse.data).at("contents")
+            .at("sectionListRenderer").at("contents").at(0).at("itemSectionRenderer").at("contents");
         return ParseSearchContents(contentsObject, Results::Type::Search, query);
     }
     catch (const json::exception& error)
@@ -98,8 +103,8 @@ Youtube::Results Youtube::Related(const std::string& videoId)
 
     try
     {
-        json contentsObject = json::parse(nextResponse.data)["contents"]["singleColumnWatchNextResults"]["results"]
-            ["results"]["contents"][2]["shelfRenderer"]["content"]["horizontalListRenderer"]["items"];
+        json contentsObject = json::parse(nextResponse.data).at("contents").at("singleColumnWatchNextResults").at("results")
+            .at("results").at("contents").at(2).at("shelfRenderer").at("content").at("horizontalListRenderer").at("items");
         return ParseSearchContents(contentsObject, Results::Type::Related, videoId);
     }
     catch (const json::exception& error)

@@ -25,10 +25,10 @@ void Youtube::Playlist::checkAlerts(const json& browseResponseJson)
         if (alertObject.contains("alertRenderer"))
             alertRendererObject = alertObject["alertRenderer"];
         else
-            alertRendererObject = alertObject["alertWithButtonRenderer"];
+            alertRendererObject = alertObject.at("alertWithButtonRenderer");
 
-        std::string alertMessage = Utility::ExtractString(alertRendererObject["text"]);
-        if (alertRendererObject["type"] == "ERROR")
+        std::string alertMessage = Utility::ExtractString(alertRendererObject.at("text"));
+        if (alertRendererObject.at("type") == "ERROR")
             throw YoutubeError(YoutubeError::Type::PlaylistError, m_id, alertMessage);
         m_videosHidden = boost::regex_search(alertMessage, boost::regex(R"(navailable.+video.+hidden)"));
     }
@@ -42,7 +42,7 @@ void Youtube::Playlist::parseAuthor(const json& playlistHeaderRendererObject)
         return;
     }
 
-    m_author = Utility::ExtractString(playlistHeaderRendererObject["subtitle"]);
+    m_author = Utility::ExtractString(playlistHeaderRendererObject.at("subtitle"));
     boost::smatch matches;
     if (!boost::regex_match(m_author, matches, boost::regex(R"(^([\s\S]+) .+ Album$)")))
     {
@@ -57,16 +57,16 @@ void Youtube::Playlist::parseAuthor(const json& playlistHeaderRendererObject)
 
 void Youtube::Playlist::parseThumbnailUrlHeaderRenderer(const json& playlistHeaderRendererObject)
 {
-    const json& heroPlaylistThumbnailRendererObject = playlistHeaderRendererObject["playlistHeaderBanner"]["heroPlaylistThumbnailRenderer"];
+    const json& heroPlaylistThumbnailRendererObject = playlistHeaderRendererObject.at("playlistHeaderBanner").at("heroPlaylistThumbnailRenderer");
     if (heroPlaylistThumbnailRendererObject.contains("thumbnail"))
-        m_thumbnailUrl = Utility::ExtractThumbnailUrl(heroPlaylistThumbnailRendererObject["thumbnail"]["thumbnails"]);
+        m_thumbnailUrl = Utility::ExtractThumbnailUrl(heroPlaylistThumbnailRendererObject["thumbnail"].at("thumbnails"));
 }
 
 void Youtube::Playlist::parseThumbnailUrlSidebarRenderer(const json& playlistSidebarPrimaryInfoRendererObject)
 {
-    const json& playlistVideoThumbnailRendererObject = playlistSidebarPrimaryInfoRendererObject["thumbnailRenderer"]["playlistVideoThumbnailRenderer"];
+    const json& playlistVideoThumbnailRendererObject = playlistSidebarPrimaryInfoRendererObject.at("thumbnailRenderer").at("playlistVideoThumbnailRenderer");
     if (playlistVideoThumbnailRendererObject.contains("thumbnail"))
-        m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistVideoThumbnailRendererObject["thumbnail"]["thumbnails"]);
+        m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistVideoThumbnailRendererObject["thumbnail"].at("thumbnails"));
 }
 
 void Youtube::Playlist::parseVideos(const json& videoContentsObject)
@@ -76,13 +76,13 @@ void Youtube::Playlist::parseVideos(const json& videoContentsObject)
     {
         if (videoContentObject.contains("continuationItemRenderer"))
         {
-            m_continuationToken = videoContentObject["continuationItemRenderer"]
-                ["continuationEndpoint"]["continuationCommand"]["token"];
+            m_continuationToken = videoContentObject.at("continuationItemRenderer")
+                .at("continuationEndpoint").at("continuationCommand").at("token");
             break;
         }
 
-        const json& playlistVideoRendererObject = videoContentObject["playlistVideoRenderer"];
-        std::string videoTitle = Utility::ExtractString(playlistVideoRendererObject["title"]);
+        const json& playlistVideoRendererObject = videoContentObject.at("playlistVideoRenderer");
+        std::string videoTitle = Utility::ExtractString(playlistVideoRendererObject.at("title"));
         if (videoTitle == "[Private video]" || videoTitle == "[Deleted video]")
         {
             /*
@@ -158,8 +158,8 @@ Youtube::Playlist::Iterator::pointer Youtube::Playlist::discoverVideo(size_t ind
     try
     {
         json browseResponseJson = json::parse(browseResponse.data);
-        parseVideos(browseResponseJson["onResponseReceivedActions"][0]
-            ["appendContinuationItemsAction"]["continuationItems"]);
+        parseVideos(browseResponseJson.at("onResponseReceivedActions").at(0)
+            .at("appendContinuationItemsAction").at("continuationItems"));
         return (m_videos.data() + index);
     }
     catch (const json::exception& error)
@@ -192,31 +192,31 @@ void Youtube::Playlist::downloadInfo()
         json browseResponseJson = json::parse(browseResponse.data);
         checkAlerts(browseResponseJson);
 
-        if (browseResponseJson["header"].contains("playlistHeaderRenderer"))
+        if (browseResponseJson.at("header").contains("playlistHeaderRenderer"))
         {
             const json& playlistHeaderRendererObject = browseResponseJson["header"]["playlistHeaderRenderer"];
-            m_title = Utility::ExtractString(playlistHeaderRendererObject["title"]);
+            m_title = Utility::ExtractString(playlistHeaderRendererObject.at("title"));
             parseAuthor(playlistHeaderRendererObject);
             parseThumbnailUrlHeaderRenderer(playlistHeaderRendererObject);
-            parseVideoCount(playlistHeaderRendererObject["byline"][0]["playlistBylineRenderer"]["text"]);
+            parseVideoCount(playlistHeaderRendererObject.at("byline").at(0).at("playlistBylineRenderer").at("text"));
             m_optionalKnown = true;
-            m_viewCount = Utility::ExtractViewCount(playlistHeaderRendererObject["viewCountText"]);
+            m_viewCount = Utility::ExtractViewCount(playlistHeaderRendererObject.at("viewCountText"));
         }
         else
         {
-            const json& playlistSidebarPrimaryInfoRendererObject = browseResponseJson["sidebar"]["playlistSidebarRenderer"]["items"][0]["playlistSidebarPrimaryInfoRenderer"];
-            const json& playlistSidebarSecondaryInfoRendererObject = browseResponseJson["sidebar"]["playlistSidebarRenderer"]["items"][1]["playlistSidebarSecondaryInfoRenderer"];
-            m_title = Utility::ExtractString(playlistSidebarPrimaryInfoRendererObject["title"]);
-            m_author = Utility::ExtractString(playlistSidebarSecondaryInfoRendererObject["videoOwner"]["videoOwnerRenderer"]["title"]);
+            const json& playlistSidebarPrimaryInfoRendererObject = browseResponseJson.at("sidebar").at("playlistSidebarRenderer").at("items").at(0).at("playlistSidebarPrimaryInfoRenderer");
+            const json& playlistSidebarSecondaryInfoRendererObject = browseResponseJson.at("sidebar").at("playlistSidebarRenderer").at("items").at(1).at("playlistSidebarSecondaryInfoRenderer");
+            m_title = Utility::ExtractString(playlistSidebarPrimaryInfoRendererObject.at("title"));
+            m_author = Utility::ExtractString(playlistSidebarSecondaryInfoRendererObject.at("videoOwner").at("videoOwnerRenderer").at("title"));
             parseThumbnailUrlSidebarRenderer(playlistSidebarPrimaryInfoRendererObject);
-            parseVideoCount(playlistSidebarPrimaryInfoRendererObject["stats"][0]);
+            parseVideoCount(playlistSidebarPrimaryInfoRendererObject.at("stats").at(0));
             m_optionalKnown = true;
-            m_viewCount = Utility::ExtractViewCount(playlistSidebarPrimaryInfoRendererObject["stats"][1]);
+            m_viewCount = Utility::ExtractViewCount(playlistSidebarPrimaryInfoRendererObject.at("stats").at(1));
         }
 
-        const json& contentsObject = browseResponseJson["contents"]["twoColumnBrowseResultsRenderer"]["tabs"][0]
-            ["tabRenderer"]["content"]["sectionListRenderer"]["contents"][0]
-            ["itemSectionRenderer"]["contents"][0];
+        const json& contentsObject = browseResponseJson.at("contents").at("twoColumnBrowseResultsRenderer").at("tabs").at(0)
+            .at("tabRenderer").at("content").at("sectionListRenderer").at("contents").at(0)
+            .at("itemSectionRenderer").at("contents").at(0);
 
         /*
         *   YouTube #Shorts playlists are structured differently and can't be parsed.
@@ -226,7 +226,7 @@ void Youtube::Playlist::downloadInfo()
             throw LocalError(LocalError::Type::PlaylistNotSupported, m_id);
         if (!contentsObject.contains("playlistVideoListRenderer"))
             throw LocalError(LocalError::Type::EmptyPlaylist, m_id);
-        parseVideos(contentsObject["playlistVideoListRenderer"]["contents"]);
+        parseVideos(contentsObject["playlistVideoListRenderer"].at("contents"));
     }
     catch (const json::exception& error)
     {
@@ -273,11 +273,11 @@ Youtube::Playlist::Playlist(const std::string& idUrl)
 
 Youtube::Playlist::Playlist(const json& playlistInfoObject)
 {
-    m_id = playlistInfoObject["playlistId"];
-    m_title = Utility::ExtractString(playlistInfoObject["title"]);
-    m_author = Utility::ExtractString(playlistInfoObject["shortBylineText"]);
-    m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistInfoObject["thumbnail"]["thumbnails"]);
-    parseVideoCount(playlistInfoObject["videoCountShortText"]);
+    m_id = playlistInfoObject.at("playlistId");
+    m_title = Utility::ExtractString(playlistInfoObject.at("title"));
+    m_author = Utility::ExtractString(playlistInfoObject.at("shortBylineText"));
+    m_thumbnailUrl = Utility::ExtractThumbnailUrl(playlistInfoObject.at("thumbnail").at("thumbnails"));
+    parseVideoCount(playlistInfoObject.at("videoCountShortText"));
 }
 
 } // namespace kc

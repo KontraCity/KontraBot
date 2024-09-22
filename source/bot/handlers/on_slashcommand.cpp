@@ -251,7 +251,7 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
             {
                 std::lock_guard lock(m_mutex);
                 event.edit_original_response(Info(guild.id).settings().locale->unknownError());
-                m_logger.info(logMessage(fmt::format("Runtime error: {}", error.what())));
+                m_logger.error(logMessage(fmt::format("Runtime error: {}", error.what())));
             }
         }).detach();
         return;
