@@ -525,6 +525,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         ));
     }
 
+    m_codec->pkt_timebase = m_stream->time_base;
     result = avcodec_open2(m_codec, decoder, nullptr);
     if (result < 0)
     {
@@ -588,7 +589,6 @@ Youtube::Extractor::Extractor(const std::string& videoId)
 Youtube::Extractor::~Extractor()
 {
     swr_free(&m_resampler);
-    avcodec_close(m_codec);
     avcodec_free_context(&m_codec);
     avformat_close_input(&m_format);
     avio_context_free(&m_io);
@@ -654,8 +654,8 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
 
         while (avcodec_receive_frame(m_codec, frame) >= 0)
         {
-            uint8_t* buffer = nullptr;
-            int bytesAllocated = av_samples_alloc(&buffer, nullptr, OutputChannelLayout.nb_channels, frame->nb_samples, OutputFormat, 0);
+            uint8_t** buffer = nullptr;
+            int bytesAllocated = av_samples_alloc_array_and_samples(&buffer, nullptr, OutputChannelLayout.nb_channels, frame->nb_samples, OutputFormat, 0);
             if (bytesAllocated < 0)
             {
                 av_frame_free(&frame);
@@ -667,10 +667,10 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 ));
             }
 
-            int samplesConverted = swr_convert(m_resampler, &buffer, frame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
+            int samplesConverted = swr_convert(m_resampler, buffer, frame->nb_samples, (const uint8_t**)frame->data, frame->nb_samples);
             if (samplesConverted < 0)
             {
-                av_freep(&buffer);
+                av_freep(&buffer[0]);
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
@@ -683,7 +683,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
             int bytesConverted = av_samples_get_buffer_size(nullptr, OutputChannelLayout.nb_channels, samplesConverted, OutputFormat, 0);
             if (bytesConverted < 0)
             {
-                av_freep(&buffer);
+                av_freep(&buffer[0]);
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
@@ -696,16 +696,16 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
             rawFrame.reserve(rawFrame.size() + bytesConverted);
             for (int sampleIndex = 0; sampleIndex < samplesConverted; ++sampleIndex)
             {
-                uint8_t* leftChannelSample = buffer + sampleIndex * 2;
+                uint8_t* leftChannelSample = buffer[0] + sampleIndex * 2;
                 rawFrame.insert(rawFrame.end(), leftChannelSample, leftChannelSample + 2);
-                uint8_t* rightChannelSample = leftChannelSample + (bytesConverted / 2);
+                uint8_t* rightChannelSample = buffer[1] + sampleIndex * 2;
                 rawFrame.insert(rawFrame.end(), rightChannelSample, rightChannelSample + 2);
             }
 
-            samplesConverted = swr_convert(m_resampler, &buffer, frame->nb_samples, nullptr, 0);
+            samplesConverted = swr_convert(m_resampler, buffer, frame->nb_samples, nullptr, 0);
             if (samplesConverted < 0)
             {
-                av_freep(&buffer);
+                av_freep(&buffer[0]);
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
@@ -716,17 +716,30 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
             }
             else if (samplesConverted != 0)
             {
+                int bytesConverted = av_samples_get_buffer_size(nullptr, OutputChannelLayout.nb_channels, samplesConverted, OutputFormat, 0);
+                if (bytesConverted < 0)
+                {
+                    av_freep(&buffer[0]);
+                    av_frame_free(&frame);
+                    av_packet_unref(&packet);
+                    throw std::runtime_error(fmt::format(
+                        "kc::Youtube::Extractor::extractFrame(): "
+                        "Couldn't get converted bytes count [video: \"{}\", return code: {}]",
+                        m_videoId, bytesConverted
+                    ));
+                }
+
                 rawFrame.reserve(rawFrame.size() + bytesConverted);
                 for (int sampleIndex = 0; sampleIndex < samplesConverted; ++sampleIndex)
                 {
-                    uint8_t* leftChannelSample = buffer + sampleIndex * 2;
+                    uint8_t* leftChannelSample = buffer[0] + sampleIndex * 2;
                     rawFrame.insert(rawFrame.end(), leftChannelSample, leftChannelSample + 2);
-                    uint8_t* rightChannelSample = leftChannelSample + (bytesConverted / 2);
+                    uint8_t* rightChannelSample = buffer[1] + sampleIndex * 2;
                     rawFrame.insert(rawFrame.end(), rightChannelSample, rightChannelSample + 2);
                 }
             }
 
-            av_freep(&buffer);
+            av_freep(&buffer[0]);
         }
 
         av_frame_free(&frame);
