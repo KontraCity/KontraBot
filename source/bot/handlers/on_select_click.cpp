@@ -5,7 +5,7 @@ namespace kc {
 void Bot::Bot::onSelectClick(const dpp::select_click_t& event)
 {
     const dpp::guild& guild = event.command.get_guild();
-    const LogMessageFunction logMessage = [&event, &guild](const std::string& message)
+    const LogMessageFunction logMessage = [event, guild](const std::string& message)
     {
         return fmt::format(
             "\"{}\" / \"{}\": [{}/{}]: {}",
@@ -30,7 +30,11 @@ void Bot::Bot::onSelectClick(const dpp::select_click_t& event)
         case Signal::Type::PlayVideo:
         case Signal::Type::PlayPlaylist:
         {
-            event.reply(addItem(event.from, event.command, signal.data(), logMessage, info, true));
+            std::thread([this, event, logMessage, signal]()
+            {
+                event.thinking();
+                event.edit_original_response(addItem(event.from, event.command, signal.data(), logMessage, true));
+            }).detach();
             break;
         }
         case Signal::Type::Unsupported:

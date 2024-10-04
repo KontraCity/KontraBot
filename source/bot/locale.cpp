@@ -19,6 +19,25 @@ Bot::Locale::Pointer Bot::Locale::Create(const std::string localeName)
     return Create(LocaleEn::Type);
 }
 
+const char* Bot::Locale::EndReasonToString(EndReason reason)
+{
+    switch (reason)
+    {
+        case EndReason::UserRequested:
+            return "requested by user";
+        case EndReason::Timeout:
+            return "timeouted";
+        case EndReason::EverybodyLeft:
+            return "everybody left";
+        case EndReason::Kicked:
+            return "kicked";
+        case EndReason::Moved:
+            return "moved";
+        default:
+            return "unknown";
+    }
+}
+
 dpp::message Bot::Locale::GenericMessage(uint32_t color, const char* emoji, const std::string& string, bool ephemeral)
 {
     dpp::embed embed;

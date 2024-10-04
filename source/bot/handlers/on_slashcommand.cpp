@@ -226,21 +226,22 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
             return;
         }
 
-        if (boost::regex_search(whatOption, boost::regex(Youtube::VideoConst::ExtractId)) ||
-            boost::regex_search(whatOption, boost::regex(Youtube::PlaylistConst::ExtractId)))
-        {
-            event.reply(addItem(event.from, event.command, whatOption, logMessage, info));
-            return;
-        }
-
         std::thread([this, event, guild, logMessage, whatOption]()
         {
+            if (boost::regex_search(whatOption, boost::regex(Youtube::VideoConst::ExtractId)) ||
+                boost::regex_search(whatOption, boost::regex(Youtube::PlaylistConst::ExtractId)))
+            {
+                event.thinking();
+                event.edit_original_response(addItem(event.from, event.command, whatOption, logMessage));
+                return;
+            }
+
             try
             {
                 event.thinking(true);
                 Youtube::Results results = Youtube::Search(whatOption);
-
                 std::lock_guard lock(m_mutex);
+
                 event.edit_original_response(
                     Info(guild.id).settings().locale->search(results),
                     std::bind(&Bot::updateEphemeralToken, this, std::placeholders::_1, event.command.token)

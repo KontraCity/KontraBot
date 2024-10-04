@@ -100,6 +100,15 @@ namespace Youtube
         };
 
     private:
+        /// @brief Curl progress callback
+        /// @param target Extractor target
+        /// @param downloadTotal Count of downloaded bytes
+        /// @param downloadNow Count of total bytes to download
+        /// @param uploadTotal Count of uploaded bytes
+        /// @param uploadNow Count of total bytes to upload
+        /// @return 1 if download should be terminated, 0 otherwise
+        static int ProgressCallback(Extractor* target, double downloadTotal, double downloadNow, double uploadTotal, double uploadNow);
+
         /// @brief Curl header writer callback
         /// @param data Data to write
         /// @param itemSize Size of one item in bytes

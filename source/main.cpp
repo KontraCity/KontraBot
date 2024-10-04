@@ -209,7 +209,7 @@ static bool CheckClientAuthorization()
         return false;
     }
 }
-
+#include "common/stopwatch.hpp"
 int main(int argc, char** argv)
 {
     ParseResult result = ParseOptions(argc, argv);

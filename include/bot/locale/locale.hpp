@@ -95,6 +95,11 @@ namespace Bot
         /// @return Created locale
         static Pointer Create(const std::string localeName);
 
+        /// @brief Convert end reason to string
+        /// @param reason The end reason to convert
+        /// @return Converted string
+        static const char* EndReasonToString(EndReason reason);
+
     protected:
         // Function used to get number's cardinal ending
         using CardinalFunction = const char* (*)(size_t);

@@ -30,7 +30,11 @@ void Bot::Bot::onButtonClick(const dpp::button_click_t& event)
                 return;
             }
 
-            event.reply(addItem(event.from, event.command, signal.data(), logMessage, info, true));
+            std::thread([this, event, logMessage, signal]()
+            {
+                event.thinking();
+                event.edit_original_response(addItem(event.from, event.command, signal.data(), logMessage, true));
+            }).detach();
             break;
         }
         case Signal::Type::RelatedSearch:
@@ -41,8 +45,8 @@ void Bot::Bot::onButtonClick(const dpp::button_click_t& event)
                 {
                     event.thinking(true);
                     Youtube::Results results = Youtube::Related(signal.data());
-
                     std::lock_guard lock(m_mutex);
+
                     event.edit_original_response(
                         Info(guild.id).settings().locale->search(results),
                         std::bind(&Bot::updateEphemeralToken, this, std::placeholders::_1, event.command.token)

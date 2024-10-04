@@ -150,7 +150,7 @@ Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const 
     return { JoinStatus::Result::Joined, userVoice };
 }
 
-dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interaction& interaction, const std::string& itemId, const LogMessageFunction& logMessage, Info& info, bool showRequester)
+dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interaction& interaction, const std::string& itemId, const LogMessageFunction& logMessage, bool showRequester)
 {
     const dpp::guild& guild = interaction.get_guild();
     const dpp::user& requester = interaction.get_issuing_user();
@@ -161,6 +161,9 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             boost::regex_search(itemId, boost::regex(Youtube::VideoConst::ExtractId)))
         {
             Youtube::Video video(itemId);
+            std::lock_guard lock(m_mutex);
+            Info info(guild.id);
+
             switch (video.type())
             {
                 case Youtube::Video::Type::Normal:
@@ -195,6 +198,9 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
         }
 
         Youtube::Playlist playlist(itemId);
+        std::lock_guard lock(m_mutex);
+        Info info(guild.id);
+
         JoinStatus joinStatus = joinUserVoice(client, interaction, info, playlist);
         PlayerEntry playerEntry = m_players.find(guild.id);
         switch (joinStatus.result)
@@ -217,28 +223,33 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
     }
     catch (const Youtube::YoutubeError& error)
     {
+        std::lock_guard lock(m_mutex);
         m_logger.error(logMessage(fmt::format("YouTube error: {}", error.what())));
-        return info.settings().locale->youtubeError(error);
+        return Info(guild.id).settings().locale->youtubeError(error);
     }
     catch (const Youtube::LocalError& error)
     {
+        std::lock_guard lock(m_mutex);
         m_logger.error(logMessage(fmt::format("Local error: {}", error.what())));
-        return info.settings().locale->localError(error);
+        return Info(guild.id).settings().locale->localError(error);
     }
     catch (const std::runtime_error& error)
     {
+        std::lock_guard lock(m_mutex);
         m_logger.error(logMessage(fmt::format("Runtime error: {}", error.what())));
-        return info.settings().locale->unknownError();
+        return Info(guild.id).settings().locale->unknownError();
     }
     catch (const std::exception& error)
     {
+        std::lock_guard lock(m_mutex);
         m_logger.error(logMessage(fmt::format("Unknown error: {}", error.what())));
-        return info.settings().locale->unknownError();
+        return Info(guild.id).settings().locale->unknownError();
     }
     catch (...)
     {
+        std::lock_guard lock(m_mutex);
         m_logger.error(logMessage("Unknown error"));
-        return info.settings().locale->unknownError();
+        return Info(guild.id).settings().locale->unknownError();
     }
 }
 

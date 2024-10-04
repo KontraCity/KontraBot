@@ -576,71 +576,66 @@ void Bot::Player::stop(Info& info)
     updateStatus(info);
 }
 
-void Bot::Player::endSession(Info& info, bool dontClearVoiceStatus)
-{
-    std::lock_guard lock(m_mutex);
-    if (m_session.playingVideo)
-        incrementPlayedTracks(info);
-
-    if (dontClearVoiceStatus)
-    {
-        m_client->disconnect_voice(m_session.guildId);
-    }
-    else
-    {
-        dpp::discord_client* client = m_client;
-        Session session = m_session;
-        m_root->channel_set_voice_status(m_session.voiceChannelId, "", [client, session](const dpp::confirmation_callback_t& event)
-        {
-            client->disconnect_voice(session.guildId);
-        });
-    }
-
-    m_logger.info(
-        "Session ended [{}, {} track{}]",
-        Utility::NiceString(pt::second_clock::local_time() - m_session.startTimestamp),
-        m_session.tracksPlayed,
-        LocaleEn::Cardinal(m_session.tracksPlayed)
-    );
-}
-
 void Bot::Player::endSession(Info& info, Locale::EndReason reason)
 {
+    bool clearVoiceStatus;
     switch (reason)
     {
         case Locale::EndReason::UserRequested:
-        {
-            endSession(info);
-            return;
-        }
         case Locale::EndReason::Timeout:
         {
-            endSession(info);
+            /*
+            *   Bot is still sitting in the voice channel.
+            *   Clearing voice status is necessary before leaving.
+            */
+            clearVoiceStatus = true;
             break;
         }
         case Locale::EndReason::EverybodyLeft:
         {
             /*
-            *   Bot is the last user to leave voice channel.
-            *   Discord clears voice status automatically when there is no one left.
+            *   Bot is the last user to leave the voice channel.
+            *   Discord will clear voice status automatically.
             */
-            endSession(info, true);
+            clearVoiceStatus = false;
             break;
         }
         case Locale::EndReason::Kicked:
         case Locale::EndReason::Moved:
         {
             /*
-            *   Bot is already not in voice channel.
-            *   Voice status can only be modified when bot is in the voice.
+            *   Bot is not in the voice channel already.
+            *   Clearing voice status is implossible.
             */
-            endSession(info, true);
+            clearVoiceStatus = false;
             break;
         }
     }
 
-    dpp::message message = info.settings().locale->sessionEnd(info.settings(), reason, m_session);
-    m_root->message_create(message.set_channel_id(m_session.textChannelId));
+    std::lock_guard lock(m_mutex);
+    if (m_session.playingVideo)
+        incrementPlayedTracks(info);
+
+    dpp::discord_client* client = m_client;
+    dpp::snowflake guildId = m_session.guildId;
+    if (clearVoiceStatus)
+        m_root->channel_set_voice_status(m_session.voiceChannelId, "", [client, guildId](const dpp::confirmation_callback_t&) { client->disconnect_voice(guildId); });
+    else
+        m_client->disconnect_voice(m_session.guildId);
+
+    m_logger.info(
+        "Session ended ({}) [{}, {} track{}]",
+        Locale::EndReasonToString(reason),
+        Utility::NiceString(pt::second_clock::local_time() - m_session.startTimestamp),
+        m_session.tracksPlayed,
+        LocaleEn::Cardinal(m_session.tracksPlayed)
+    );
+
+    if (reason != Locale::EndReason::UserRequested)
+    {
+        dpp::message message = info.settings().locale->sessionEnd(info.settings(), reason, m_session);
+        m_root->message_create(message.set_channel_id(m_session.textChannelId));
+    }
 }
 
 } // namespace kc

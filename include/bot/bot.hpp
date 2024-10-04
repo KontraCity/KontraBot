@@ -132,10 +132,9 @@ namespace Bot
         /// @param interaction The event to handle
         /// @param itemId ID of item requested by user
         /// @param logMessage Handler log message function
-        /// @param info Guild's info
         /// @param showRequester Whether or not to show requester in result message
         /// @return Result message
-        dpp::message addItem(dpp::discord_client* client, const dpp::interaction& interaction, const std::string& itemId, const LogMessageFunction& logMessage, Info& info, bool showRequester = false);
+        dpp::message addItem(dpp::discord_client* client, const dpp::interaction& interaction, const std::string& itemId, const LogMessageFunction& logMessage, bool showRequester = false);
 
     private:
         /// @brief Handle autocomplete event

@@ -13,12 +13,15 @@ void Youtube::Extractor::Frame::clear()
     vector::clear();
 }
 
+int Youtube::Extractor::ProgressCallback(Extractor* target, double downloadTotal, double downloadNow, double uploadTotal, double uploadNow)
+{
+    std::lock_guard lock(target->m_mutex);
+    return static_cast<int>(target->m_threadStatus == ThreadStatus::Stopped);
+}
+
 size_t Youtube::Extractor::HeaderWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target)
 {
     std::lock_guard lock(target->m_mutex);
-    if (target->m_threadStatus == ThreadStatus::Stopped)
-        return 0;
-
     if (!target->m_fileSize)
     {
         std::string string(reinterpret_cast<char*>(data), itemCount);
@@ -26,16 +29,12 @@ size_t Youtube::Extractor::HeaderWriter(uint8_t* data, size_t itemSize, size_t i
         if (boost::regex_search(string, matches, boost::regex(R"([Cc]ontent-[Ll]ength: (\d+))")))
             target->m_fileSize = std::stoull(matches.str(1));
     }
-
     return itemSize * itemCount;
 }
 
 size_t Youtube::Extractor::ExtractorWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target)
 {
     std::lock_guard lock(target->m_mutex);
-    if (target->m_threadStatus == ThreadStatus::Stopped)
-        return 0;
-
     target->m_buffer.insert(target->m_buffer.end(), data, data + itemCount);
     target->m_cv.notify_all();
     return itemSize * itemCount;
@@ -67,11 +66,8 @@ int Youtube::Extractor::Read(void* root, uint8_t* buffer, int bufferLength)
         if (bytesAvailable > bufferLength)
             bytesAvailable = bufferLength;
 
-        std::copy(
-            extractor->m_buffer.data() + (extractor->m_position - extractor->m_positionOffset),
-            extractor->m_buffer.data() + (extractor->m_position - extractor->m_positionOffset) + bytesAvailable,
-            buffer
-        );
+        uint8_t* data = extractor->m_buffer.data() + (extractor->m_position - extractor->m_positionOffset);
+        std::copy(data, data + bytesAvailable, buffer);
         extractor->m_position += bytesAvailable;
         return bytesAvailable;
     }
@@ -150,6 +146,18 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request redirection [return code: {}]", static_cast<int>(result)));
 
+        result = curl_easy_setopt(curl.get(), CURLOPT_XFERINFODATA, this);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request progress callback target [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_XFERINFOFUNCTION, &Extractor::ProgressCallback);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't configure request progress callback function [return code: {}]", static_cast<int>(result)));
+
+        result = curl_easy_setopt(curl.get(), CURLOPT_NOPROGRESS, 0L);
+        if (result != CURLE_OK)
+            throw std::runtime_error(fmt::format("Couldn't enable request progress callback [return code: {}]", static_cast<int>(result)));
+
         result = curl_easy_setopt(curl.get(), CURLOPT_HEADERDATA, this);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request header target [return code: {}]", static_cast<int>(result)));
@@ -176,7 +184,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
             result = curl_easy_perform(curl.get());
             if (result == CURLE_OK)
                 break;
-            else if (result == CURLE_WRITE_ERROR)
+            else if (result == CURLE_ABORTED_BY_CALLBACK)
                 return; // Thread is cancelled
 
             if (requestAttempt == MaxRequestAttempts)

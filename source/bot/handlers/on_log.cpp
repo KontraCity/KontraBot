@@ -20,6 +20,8 @@ void Bot::Bot::onLog(const dpp::log_t& event, bool registerCommands)
                 break;
             if (event.message.find("Success") != std::string::npos)
                 break;
+            if (event.message.find("Received unhandled code") != std::string::npos)
+                break;
 
             logger.warn(event.message);
             break;
