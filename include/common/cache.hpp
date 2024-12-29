@@ -5,7 +5,7 @@
 #include <mutex>
 #include <string>
 
-namespace kc {
+namespace kb {
 
 namespace CacheConst
 {
@@ -29,6 +29,9 @@ namespace CacheConst
 class Cache
 {
 public:
+    // Singleton instance
+    static const std::unique_ptr<Cache> Instance;
+
     struct YoutubeAuth
     {
         bool authorized = false;
@@ -37,10 +40,6 @@ public:
         int expiresAt = 0;
         std::string refreshToken;
     };
-
-public:
-    // Singleton instance
-    static const std::unique_ptr<Cache> Instance;
 
 private:
     std::mutex m_mutex;
@@ -51,6 +50,7 @@ private:
     /// @brief Create or read and parse cache file
     Cache();
 
+private:
     /// @brief Save cache file
     /// @throw std::runtime_error if internal error occurs
     void save();
@@ -82,4 +82,4 @@ public:
     }
 };
 
-} // namespace kc
+} // namespace kb

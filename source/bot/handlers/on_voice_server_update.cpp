@@ -1,6 +1,6 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onVoiceServerUpdate(const dpp::voice_server_update_t& event)
 {
@@ -41,4 +41,4 @@ void Bot::Bot::onVoiceServerUpdate(const dpp::voice_server_update_t& event)
     m_logger.warn(logMessage(fmt::format("Voice server changed from \"{}\" to \"{}\", reconnecting", playerEndpoint, event.endpoint)));
 }
 
-} // namespace kc
+} // namespace kb

@@ -7,7 +7,7 @@
 // Custom modules
 #include "youtube/item.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Youtube
 {
@@ -30,6 +30,7 @@ namespace Youtube
         /// @param query Results list query
         Results(Type type, const std::string& query);
 
+    public:
         /// @brief Get results list type
         /// @return Results list type
         inline Type type() const
@@ -60,4 +61,4 @@ namespace Youtube
     Results Related(const std::string& videoId);
 }
 
-} // namespace kc
+} // namespace kb

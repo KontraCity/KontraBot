@@ -4,7 +4,7 @@
 #include <string>
 #include <stdexcept>
 
-namespace kc {
+namespace kb {
 
 namespace Youtube
 {
@@ -27,12 +27,6 @@ namespace Youtube
         std::string m_subreason;
         std::string m_what;
 
-    private:
-        /// @brief Convert error type to error name
-        /// @param type Error type
-        /// @return Error name
-        static const char* TypeToName(Type type);
-
     public:
         /// @brief Create YouTube error
         /// @param type Error type
@@ -41,6 +35,7 @@ namespace Youtube
         /// @param subreason YouTube error subreason
         YoutubeError(Type type, const std::string& itemId, const std::string& reason, const std::string& subreason = "");
 
+    public:
         /// @brief Get error type
         /// @return Error type
         inline Type type() const noexcept
@@ -124,18 +119,13 @@ namespace Youtube
         std::string m_itemId;
         std::string m_what;
 
-    private:
-        /// @brief Convert error type to error reason
-        /// @param type Error type
-        /// @return Error reason
-        static const char* TypeToReason(Type type);
-
     public:
         /// @brief Create error
         /// @param type Error type
         /// @param itemId ID of item that created the error
         LocalError(Type type, const std::string& itemId);
 
+    public:
         /// @brief Get error type
         /// @return Error type
         inline Type type() const noexcept
@@ -159,4 +149,4 @@ namespace Youtube
     };
 }
 
-} // namespace kc
+} // namespace kb

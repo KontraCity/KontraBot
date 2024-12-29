@@ -7,7 +7,7 @@
 // Library DPP
 #include <dpp/dpp.h>
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -369,17 +369,18 @@ namespace Bot
         Commands();
 
     public:
+        /// @brief Parse bot commands
+        /// @param commands Commands to parse
+        /// @throw std::invalid_argument if unknown command is encountered
+        void parse(const dpp::slashcommand_map& commands);
+
+    public:
         /// @brief Check if commands are parsed
         /// @return True if commands are parsed
         inline operator bool() const
         {
             return m_parsed;
         }
-
-        /// @brief Parse bot commands
-        /// @param commands Commands to parse
-        /// @throw std::invalid_argument if unknown command is encountered
-        void parse(const dpp::slashcommand_map& commands);
 
         /// @brief Get /help command
         /// @return /help command
@@ -481,4 +482,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

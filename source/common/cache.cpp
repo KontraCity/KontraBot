@@ -1,5 +1,5 @@
 #include "common/cache.hpp"
-using namespace kc::CacheConst;
+using namespace kb::CacheConst;
 
 // STL modules
 #include <fstream>
@@ -9,7 +9,7 @@ using namespace kc::CacheConst;
 // Library nlohmann::json
 #include <nlohmann/json.hpp>
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -65,7 +65,7 @@ void Cache::save()
 {
     std::ofstream cacheFile(CacheFile, std::ios::trunc);
     if (!cacheFile)
-        throw std::runtime_error("kc::Bot::Cache::save(): Couldn't open cache file");
+        throw std::runtime_error("kb::Bot::Cache::save(): Couldn't open cache file");
 
     json youtubeAuthObject;
     youtubeAuthObject[Objects::YoutubeAuth::Authorized] = m_youtubeAuth.authorized;
@@ -79,4 +79,4 @@ void Cache::save()
     cacheFile << cacheJson.dump(4) << '\n';
 }
 
-} // namespace kc
+} // namespace kb

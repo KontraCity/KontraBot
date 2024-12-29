@@ -14,7 +14,45 @@
 #include "youtube/error.hpp"
 #include "youtube/utility.hpp"
 
-namespace kc {
+namespace kb {
+
+Youtube::Video::Video(const std::string& idUrl)
+    : m_id(idUrl)
+{
+    if (!boost::regex_match(m_id, boost::regex(VideoConst::ValidateId)))
+    {
+        boost::smatch matches;
+        if (!boost::regex_search(m_id, matches, boost::regex(VideoConst::ExtractId)))
+        {
+            throw std::invalid_argument(fmt::format(
+                "kb::Youtube::Video::Video(): [idUrl]: \"{}\": "
+                "Not a valid video ID or watch URL",
+                m_id
+            ));
+        }
+        m_id = matches.str(1);
+    }
+
+    downloadInfo();
+}
+
+Youtube::Video::Video(const json& videoInfoObject)
+{
+    m_id = videoInfoObject.at("videoId");
+    m_title = Utility::ExtractString(videoInfoObject.at("title"));
+    m_author = Utility::ExtractString(videoInfoObject.at("shortBylineText"));
+    m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoInfoObject.at("thumbnail").at("thumbnails"));
+
+    if (videoInfoObject.contains("upcomingEventData"))
+    {
+        m_type = Type::Premiere;
+        return;
+    }
+
+    if (!parseDuration(videoInfoObject))
+        m_type = Type::Livestream;
+    parseViewCount(videoInfoObject);
+}
 
 bool Youtube::Video::parseDuration(const json& videoInfoObject)
 {
@@ -32,7 +70,7 @@ bool Youtube::Video::parseDuration(const json& videoInfoObject)
     if (!boost::regex_match(durationString, matches, boost::regex(R"((?:(\d{1,3}):)?(\d{1,2}):(\d{2}))")))
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Video::parseDuration(): "
+            "kb::Youtube::Video::parseDuration(): "
             "Couldn't extract duration components from duration string [video: \"{}\", duration string: \"{}\"]",
             m_id, durationString
         ));
@@ -60,7 +98,7 @@ void Youtube::Video::parseViewCount(const json& videoInfoObject)
     if (!boost::regex_search(accessibilityString, matches, boost::regex(R"(([\d,]+ view|No views))")))
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Video::parseViewCount(): "
+            "kb::Youtube::Video::parseViewCount(): "
             "Couldn't extract view count string from accessibility string [video: \"{}\", accessibility string: \"{}\"]",
             m_id, accessibilityString
         ));
@@ -109,7 +147,7 @@ void Youtube::Video::parseChapters(const std::string& description)
             line.replace(matches.position(), matches.str(0).length(), "");
         if (boost::regex_search(line, matches, boost::regex(R"((?:[-\|: ]+)$)")))
             line.replace(matches.position(), matches.str(0).length(), "");
-        m_chapters.push_back({ m_chapters.size() + 1, kc::Utility::Truncate(line, 100), timestamp });
+        m_chapters.push_back({ m_chapters.size() + 1, kb::Utility::Truncate(line, 100), timestamp });
     }
 
     if (m_chapters.empty())
@@ -189,7 +227,7 @@ void Youtube::Video::downloadInfo()
     if (playerResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Video::downloadInfo(): "
+            "kb::Youtube::Video::downloadInfo(): "
             "Couldn't get API response [video: \"{}\", client: \"web\", response code: {}]",
             m_id, playerResponse.code
         ));
@@ -227,7 +265,7 @@ void Youtube::Video::downloadInfo()
     catch (const json::exception& error)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Video::downloadInfo(): "
+            "kb::Youtube::Video::downloadInfo(): "
             "Couldn't parse API JSON response [video: \"{}\", client: \"web\", id: {}]",
             m_id, error.id
         ));
@@ -247,42 +285,4 @@ void Youtube::Video::checkOptional() const
     mutableThis->downloadInfo();
 }
 
-Youtube::Video::Video(const std::string& idUrl)
-    : m_id(idUrl)
-{
-    if (!boost::regex_match(m_id, boost::regex(VideoConst::ValidateId)))
-    {
-        boost::smatch matches;
-        if (!boost::regex_search(m_id, matches, boost::regex(VideoConst::ExtractId)))
-        {
-            throw std::invalid_argument(fmt::format(
-                "kc::Youtube::Video::Video(): [idUrl]: \"{}\": "
-                "Not a valid video ID or watch URL",
-                m_id
-            ));
-        }
-        m_id = matches.str(1);
-    }
-
-    downloadInfo();
-}
-
-Youtube::Video::Video(const json& videoInfoObject)
-{
-    m_id = videoInfoObject.at("videoId");
-    m_title = Utility::ExtractString(videoInfoObject.at("title"));
-    m_author = Utility::ExtractString(videoInfoObject.at("shortBylineText"));
-    m_thumbnailUrl = Utility::ExtractThumbnailUrl(videoInfoObject.at("thumbnail").at("thumbnails"));
-
-    if (videoInfoObject.contains("upcomingEventData"))
-    {
-        m_type = Type::Premiere;
-        return;
-    }
-
-    if (!parseDuration(videoInfoObject))
-        m_type = Type::Livestream;
-    parseViewCount(videoInfoObject);
-}
-
-} // namespace kc
+} // namespace kb

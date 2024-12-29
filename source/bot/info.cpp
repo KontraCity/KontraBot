@@ -1,5 +1,5 @@
 #include "bot/info.hpp"
-using namespace kc::Bot::InfoConst;
+using namespace kb::Bot::InfoConst;
 
 // STL modules
 #include <map>
@@ -18,11 +18,10 @@ using namespace kc::Bot::InfoConst;
 #include <fmt/format.h>
 
 // Custom modules
-#include "bot/locale/locale_en.hpp"
-#include "bot/locale/locale_ru.hpp"
+#include "bot/locale/locales.hpp"
 #include "common/utility.hpp"
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -68,7 +67,7 @@ Bot::Info::Info(dpp::snowflake guildId)
 
     std::ifstream infoFile(m_filePath);
     if (!infoFile)
-        throw std::runtime_error(fmt::format("kc::Bot::Info::Info(): Couldn't open info file [file: \"{}\"]", m_filePath));
+        throw std::runtime_error(fmt::format("kb::Bot::Info::Info(): Couldn't open info file [file: \"{}\"]", m_filePath));
 
     try
     {
@@ -91,7 +90,7 @@ Bot::Info::Info(dpp::snowflake guildId)
     }
     catch (const json::exception& error)
     {
-        throw std::runtime_error(fmt::format("kc::Bot::Info::Info(): Couldn't parse info JSON file [file: \"{}\", id: {}]", m_filePath, error.id));
+        throw std::runtime_error(fmt::format("kb::Bot::Info::Info(): Couldn't parse info JSON file [file: \"{}\", id: {}]", m_filePath, error.id));
     }
 }
 
@@ -126,4 +125,4 @@ Bot::Info::~Info()
     infoFile << infoJson.dump(4) << '\n';
 }
 
-} // namespace kc
+} // namespace kb

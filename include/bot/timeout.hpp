@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include <functional>
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -24,10 +24,6 @@ namespace Bot
         bool m_enabled;
         Callback m_callback;
 
-    private:
-        /// @brief Timeout thread implementation
-        void threadFunction();
-
     public:
         /// @brief Create timeout
         /// @param callback Callback function to call when timeout occurs
@@ -38,6 +34,11 @@ namespace Bot
 
         ~Timeout();
 
+    private:
+        /// @brief Timeout thread implementation
+        void threadFunction();
+
+    public:
         /// @brief Set new timeout duration
         /// @param Timeout duration in seconds
         void setTimeoutDuration(uint64_t timeoutDuration);
@@ -57,4 +58,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

@@ -1,6 +1,6 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onVoiceStateUpdate(const dpp::voice_state_update_t& event)
 {
@@ -40,4 +40,4 @@ void Bot::Bot::onVoiceStateUpdate(const dpp::voice_state_update_t& event)
     }
 }
 
-} // namespace kc
+} // namespace kb

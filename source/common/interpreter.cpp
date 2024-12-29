@@ -6,7 +6,7 @@
 // Library {fmt}
 #include <fmt/format.h>
 
-namespace kc {
+namespace kb {
 
 void Interpreter::Output(js_State* state)
 {
@@ -23,6 +23,12 @@ void Interpreter::Output(js_State* state)
     reinterpret_cast<Interpreter*>(std::stoull(js_tostring(state, -1)))->m_lastOutput += data;
 }
 
+Interpreter::Interpreter()
+    : m_state(nullptr, js_freestate)
+{
+    reset();
+}
+
 void Interpreter::updatePointer()
 {
     js_dostring(m_state.get(), fmt::format(
@@ -32,18 +38,12 @@ void Interpreter::updatePointer()
     );
 }
 
-Interpreter::Interpreter()
-    : m_state(nullptr, js_freestate)
-{
-    reset();
-}
-
 void Interpreter::reset()
 {
     std::lock_guard lock(m_mutex);
     m_state.reset(js_newstate(NULL, NULL, 0));
     if (!m_state.get())
-        throw std::runtime_error("kc::Interpreter::reset(): Couldn't create interpreter state");
+        throw std::runtime_error("kb::Interpreter::reset(): Couldn't create interpreter state");
 
     updatePointer();
     js_newcfunction(m_state.get(), Interpreter::Output, "output", 0);
@@ -61,7 +61,7 @@ std::string Interpreter::execute(const std::string& code)
     if (result != 0)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Interpreter::execute(): "
+            "kb::Interpreter::execute(): "
             "Couldn't compile JavaScript code [return code: {}]",
             result
         ));
@@ -73,7 +73,7 @@ std::string Interpreter::execute(const std::string& code)
     if (result != 0)
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Interpreter::execute(): "
+            "kb::Interpreter::execute(): "
             "Couldn't execute JavaScript code [return code: {}, message: \"{}\"]",
             result, std::string(js_trystring(m_state.get(), -1, "Error"))
         ));
@@ -82,4 +82,4 @@ std::string Interpreter::execute(const std::string& code)
     return m_lastOutput;
 }
 
-} // namespace kc
+} // namespace kb

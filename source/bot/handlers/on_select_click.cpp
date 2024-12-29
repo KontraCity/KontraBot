@@ -1,6 +1,6 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onSelectClick(const dpp::select_click_t& event)
 {
@@ -70,4 +70,4 @@ void Bot::Bot::onSelectClick(const dpp::select_click_t& event)
     }
 }
 
-} // namespace kc
+} // namespace kb

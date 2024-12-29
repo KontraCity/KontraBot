@@ -3,7 +3,7 @@
 // Custom modules
 #include "bot/commands.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onReady(const dpp::ready_t& event)
 {
@@ -64,4 +64,4 @@ void Bot::Bot::onReady(const dpp::ready_t& event)
     }
 }
 
-} // namespace kc
+} // namespace kb

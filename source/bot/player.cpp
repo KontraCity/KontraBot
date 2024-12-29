@@ -8,13 +8,18 @@
 #include <fmt/format.h>
 
 // Custom modules
+#include "bot/locale/locale_en.hpp"
 #include "bot/bot.hpp"
 #include "common/utility.hpp"
 #include "youtube/extractor.hpp"
 
-namespace kc {
+namespace kb {
 
-std::vector<Youtube::Video::Chapter>::const_iterator Bot::Player::DeduceChapter(const std::vector<Youtube::Video::Chapter>& chapters, pt::time_duration timestamp)
+/// @brief Deduce frame's chapter from frame timestamp
+/// @param chapters Video chapters
+/// @param timestamp Frame's timestamp
+/// @return Frame's chapter
+static std::vector<Youtube::Video::Chapter>::const_iterator DeduceChapter(const std::vector<Youtube::Video::Chapter>& chapters, pt::time_duration timestamp)
 {
     auto chapterEntry = std::lower_bound(
         chapters.begin(),
@@ -26,6 +31,28 @@ std::vector<Youtube::Video::Chapter>::const_iterator Bot::Player::DeduceChapter(
     if (chapterEntry != chapters.begin())
         chapterEntry -= 1;
     return chapterEntry;
+}
+
+Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
+    : m_logger(Utility::CreateLogger(fmt::format("player \"{}\"", interaction.get_guild().name)))
+    , m_root(root)
+    , m_timeout([this]() { signalDisconnect(Locale::EndReason::Timeout); }, info.settings().timeoutMinutes * 60)
+    , m_client(client)
+    , m_session({ 
+        interaction.get_guild().id,
+        voiceChannelId,
+        interaction.channel_id,
+        info.stats().sessionsConducted += 1,
+        interaction.get_issuing_user()
+    })
+{}
+
+Bot::Player::~Player()
+{
+    if (m_threadStatus == ThreadStatus::Running)
+        m_threadStatus = ThreadStatus::Stopped;
+    if (m_thread.joinable())
+        m_thread.join();
 }
 
 void Bot::Player::extractNextVideo(const Info& info)
@@ -365,28 +392,6 @@ void Bot::Player::signalDisconnect(Locale::EndReason reason)
     disconnectThread.detach();
 }
 
-Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
-    : m_logger(Utility::CreateLogger(fmt::format("player \"{}\"", interaction.get_guild().name)))
-    , m_root(root)
-    , m_timeout([this]() { signalDisconnect(Locale::EndReason::Timeout); }, info.settings().timeoutMinutes * 60)
-    , m_client(client)
-    , m_session({ 
-        interaction.get_guild().id,
-        voiceChannelId,
-        interaction.channel_id,
-        info.stats().sessionsConducted += 1,
-        interaction.get_issuing_user()
-    })
-{}
-
-Bot::Player::~Player()
-{
-    if (m_threadStatus == ThreadStatus::Running)
-        m_threadStatus = ThreadStatus::Stopped;
-    if (m_thread.joinable())
-        m_thread.join();
-}
-
 void Bot::Player::signalReady(const Info& info)
 {
     std::lock_guard lock(m_mutex);
@@ -650,4 +655,4 @@ void Bot::Player::endSession(Info& info, Locale::EndReason reason)
     }
 }
 
-} // namespace kc
+} // namespace kb

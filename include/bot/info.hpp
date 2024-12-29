@@ -6,10 +6,13 @@
 // Library DPP
 #include <dpp/dpp.h>
 
+// Library spdlog
+#include <spdlog/spdlog.h>
+
 // Custom modules
 #include "bot/types.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -57,6 +60,7 @@ namespace Bot
 
         ~Info();
 
+    public:
         /// @brief Get guild settings
         /// @return Guild settings
         inline const Settings& settings() const
@@ -87,4 +91,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

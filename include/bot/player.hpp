@@ -11,8 +11,8 @@
 // Library boost::date_time
 #include <boost/date_time.hpp>
 
-/* Forward kc::Bot::Player class declaration for other modules */
-namespace kc {
+/* Forward kb::Bot::Player class declaration for other modules */
+namespace kb {
     namespace Bot {
         class Player;
     }
@@ -25,7 +25,7 @@ namespace kc {
 #include "bot/timeout.hpp"
 #include "youtube/item.hpp"
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 namespace dt = boost::gregorian;
@@ -44,22 +44,28 @@ namespace Bot
         };
 
     private:
-        /// @brief Deduce frame's chapter from frame timestamp
-        /// @param chapters Video chapters
-        /// @param timestamp Frame's timestamp
-        /// @return Frame's chapter
-        static std::vector<Youtube::Video::Chapter>::const_iterator DeduceChapter(const std::vector<Youtube::Video::Chapter>& chapters, pt::time_duration timestamp);
-
-    private:
+        // Common members
         spdlog::logger m_logger;
         class Bot* m_root;
         Timeout m_timeout;
         dpp::discord_client* m_client;
         Session m_session;
 
+        // Threading members
         std::mutex m_mutex;
         std::thread m_thread;
         ThreadStatus m_threadStatus = ThreadStatus::Idle;
+
+    public:
+        /// @brief Initialize player
+        /// @param root Player's bot
+        /// @param client Discord client handling event
+        /// @param interaction The event to handle
+        /// @param voiceChannelId ID of player's voice channel
+        /// @param info Guild's info
+        Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info);
+
+        ~Player();
 
     private:
         /// @brief Extract next video from queue or playlist iterator
@@ -105,16 +111,6 @@ namespace Bot
         void signalDisconnect(Locale::EndReason reason);
 
     public:
-        /// @brief Initialize player
-        /// @param root Player's bot
-        /// @param client Discord client handling event
-        /// @param interaction The event to handle
-        /// @param voiceChannelId ID of player's voice channel
-        /// @param info Guild's info
-        Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info);
-
-        ~Player();
-
         /// @brief Tell player that voice client is ready
         /// @param info Guild's info
         void signalReady(const Info& info);
@@ -188,4 +184,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

@@ -12,7 +12,7 @@
 // Library {fmt}
 #include <fmt/format.h>
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -69,6 +69,7 @@ namespace Youtube
         };
 
     private:
+        // Common members
         std::string m_id;
         std::string m_title;
         std::string m_author;
@@ -77,15 +78,28 @@ namespace Youtube
         uint64_t m_viewCount = 0;
         Type m_type = Type::Normal;
 
+        // Optional members
         bool m_optionalKnown = false;
         std::string m_category;
         dt::date m_uploadDate;
         std::vector<Chapter> m_chapters;
 
+    public:
+        /// @brief Get video info
+        /// @param idUrl Video ID or watch URL
+        /// @throw std::invalid_argument if [idUrl] is not a valid video ID or watch URL
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
+        Video(const std::string& idUrl);
+
+        /// @brief Parse video info
+        /// @param videoInfoObject API response JSON video info object
+        Video(const json& videoInfoObject);
+
     private:
         /// @brief Check API response video playability status
         /// @param playabilityStatusObject API response JSON playability status object
-        /// @throw kc::Youtube::YoutubeError if YouTube error is found
+        /// @throw kb::Youtube::YoutubeError if YouTube error is found
         void checkPlayabilityStatus(const json& playabilityStatusObject);
 
         /// @brief Parse API response video duration
@@ -108,26 +122,15 @@ namespace Youtube
 
         /// @brief Download video info
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
         void downloadInfo();
 
         /// @brief Check optional fields availability
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
         void checkOptional() const;
 
     public:
-        /// @brief Get video info
-        /// @param idUrl Video ID or watch URL
-        /// @throw std::invalid_argument if [idUrl] is not a valid video ID or watch URL
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        Video(const std::string& idUrl);
-
-        /// @brief Parse video info
-        /// @param videoInfoObject API response JSON video info object
-        Video(const json& videoInfoObject);
-
         /// @brief Get video ID
         /// @return Video ID
         inline const std::string& id() const
@@ -198,7 +201,7 @@ namespace Youtube
 
         /// @brief Get video category: optional info may be downloaded
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
         /// @return Video category
         inline const std::string& category() const
         {
@@ -208,7 +211,7 @@ namespace Youtube
 
         /// @brief Get video upload date: optional info may be downloaded
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
         /// @return Video upload date
         inline dt::date uploadDate() const
         {
@@ -218,7 +221,7 @@ namespace Youtube
 
         /// @brief Get video chapters: optional info may be downloaded
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
         /// @return Video chapters
         inline const std::vector<Chapter>& chapters() const
         {
@@ -228,4 +231,4 @@ namespace Youtube
     };
 }
 
-} // namespace kc
+} // namespace kb

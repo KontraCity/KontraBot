@@ -8,23 +8,23 @@
 // Library DPP
 #include <dpp/snowflake.h>
 
-/* Forward kc::Bot::Locale class declaration for other modules */
-namespace kc {
+/* Forward kb::Bot::Locale class declaration for other modules */
+namespace kb {
     namespace Bot {
         class Locale;
     }
 }
 
-// Custom kc::Bot modules
+// Custom kb::Bot modules
 #include "bot/session.hpp"
 #include "bot/types.hpp"
 
-// Custom kc::Youtube modules
+// Custom kb::Youtube modules
 #include "youtube/error.hpp"
 #include "youtube/item.hpp"
 #include "youtube/search.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -75,22 +75,6 @@ namespace Bot
             Kicked,         // Somebody kicked bot from voice channel
             Moved,          // Somebody moved bot in another voice channel
         };
-
-    public:
-        /// @brief Create locale from its type
-        /// @param localeType Locale type
-        /// @return Created locale
-        static Pointer Create(Type localeType);
-
-        /// @brief Create locale from its name
-        /// @param localeName Locale name
-        /// @return Created locale
-        static Pointer Create(const std::string localeName);
-
-        /// @brief Convert end reason to string
-        /// @param reason The end reason to convert
-        /// @return Converted string
-        static const char* EndReasonToString(EndReason reason);
 
     protected:
         // Function used to get number's cardinal ending
@@ -210,6 +194,22 @@ namespace Bot
             const char* lasted;                 // "Lasted" string
             const char* tracksPlayed;           // "Tracks played" string
         };
+
+    public:
+        /// @brief Create locale from its type
+        /// @param localeType Locale type
+        /// @return Created locale
+        static Pointer Create(Type localeType);
+
+        /// @brief Create locale from its name
+        /// @param localeName Locale name
+        /// @return Created locale
+        static Pointer Create(const std::string localeName);
+
+        /// @brief Convert end reason to string
+        /// @param reason The end reason to convert
+        /// @return Converted string
+        static const char* EndReasonToString(EndReason reason);
 
     protected:
         /// @brief Create generic message
@@ -554,4 +554,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

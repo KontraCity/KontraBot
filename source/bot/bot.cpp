@@ -4,13 +4,12 @@
 #include <boost/regex.hpp>
 
 // Custom modules
-#include "bot/locale/locale_en.hpp"
-#include "bot/locale/locale_ru.hpp"
+#include "bot/locale/locales.hpp"
 #include "bot/commands.hpp"
 #include "common/config.hpp"
 #include "common/utility.hpp"
 
-namespace kc {
+namespace kb {
 
 size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake channelId)
 {
@@ -18,6 +17,49 @@ size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake chann
     for (const auto& voiceMember : guild.voice_members)
         count += (voiceMember.second.channel_id == channelId);
     return count;
+}
+
+Bot::Bot::Bot(bool registerCommands)
+    : cluster(Config::Instance->discordBotApiToken())
+    , m_logger(Utility::CreateLogger("bot"))
+{
+    on_log(std::bind(&Bot::onLog, this, std::placeholders::_1, registerCommands));
+
+    if (registerCommands)
+    {
+        on_ready([this](const dpp::ready_t& event)
+            {
+                if (dpp::run_once<struct RegisterCommands>())
+                {
+                    std::vector<dpp::slashcommand> commands = Commands::GetCommands(me.id);
+                    m_logger.info("Registering {} slashcommand{}...", commands.size(), LocaleEn::Cardinal(commands.size()));
+                    global_bulk_command_create(commands);
+                }
+            });
+
+        start(true);
+        return;
+    }
+
+    on_autocomplete(std::bind(&Bot::onAutocomplete, this, std::placeholders::_1));
+
+    on_button_click(std::bind(&Bot::onButtonClick, this, std::placeholders::_1));
+
+    on_ready(std::bind(&Bot::onReady, this, std::placeholders::_1));
+
+    on_message_create(std::bind(&Bot::onMessageCreate, this, std::placeholders::_1));
+
+    on_select_click(std::bind(&Bot::onSelectClick, this, std::placeholders::_1));
+
+    on_slashcommand(std::bind(&Bot::onSlashcommand, this, std::placeholders::_1));
+
+    on_voice_ready(std::bind(&Bot::onVoiceReady, this, std::placeholders::_1));
+
+    on_voice_server_update(std::bind(&Bot::onVoiceServerUpdate, this, std::placeholders::_1));
+
+    on_voice_state_update(std::bind(&Bot::onVoiceStateUpdate, this, std::placeholders::_1));
+
+    on_voice_track_marker(std::bind(&Bot::onVoiceTrackMarker, this, std::placeholders::_1));
 }
 
 void Bot::Bot::presenceFunction()
@@ -263,49 +305,6 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
     }
 }
 
-Bot::Bot::Bot(bool registerCommands)
-    : cluster(Config::Instance->discordBotApiToken())
-    , m_logger(Utility::CreateLogger("bot"))
-{
-    on_log(std::bind(&Bot::onLog, this, std::placeholders::_1, registerCommands));
-
-    if (registerCommands)
-    {
-        on_ready([this](const dpp::ready_t& event)
-        {
-            if (dpp::run_once<struct RegisterCommands>())
-            {
-                std::vector<dpp::slashcommand> commands = Commands::GetCommands(me.id);
-                m_logger.info("Registering {} slashcommand{}...", commands.size(), LocaleEn::Cardinal(commands.size()));
-                global_bulk_command_create(commands);
-            }
-        });
-
-        start(true);
-        return;
-    }
-
-    on_autocomplete(std::bind(&Bot::onAutocomplete, this, std::placeholders::_1));
-
-    on_button_click(std::bind(&Bot::onButtonClick, this, std::placeholders::_1));
-
-    on_ready(std::bind(&Bot::onReady, this, std::placeholders::_1));
-
-    on_message_create(std::bind(&Bot::onMessageCreate, this, std::placeholders::_1));
-
-    on_select_click(std::bind(&Bot::onSelectClick, this, std::placeholders::_1));
-
-    on_slashcommand(std::bind(&Bot::onSlashcommand, this, std::placeholders::_1));
-
-    on_voice_ready(std::bind(&Bot::onVoiceReady, this, std::placeholders::_1));
-
-    on_voice_server_update(std::bind(&Bot::onVoiceServerUpdate, this, std::placeholders::_1));
-
-    on_voice_state_update(std::bind(&Bot::onVoiceStateUpdate, this, std::placeholders::_1));
-
-    on_voice_track_marker(std::bind(&Bot::onVoiceTrackMarker, this, std::placeholders::_1));
-}
-
 Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dpp::guild& guild, Info& info, Locale::EndReason reason)
 {
     dpp::voiceconn* botVoice = client->get_voice(guild.id);
@@ -318,4 +317,4 @@ Bot::Bot::LeaveStatus Bot::Bot::leaveVoice(dpp::discord_client* client, const dp
     return { LeaveStatus::Result::Left, disconnectedChannel };
 }
 
-} // namespace kc
+} // namespace kb

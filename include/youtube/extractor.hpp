@@ -17,7 +17,7 @@ extern "C" {
 // Library spdlog
 #include <spdlog/spdlog.h>
 
-namespace kc {
+namespace kb {
 
 namespace Youtube
 {
@@ -59,9 +59,11 @@ namespace Youtube
             /// @brief Create empty frame
             Frame();
 
+        public:
             /// @brief Clear frame
             void clear();
 
+        public:
             /// @brief Get frame timestamp
             /// @return Frame timestamp in milliseconds
             inline int64_t timestamp() const
@@ -142,6 +144,17 @@ namespace Youtube
         int64_t m_seekPosition;
         Frame m_overflowFrame;
 
+    public:
+        /// @brief Initialize audio extractor
+        /// @param videoId ID of video to extract
+        /// @throw std::invalid_argument if [videoId] is not a valid video ID
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::LocalError if extraction error occurs
+        Extractor(const std::string& videoId);
+
+        ~Extractor();
+
     private:
         /// @brief Download thread implementation
         /// @param startPosition Byte position to start download from
@@ -155,16 +168,6 @@ namespace Youtube
         void stopThread();
 
     public:
-        /// @brief Initialize audio extractor
-        /// @param videoId ID of video to extract
-        /// @throw std::invalid_argument if [videoId] is not a valid video ID
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        /// @throw kc::Youtube::LocalError if extraction error occurs
-        Extractor(const std::string& videoId);
-
-        ~Extractor();
-
         /// @brief Seek audio track
         /// @param timestamp Timestamp to seek to in seconds
         void seekTo(int64_t timestamp);
@@ -176,4 +179,4 @@ namespace Youtube
     };
 }
 
-} // namespace kc
+} // namespace kb

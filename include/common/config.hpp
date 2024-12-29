@@ -4,7 +4,7 @@
 #include <memory>
 #include <string>
 
-namespace kc {
+namespace kb {
 
 namespace ConfigConst
 {
@@ -68,14 +68,17 @@ public:
 private:
     std::string m_error;
 
+    // Common configuration
     std::string m_discordBotApiToken;
-    bool m_youtubeAuthEnabled;
+    bool m_youtubeAuthEnabled = ConfigConst::Defaults::YoutubeAuthEnabled;
 
-    bool m_proxyEnabled;
+    // Proxy configuration
+    bool m_proxyEnabled = ConfigConst::Defaults::Proxy::Enabled;
     std::string m_proxyHost;
     uint16_t m_proxyPort;
 
-    bool m_proxyAuthRequired;
+    // Proxy authentication configuration
+    bool m_proxyAuthRequired = ConfigConst::Defaults::Proxy::Auth::Required;
     std::string m_proxyAuthUser;
     std::string m_proxyAuthPassword;
 
@@ -148,4 +151,4 @@ public:
     }
 };
 
-} // namespace kc
+} // namespace kb

@@ -3,7 +3,7 @@
 // STL modules
 #include <chrono>
 
-namespace kc {
+namespace kb {
 
 class Stopwatch
 {
@@ -46,4 +46,4 @@ public:
     }
 };
 
-} // namespace kc
+} // namespace kb

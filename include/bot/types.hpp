@@ -3,8 +3,8 @@
 // STL modules
 #include <memory>
 
-/* Forward kc::Bot::Settings and kc::Bot::Stats structs declaration for other modules */
-namespace kc {
+/* Forward kb::Bot::Settings and kb::Bot::Stats structs declaration for other modules */
+namespace kb {
     namespace Bot {
         struct Settings;
         struct Stats;
@@ -14,7 +14,7 @@ namespace kc {
 // Custom modules
 #include "bot/locale/locale.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -59,4 +59,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

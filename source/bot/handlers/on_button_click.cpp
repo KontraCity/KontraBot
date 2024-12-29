@@ -1,6 +1,9 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+// Custom modules
+#include "bot/locale/locale_en.hpp"
+
+namespace kb {
 
 void Bot::Bot::onButtonClick(const dpp::button_click_t& event)
 {
@@ -94,4 +97,4 @@ void Bot::Bot::onButtonClick(const dpp::button_click_t& event)
     m_ephemeralTokens.erase(event.command.msg.id);
 }
 
-} // namespace kc
+} // namespace kb

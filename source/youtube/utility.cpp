@@ -3,7 +3,7 @@
 // STL modules
 #include <algorithm>
 
-namespace kc {
+namespace kb {
 
 std::string Youtube::Utility::ExtractThumbnailUrl(const json& thumbnailsObject)
 {
@@ -58,4 +58,4 @@ uint64_t Youtube::Utility::ExtractViewCount(const json& viewCountObject)
     return ExtractViewCount(viewCountString);
 }
 
-} // namespace kc
+} // namespace kb

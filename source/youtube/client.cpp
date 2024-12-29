@@ -1,5 +1,5 @@
 #include "youtube/client.hpp"
-using namespace kc::Youtube::ClientConst;
+using namespace kb::Youtube::ClientConst;
 
 // STL modules
 #include <algorithm>
@@ -18,7 +18,7 @@ using namespace kc::Youtube::ClientConst;
 #include "common/config.hpp"
 #include "common/utility.hpp"
 
-namespace kc {
+namespace kb {
 
 /*
 *   std::make_unique() needs public constructor, but the Youtube::Client class uses singleton pattern.
@@ -26,7 +26,10 @@ namespace kc {
 */
 const std::unique_ptr<Youtube::Client> Youtube::Client::Instance(new Youtube::Client);
 
-std::string Youtube::Client::GenerateUuid(bool withoutDashes)
+/// @brief Generate UUID string
+/// @param withoutDashes Whether to remove dashes from UUID or not
+/// @return Generated UUID string
+static std::string GenerateUuid(bool withoutDashes)
 {
     std::string uuid = boost::uuids::to_string(boost::uuids::random_generator_mt19937()());
     if (withoutDashes)
@@ -42,13 +45,16 @@ std::string Youtube::Client::GenerateUuid(bool withoutDashes)
     return uuid;
 }
 
-std::string Youtube::Client::GetPlayerId()
+/// @brief Get current YouTube player ID
+/// @throw std::runtime_error if internal error occurs
+/// @return Current YouTube player ID
+static std::string GetPlayerId()
 {
     const Curl::Response iframeResponse = Curl::Get(Urls::IframeApi);
     if (iframeResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Client::GetPlayerId(): "
+            "kb::Youtube::GetPlayerId(): "
             "Couldn't get iframe API response [response code: {}]",
             iframeResponse.code
         ));
@@ -56,26 +62,30 @@ std::string Youtube::Client::GetPlayerId()
 
     boost::smatch matches;
     if (!boost::regex_search(iframeResponse.data, matches, boost::regex(R"(https:\\\/\\\/www\.youtube\.com\\\/s\\\/player\\\/(.+?)\\\/)")))
-        throw std::runtime_error("kc::Youtube::Client::GetPlayerId(): Coudln't extract player ID from iframe API response");
+        throw std::runtime_error("kb::Youtube::GetPlayerId(): Coudln't extract player ID from iframe API response");
     return matches.str(1);
 }
 
-const char* Youtube::Client::TypeToName(Type clientType)
+/// @brief Convert client type to client name
+/// @param clientType Client type
+/// @throw std::invalid_argument if client type is unknown
+/// @return Client name
+static const char* TypeToName(Youtube::Client::Type clientType)
 {
     switch (clientType)
     {
-        case Type::Web:
+        case Youtube::Client::Type::Web:
             return "web";
-        case Type::IOS:
+        case Youtube::Client::Type::IOS:
             return "ios";
-        case Type::Android:
+        case Youtube::Client::Type::Android:
             return "android";
-        case Type::TvEmbedded:
+        case Youtube::Client::Type::TvEmbedded:
             return "tv_embedded";
     }
 
     throw std::invalid_argument(fmt::format(
-        "kc::Youtube::Client::TypeToName(): "
+        "kb::Youtube::TypeToName(): "
         "Unknown client type [client type: {}]",
         static_cast<int>(clientType)
     ));
@@ -117,7 +127,7 @@ void Youtube::Client::updatePlayer()
     if (playerCodeResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Client::update(): "
+            "kb::Youtube::Client::update(): "
             "Couldn't get player code [player: \"{}\", response code: {}]",
             m_playerId, playerCodeResponse.code
         ));
@@ -125,17 +135,17 @@ void Youtube::Client::updatePlayer()
 
     boost::smatch matches;
     if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(R"(signatureTimestamp:(\d+))")))
-        throw std::runtime_error("kc::Youtube::Client::update(): Couldn't extract signature timestamp from player code");
+        throw std::runtime_error("kb::Youtube::Client::update(): Couldn't extract signature timestamp from player code");
     m_clients["tv_embedded"]["data"]["playbackContext"]["contentPlaybackContext"]["signatureTimestamp"] = std::stoi(matches.str(1));
 
     if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(R"(=function\(a\)\{a=a\.split\(""\);([\w\$]+)\.[\s\S]*?return a\.join\(""\)\};)")))
-        throw std::runtime_error("kc::Youtube::Client::update(): Couldn't extract signature decrypt function from player code");
+        throw std::runtime_error("kb::Youtube::Client::update(): Couldn't extract signature decrypt function from player code");
     m_interpreter->reset();
     m_interpreter->execute(SignatureDecrypt + matches.str(0));
 
     std::string encapsulatedObjectName = boost::regex_replace(matches.str(1), boost::regex(R"(\$)"), R"(\\$)");
     if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(fmt::format(R"(var {}=\{{[\s\S]*?\}};)", encapsulatedObjectName))))
-        throw std::runtime_error("kc::Youtube::Client::update(): Couldn't extract singature decrypt object from player code");
+        throw std::runtime_error("kb::Youtube::Client::update(): Couldn't extract singature decrypt object from player code");
     m_interpreter->execute(matches.str(0));
     m_logger.info("Updated to player \"{}\"", m_playerId);
 }
@@ -154,7 +164,7 @@ Cache::YoutubeAuth Youtube::Client::updateToken()
     if (authTokenResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Client::updateToken(): "
+            "kb::Youtube::Client::updateToken(): "
             "Couldn't get authorization token response [response code: {}]",
             authTokenResponse.code
         ));
@@ -167,7 +177,7 @@ Cache::YoutubeAuth Youtube::Client::updateToken()
         {
             std::string error = authTokenJson.at("error");
             throw std::runtime_error(fmt::format(
-                "kc::Youtube::Client::updateToken(): "
+                "kb::Youtube::Client::updateToken(): "
                 "Unknown authorization token response error [error: \"{}\", response code: {}]",
                 error, authTokenResponse.code
             ));
@@ -185,7 +195,7 @@ Cache::YoutubeAuth Youtube::Client::updateToken()
     catch (const json::exception& error)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Client::updateToken(): "
+            "kb::Youtube::Client::updateToken(): "
             "Couldn't parse authorization token response [id: {}]",
             error.id
         ));
@@ -211,7 +221,7 @@ void Youtube::Client::checkAuthorization()
     if (authCodeResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Client::checkAuthorization(): "
+            "kb::Youtube::Client::checkAuthorization(): "
             "Couldn't get authorization code response [response code: {}]",
             authCodeResponse.code
         ));
@@ -231,7 +241,7 @@ void Youtube::Client::checkAuthorization()
     catch (const json::exception& error)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Client::checkAuthorization(): "
+            "kb::Youtube::Client::checkAuthorization(): "
             "Couldn't parse authorization code response JSON [id: {}]",
             error.id
         ));
@@ -254,7 +264,7 @@ void Youtube::Client::checkAuthorization()
         if (authTokenResponse.code != 200)
         {
             throw std::runtime_error(fmt::format(
-                "kc::Youtube::Client::checkAuthorization(): "
+                "kb::Youtube::Client::checkAuthorization(): "
                 "Couldn't get authorization token response [response code: {}]",
                 authCodeResponse.code
             ));
@@ -269,7 +279,7 @@ void Youtube::Client::checkAuthorization()
                 if (error == "authorization_pending")
                     continue;
                 throw std::runtime_error(fmt::format(
-                    "kc::Youtube::Client::checkAuthorization(): "
+                    "kb::Youtube::Client::checkAuthorization(): "
                     "Unknown authorization token response error [error: \"{}\", response code: {}]",
                     error, authTokenResponse.code
                 ));
@@ -289,7 +299,7 @@ void Youtube::Client::checkAuthorization()
         catch (const json::exception& error)
         {
             throw std::runtime_error(fmt::format(
-                "kc::Youtube::Client::checkAuthorization(): "
+                "kb::Youtube::Client::checkAuthorization(): "
                 "Couldn't parse authorization token response [id: {}]",
                 error.id
             ));
@@ -297,7 +307,7 @@ void Youtube::Client::checkAuthorization()
     }
 
     throw std::runtime_error(fmt::format(
-        "kc::Youtube::Client::checkAuthorization(): "
+        "kb::Youtube::Client::checkAuthorization(): "
         "Couldn't authorize in {} seconds",
         expiresIn
     ));
@@ -341,7 +351,7 @@ std::string Youtube::Client::decryptSignatureCipher(std::string signatureCipher)
     signatureCipher = m_interpreter->execute(fmt::format(R"(console.log(decodeURIComponent("{}")))", signatureCipher));
     boost::smatch matches;
     if (!boost::regex_match(signatureCipher, matches, boost::regex(R"(s=([\s\S]+)&sp=sig&url=([\s\S]+))")))
-        throw std::runtime_error("kc::Youtube::Client::decryptSignatureCipher(): Couldn't extract signature and URL from signature cipher");
+        throw std::runtime_error("kb::Youtube::Client::decryptSignatureCipher(): Couldn't extract signature and URL from signature cipher");
 
     updatePlayer();
     std::string decodedSignature = m_interpreter->execute(fmt::format(
@@ -353,4 +363,4 @@ std::string Youtube::Client::decryptSignatureCipher(std::string signatureCipher)
     return fmt::format("{}&sig={}", matches.str(2), decodedSignature);
 }
 
-} // namespace kc
+} // namespace kb

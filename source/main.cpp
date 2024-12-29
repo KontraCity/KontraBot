@@ -11,7 +11,7 @@
 #include "common/config.hpp"
 #include "common/utility.hpp"
 #include "youtube/client.hpp"
-using namespace kc;
+using namespace kb;
 
 struct ParseResult
 {
@@ -210,7 +210,7 @@ static bool CheckClientAuthorization()
         return false;
     }
 }
-#include "common/stopwatch.hpp"
+
 int main(int argc, char** argv)
 {
     ParseResult result = ParseOptions(argc, argv);

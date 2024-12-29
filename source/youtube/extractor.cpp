@@ -1,5 +1,5 @@
 #include "youtube/extractor.hpp"
-using namespace kc::Youtube::ExtractorConst;
+using namespace kb::Youtube::ExtractorConst;
 
 // STL modules
 #include <stdexcept>
@@ -23,7 +23,7 @@ using namespace kc::Youtube::ExtractorConst;
 #include "youtube/error.hpp"
 #include "youtube/video.hpp"
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -124,6 +124,347 @@ int64_t Youtube::Extractor::Seek(void* root, int64_t offset, int whence)
     extractor->startThread(offset);
     extractor->m_cv.wait(lock);
     return extractor->m_position;
+}
+
+Youtube::Extractor::Extractor(const std::string& videoId)
+    : m_logger(kb::Utility::CreateLogger(fmt::format("extractor \"{}\"", videoId)))
+    , m_videoId(videoId)
+    , m_fileSize(0)
+    , m_threadStatus(ThreadStatus::Idle)
+    , m_position(0)
+    , m_positionOffset(0)
+    , m_io(nullptr)
+    , m_format(nullptr)
+    , m_stream(nullptr)
+    , m_codec(nullptr)
+    , m_resampler(nullptr)
+    , m_unitsPerSecond(0)
+    , m_seekPosition(0)
+{
+    av_log_set_callback([](void* opaque, int level, const char* format, va_list arguments)
+        {
+            static std::mutex mutex;
+            std::lock_guard lock(mutex);
+
+            /*
+             *  The format string provided by ffmpeg libraries contains '\n' character at the end.
+             *  The same character is inserted by spdlog, so the one in format string should be discarded.
+            */
+            std::string string(1024, '\0');
+            int stringLength = vsnprintf(string.data(), string.size(), format, arguments);
+            string.resize(stringLength - 1);
+
+            static spdlog::logger logger = kb::Utility::CreateLogger("ffmpeg");
+            switch (level)
+            {
+            case AV_LOG_INFO:
+            {
+                logger.info(string);
+                break;
+            }
+            case AV_LOG_WARNING:
+            {
+                logger.warn(string);
+                break;
+            }
+            case AV_LOG_ERROR:
+            {
+                logger.error(string);
+                break;
+            }
+            case AV_LOG_FATAL:
+            case AV_LOG_PANIC:
+            {
+                logger.critical(string);
+                break;
+            }
+            default:
+            {
+                break;
+            }
+            }
+        });
+
+    if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
+    {
+        throw std::invalid_argument(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): [videoId]: \"{}\": "
+            "Not a valid video ID",
+            videoId
+        ));
+    }
+
+    for (int attempt = 1; true; ++attempt)
+    {
+        Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::IOS, "player", { {"videoId", m_videoId} });
+        if (playerResponse.code != 200)
+        {
+            throw std::runtime_error(fmt::format(
+                "kb::Youtube::Extractor::Extractor(): "
+                "Couldn't get API response [video: \"{}\", client: \"ios\", response code: {}]",
+                m_videoId, playerResponse.code
+            ));
+        }
+
+        try
+        {
+            json playerResponseJson = json::parse(playerResponse.data);
+            bool clientFallback = (playerResponseJson.at("playabilityStatus").at("status") != "OK");
+
+            std::string responseVideoId = playerResponseJson.at("videoDetails").at("videoId");
+            if (responseVideoId != videoId)
+            {
+                m_logger.warn("API response is for wrong video \"{}\", trying \"tv_embedded\" client", responseVideoId);
+                clientFallback = true;
+            }
+
+            if (clientFallback)
+            {
+                playerResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "player", { {"videoId", m_videoId} });
+                if (playerResponse.code != 200)
+                {
+                    throw std::runtime_error(fmt::format(
+                        "kb::Youtube::Extractor::Extractor(): Couldn't get API response [video: \"{}\", player: \"tv_embedded\", response code: {}]",
+                        m_videoId, playerResponse.code
+                    ));
+                }
+
+                playerResponseJson = json::parse(playerResponse.data);
+                if (playerResponseJson.at("playabilityStatus").at("status") != "OK")
+                    throw YoutubeError(YoutubeError::Type::Unknown, m_videoId, "unknown error");
+            }
+
+            bool urlResolved = false;
+            int bestBitrate = 0;
+            std::string bestMimeType;
+            for (const json& formatObject : playerResponseJson.at("streamingData").at("adaptiveFormats"))
+            {
+                std::string mimeType = formatObject.at("mimeType");
+                if (mimeType.find("audio/") == std::string::npos)
+                    continue;
+
+                int bitrate = formatObject.at("bitrate");
+                if (bitrate < bestBitrate)
+                    continue;
+                bestBitrate = bitrate;
+                bestMimeType = mimeType;
+
+                if (formatObject.contains("url"))
+                {
+                    m_audioUrl = formatObject.at("url");
+                    urlResolved = true;
+                }
+                else
+                {
+                    m_audioUrl = formatObject.at("signatureCipher");
+                    urlResolved = false;
+                }
+            }
+
+            if (m_audioUrl.empty())
+                throw LocalError(LocalError::Type::AudioNotSupported, m_videoId);
+            if (!urlResolved)
+                m_audioUrl = Youtube::Client::Instance->decryptSignatureCipher(m_audioUrl);
+        }
+        catch (const json::exception& error)
+        {
+            throw std::runtime_error(fmt::format(
+                "kb::Youtube::Extractor::Extractor(): "
+                "Couldn't parse API response JSON [video: \"{}\", id: {}]",
+                m_videoId, error.id
+            ));
+        }
+
+        {
+            std::unique_lock lock(m_mutex);
+            startThread();
+            m_cv.wait(lock);
+        }
+
+        if (m_threadStatus != ThreadStatus::Error)
+            break;
+        stopThread();
+
+        if (attempt == MaxExtractionAttempts)
+            throw LocalError(LocalError::Type::CouldntDownload, m_videoId);
+        m_logger.warn("Extraction attempt {}/{} failed, retrying", attempt, MaxExtractionAttempts);
+    }
+
+    m_io = avio_alloc_context(nullptr, 0, 0, this, &Extractor::Read, nullptr, &Extractor::Seek);
+    if (!m_io)
+    {
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate IO context [video: \"{}\"]",
+            m_videoId
+        ));
+    }
+
+    m_format = avformat_alloc_context();
+    if (!m_format)
+    {
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate format context [video: \"{}\"]",
+            m_videoId
+        ));
+    }
+    m_format->pb = m_io;
+
+    int result = avformat_open_input(&m_format, "", nullptr, nullptr);
+    if (result < 0)
+    {
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't open input [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+
+    result = avformat_find_stream_info(m_format, nullptr);
+    if (result < 0)
+    {
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't find audio stream info [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+
+    int streamIndex = av_find_best_stream(m_format, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
+    if (streamIndex < 0)
+    {
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't find best audio stream [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+
+    m_stream = m_format->streams[streamIndex];
+    AVCodecParameters* parameters = m_stream->codecpar;
+
+    m_unitsPerSecond = static_cast<int>(static_cast<double>(m_stream->time_base.den) / m_stream->time_base.num);
+    const AVCodec* decoder = avcodec_find_decoder(m_stream->codecpar->codec_id);
+    if (!decoder)
+    {
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't find audio decoder [video: \"{}\"]",
+            m_videoId
+        ));
+    }
+
+    m_codec = avcodec_alloc_context3(decoder);
+    if (!m_codec)
+    {
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate codec context [video: \"{}\"]",
+            videoId
+        ));
+    }
+
+    result = avcodec_parameters_to_context(m_codec, parameters);
+    if (result < 0)
+    {
+        avcodec_free_context(&m_codec);
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't fill codec context with stream parameters [video: \"{}\", return code: {}]",
+            videoId, result
+        ));
+    }
+
+    m_codec->pkt_timebase = m_stream->time_base;
+    result = avcodec_open2(m_codec, decoder, nullptr);
+    if (result < 0)
+    {
+        avcodec_free_context(&m_codec);
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't open audio decoder context [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+
+    /*
+    *   DPP expects PCM data that:
+    *       - Is interleaved stereo;
+    *       - Has 16 bit depth;
+    *       - Has 48kHz sample rate.
+    */
+    AVChannelLayout outputLayout = OutputChannelLayout;
+    result = swr_alloc_set_opts2(
+        &m_resampler,
+        &outputLayout,
+        OutputFormat,
+        OutputSampleRate,
+        &parameters->ch_layout,
+        static_cast<AVSampleFormat>(parameters->format),
+        parameters->sample_rate,
+        0, nullptr
+    );
+    if (result < 0)
+    {
+        avcodec_free_context(&m_codec);
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't allocate resampler context [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+
+    result = swr_init(m_resampler);
+    if (result < 0)
+    {
+        swr_free(&m_resampler);
+        avcodec_free_context(&m_codec);
+        avformat_close_input(&m_format);
+        avio_context_free(&m_io);
+        stopThread();
+        throw std::runtime_error(fmt::format(
+            "kb::Youtube::Extractor::Extractor(): "
+            "Couldn't initialize resampler [video: \"{}\", return code: {}]",
+            m_videoId, result
+        ));
+    }
+}
+
+Youtube::Extractor::~Extractor()
+{
+    swr_free(&m_resampler);
+    avcodec_free_context(&m_codec);
+    avformat_close_input(&m_format);
+    avio_context_free(&m_io);
+    stopThread();
 }
 
 void Youtube::Extractor::threadFunction(uint64_t startPosition)
@@ -290,347 +631,6 @@ void Youtube::Extractor::stopThread()
         m_thread.join();
 }
 
-Youtube::Extractor::Extractor(const std::string& videoId)
-    : m_logger(kc::Utility::CreateLogger(fmt::format("extractor \"{}\"", videoId)))
-    , m_videoId(videoId)
-    , m_fileSize(0)
-    , m_threadStatus(ThreadStatus::Idle)
-    , m_position(0)
-    , m_positionOffset(0)
-    , m_io(nullptr)
-    , m_format(nullptr)
-    , m_stream(nullptr)
-    , m_codec(nullptr)
-    , m_resampler(nullptr)
-    , m_unitsPerSecond(0)
-    , m_seekPosition(0)
-{
-    av_log_set_callback([](void* opaque, int level, const char* format, va_list arguments)
-    {
-        static std::mutex mutex;
-        std::lock_guard lock(mutex);
-
-        /*
-         *  The format string provided by ffmpeg libraries contains '\n' character at the end.
-         *  The same character is inserted by spdlog, so the one in format string should be discarded.
-        */
-        std::string string(1024, '\0');
-        int stringLength = vsnprintf(string.data(), string.size(), format, arguments);
-        string.resize(stringLength - 1);
-
-        static spdlog::logger logger = kc::Utility::CreateLogger("ffmpeg");
-        switch (level)
-        {
-            case AV_LOG_INFO:
-            {
-                logger.info(string);
-                break;
-            }
-            case AV_LOG_WARNING:
-            {
-                logger.warn(string);
-                break;
-            }
-            case AV_LOG_ERROR:
-            {
-                logger.error(string);
-                break;
-            }
-            case AV_LOG_FATAL:
-            case AV_LOG_PANIC:
-            {
-                logger.critical(string);
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
-    });
-
-    if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
-    {
-        throw std::invalid_argument(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): [videoId]: \"{}\": "
-            "Not a valid video ID",
-            videoId
-        ));
-    }
-
-    for (int attempt = 1; true; ++attempt)
-    {
-        Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::IOS, "player", { {"videoId", m_videoId} });
-        if (playerResponse.code != 200)
-        {
-            throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::Extractor(): "
-                "Couldn't get API response [video: \"{}\", client: \"ios\", response code: {}]",
-                m_videoId, playerResponse.code
-            ));
-        }
-
-        try
-        {
-            json playerResponseJson = json::parse(playerResponse.data);
-            bool clientFallback = (playerResponseJson.at("playabilityStatus").at("status") != "OK");
-
-            std::string responseVideoId = playerResponseJson.at("videoDetails").at("videoId");
-            if (responseVideoId != videoId)
-            {
-                m_logger.warn("API response is for wrong video \"{}\", trying \"tv_embedded\" client", responseVideoId);
-                clientFallback = true;
-            }
-
-            if (clientFallback)
-            {
-                playerResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "player", { {"videoId", m_videoId} });
-                if (playerResponse.code != 200)
-                {
-                    throw std::runtime_error(fmt::format(
-                        "kc::Youtube::Extractor::Extractor(): Couldn't get API response [video: \"{}\", player: \"tv_embedded\", response code: {}]",
-                        m_videoId, playerResponse.code
-                    ));
-                }
-
-                playerResponseJson = json::parse(playerResponse.data);
-                if (playerResponseJson.at("playabilityStatus").at("status") != "OK")
-                    throw YoutubeError(YoutubeError::Type::Unknown, m_videoId, "unknown error");
-            }
-
-            bool urlResolved = false;
-            int bestBitrate = 0;
-            std::string bestMimeType;
-            for (const json& formatObject : playerResponseJson.at("streamingData").at("adaptiveFormats"))
-            {
-                std::string mimeType = formatObject.at("mimeType");
-                if (mimeType.find("audio/") == std::string::npos)
-                    continue;
-
-                int bitrate = formatObject.at("bitrate");
-                if (bitrate < bestBitrate)
-                    continue;
-                bestBitrate = bitrate;
-                bestMimeType = mimeType;
-
-                if (formatObject.contains("url"))
-                {
-                    m_audioUrl = formatObject.at("url");
-                    urlResolved = true;
-                }
-                else
-                {
-                    m_audioUrl = formatObject.at("signatureCipher");
-                    urlResolved = false;
-                }
-            }
-
-            if (m_audioUrl.empty())
-                throw LocalError(LocalError::Type::AudioNotSupported, m_videoId);
-            if (!urlResolved)
-                m_audioUrl = Youtube::Client::Instance->decryptSignatureCipher(m_audioUrl);
-        }
-        catch (const json::exception& error)
-        {
-            throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::Extractor(): "
-                "Couldn't parse API response JSON [video: \"{}\", id: {}]",
-                m_videoId, error.id
-            ));
-        }
-
-        {
-            std::unique_lock lock(m_mutex);
-            startThread();
-            m_cv.wait(lock);
-        }
-
-        if (m_threadStatus != ThreadStatus::Error)
-            break;
-        stopThread();
-
-        if (attempt == MaxExtractionAttempts)
-            throw LocalError(LocalError::Type::CouldntDownload, m_videoId);
-        m_logger.warn("Extraction attempt {}/{} failed, retrying", attempt, MaxExtractionAttempts);
-    }
-
-    m_io = avio_alloc_context(nullptr, 0, 0, this, &Extractor::Read, nullptr, &Extractor::Seek);
-    if (!m_io)
-    {
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't allocate IO context [video: \"{}\"]",
-            m_videoId
-        ));
-    }
-
-    m_format = avformat_alloc_context();
-    if (!m_format)
-    {
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't allocate format context [video: \"{}\"]",
-            m_videoId
-        ));
-    }
-    m_format->pb = m_io;
-
-    int result = avformat_open_input(&m_format, "", nullptr, nullptr);
-    if (result < 0)
-    {
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't open input [video: \"{}\", return code: {}]",
-            m_videoId, result
-        ));
-    }
-
-    result = avformat_find_stream_info(m_format, nullptr);
-    if (result < 0)
-    {
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't find audio stream info [video: \"{}\", return code: {}]",
-            m_videoId, result
-        ));
-    }
-
-    int streamIndex = av_find_best_stream(m_format, AVMEDIA_TYPE_AUDIO, -1, -1, nullptr, 0);
-    if (streamIndex < 0)
-    {
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't find best audio stream [video: \"{}\", return code: {}]",
-            m_videoId, result
-        ));
-    }
-
-    m_stream = m_format->streams[streamIndex];
-    AVCodecParameters* parameters = m_stream->codecpar;
-
-    m_unitsPerSecond = static_cast<int>(static_cast<double>(m_stream->time_base.den) / m_stream->time_base.num);
-    const AVCodec* decoder = avcodec_find_decoder(m_stream->codecpar->codec_id);
-    if (!decoder)
-    {
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't find audio decoder [video: \"{}\"]",
-            m_videoId
-        ));
-    }
-
-    m_codec = avcodec_alloc_context3(decoder);
-    if (!m_codec)
-    {
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't allocate codec context [video: \"{}\"]",
-            videoId
-        ));
-    }
-
-    result = avcodec_parameters_to_context(m_codec, parameters);
-    if (result < 0)
-    {
-        avcodec_free_context(&m_codec);
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't fill codec context with stream parameters [video: \"{}\", return code: {}]",
-            videoId, result
-        ));
-    }
-
-    m_codec->pkt_timebase = m_stream->time_base;
-    result = avcodec_open2(m_codec, decoder, nullptr);
-    if (result < 0)
-    {
-        avcodec_free_context(&m_codec);
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't open audio decoder context [video: \"{}\", return code: {}]",
-            m_videoId, result
-        ));
-    }
-
-    /*
-    *   DPP expects PCM data that:
-    *       - Is interleaved stereo;
-    *       - Has 16 bit depth;
-    *       - Has 48kHz sample rate.
-    */
-    AVChannelLayout outputLayout = OutputChannelLayout;
-    result = swr_alloc_set_opts2(
-        &m_resampler,
-        &outputLayout,
-        OutputFormat,
-        OutputSampleRate,
-        &parameters->ch_layout,
-        static_cast<AVSampleFormat>(parameters->format),
-        parameters->sample_rate,
-        0, nullptr
-    );
-    if (result < 0)
-    {
-        avcodec_free_context(&m_codec);
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't allocate resampler context [video: \"{}\", return code: {}]",
-            m_videoId, result
-        ));
-    }
-
-    result = swr_init(m_resampler);
-    if (result < 0)
-    {
-        swr_free(&m_resampler);
-        avcodec_free_context(&m_codec);
-        avformat_close_input(&m_format);
-        avio_context_free(&m_io);
-        stopThread();
-        throw std::runtime_error(fmt::format(
-            "kc::Youtube::Extractor::Extractor(): "
-            "Couldn't initialize resampler [video: \"{}\", return code: {}]",
-            m_videoId, result
-        ));
-    }
-}
-
-Youtube::Extractor::~Extractor()
-{
-    swr_free(&m_resampler);
-    avcodec_free_context(&m_codec);
-    avformat_close_input(&m_format);
-    avio_context_free(&m_io);
-    stopThread();
-}
-
 void Youtube::Extractor::seekTo(int64_t timestamp)
 {
     m_seekPosition = timestamp * m_unitsPerSecond;
@@ -671,7 +671,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         {
             av_packet_unref(&packet);
             throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::extractFrame(): "
+                "kb::Youtube::Extractor::extractFrame(): "
                 "Couldn't send packet [video: \"{}\", return code: {}]",
                 m_videoId, result
             ));
@@ -682,7 +682,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         {
             av_packet_unref(&packet);
             throw std::runtime_error(fmt::format(
-                "kc::Youtube::Extractor::extractFrame(): "
+                "kb::Youtube::Extractor::extractFrame(): "
                 "Couldn't allocate frame [video: \"{}\"]",
                 m_videoId
             ));
@@ -697,7 +697,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kc::Youtube::Extractor::extractFrame(): "
+                    "kb::Youtube::Extractor::extractFrame(): "
                     "Couldn't allocate samples buffer [video: \"{}\", return code: {}]",
                     m_videoId, bytesAllocated
                 ));
@@ -710,7 +710,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kc::Youtube::Extractor::extractFrame(): "
+                    "kb::Youtube::Extractor::extractFrame(): "
                     "Couldn't convert samples [video: \"{}\", return code: {}]",
                     m_videoId, samplesConverted
                 ));
@@ -723,7 +723,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kc::Youtube::Extractor::extractFrame(): "
+                    "kb::Youtube::Extractor::extractFrame(): "
                     "Couldn't get converted bytes count [video: \"{}\", return code: {}]",
                     m_videoId, bytesConverted
                 ));
@@ -745,7 +745,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kc::Youtube::Extractor::extractFrame(): "
+                    "kb::Youtube::Extractor::extractFrame(): "
                     "Couldn't flush resampler [video: \"{}\", return code: {}]",
                     m_videoId, samplesConverted
                 ));
@@ -759,7 +759,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                     av_frame_free(&frame);
                     av_packet_unref(&packet);
                     throw std::runtime_error(fmt::format(
-                        "kc::Youtube::Extractor::extractFrame(): "
+                        "kb::Youtube::Extractor::extractFrame(): "
                         "Couldn't get converted bytes count [video: \"{}\", return code: {}]",
                         m_videoId, bytesConverted
                     ));
@@ -791,4 +791,4 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
     return rawFrame;
 }
 
-} // namespace kc
+} // namespace kb

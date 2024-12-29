@@ -1,5 +1,5 @@
 #include "common/config.hpp"
-using namespace kc::ConfigConst;
+using namespace kb::ConfigConst;
 
 // STL modules
 #include <fstream>
@@ -13,7 +13,7 @@ using namespace kc::ConfigConst;
 // Library {fmt}
 #include <fmt/format.h>
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -28,7 +28,7 @@ void Config::GenerateSampleFile()
 {
     std::ofstream configFile(ConfigFile);
     if (!configFile)
-        throw std::runtime_error("kc::Bot::Config::GenerateSampleFile(): Couldn't create sample configuration file");
+        throw std::runtime_error("kb::Bot::Config::GenerateSampleFile(): Couldn't create sample configuration file");
 
     json proxyAuthObject;
     proxyAuthObject[Objects::Proxy::Auth::Required] = Defaults::Proxy::Auth::Required;
@@ -86,4 +86,4 @@ Config::Config()
     }
 }
 
-} // namespace kc
+} // namespace kb

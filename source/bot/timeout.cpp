@@ -1,16 +1,6 @@
 #include "bot/timeout.hpp"
 
-namespace kc {
-
-void Bot::Timeout::threadFunction()
-{
-    std::unique_lock<std::mutex> lock(m_mutex);
-    bool timeouted = !m_cv.wait_for(lock, std::chrono::seconds(m_timeoutDuration), [this]() { return !m_enabled; });
-    m_enabled = false;
-
-    if (timeouted)
-        m_callback();
-}
+namespace kb {
 
 Bot::Timeout::Timeout(const Callback& callback, uint64_t timeoutDuration)
     : m_enabled(true)
@@ -29,6 +19,16 @@ Bot::Timeout::~Timeout()
     disable();
     if (m_thread.joinable())
         m_thread.join();
+}
+
+void Bot::Timeout::threadFunction()
+{
+    std::unique_lock<std::mutex> lock(m_mutex);
+    bool timeouted = !m_cv.wait_for(lock, std::chrono::seconds(m_timeoutDuration), [this]() { return !m_enabled; });
+    m_enabled = false;
+
+    if (timeouted)
+        m_callback();
 }
 
 void Bot::Timeout::setTimeoutDuration(uint64_t timeoutDuration)
@@ -77,4 +77,4 @@ void Bot::Timeout::reset()
     enable();
 }
 
-} // namespace kc
+} // namespace kb

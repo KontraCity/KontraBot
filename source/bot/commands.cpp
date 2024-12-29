@@ -1,5 +1,5 @@
 #include "bot/commands.hpp"
-using namespace kc::Bot::CommandsConst;
+using namespace kb::Bot::CommandsConst;
 
 // STL modules
 #include <stdexcept>
@@ -7,7 +7,7 @@ using namespace kc::Bot::CommandsConst;
 // Library {fmt}
 #include <fmt/format.h>
 
-namespace kc {
+namespace kb {
 
 /*
 *   std::make_unique() needs public constructor, but the Youtube::Client class uses singleton pattern.
@@ -115,7 +115,7 @@ void Bot::Commands::parse(const dpp::slashcommand_map& commands)
     if (commands.size() != registerCommands.size())
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Bot::Commands::parse(): Incorrect count of registered commands: {}/{}",
+            "kb::Bot::Commands::parse(): Incorrect count of registered commands: {}/{}",
             commands.size(),
             registerCommands.size()
         ));
@@ -162,4 +162,4 @@ void Bot::Commands::parse(const dpp::slashcommand_map& commands)
     m_parsed = true;
 }
 
-} // namespace kc
+} // namespace kb

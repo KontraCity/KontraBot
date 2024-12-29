@@ -15,15 +15,10 @@
 // Custom modules
 #include "youtube/client.hpp"
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
-
-Youtube::Results::Results(Type type, const std::string& query)
-    : m_type(type)
-    , m_query(query)
-{}
 
 /// @brief Parse API response JSON contents object to results list
 /// @param contentsObject API response JSON contents object
@@ -61,12 +56,17 @@ static Youtube::Results ParseSearchContents(const json& contentsObject, Youtube:
     return results;
 }
 
+Youtube::Results::Results(Type type, const std::string& query)
+    : m_type(type)
+    , m_query(query)
+{}
+
 Youtube::Results Youtube::Search(const std::string& query)
 {
     if (query.find_first_not_of(' ') == std::string::npos)
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Youtube::Search(): [query]: \"{}\": Query is empty",
+            "kb::Youtube::Search(): [query]: \"{}\": Query is empty",
             query
         ));
     }
@@ -76,7 +76,7 @@ Youtube::Results Youtube::Search(const std::string& query)
     if (searchResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Search(): "
+            "kb::Youtube::Search(): "
             "Couldn't get API response [query: \"{}\", client: \"tv_embedded\", response code: {}]",
             query, searchResponse.code
         ));
@@ -91,7 +91,7 @@ Youtube::Results Youtube::Search(const std::string& query)
     catch (const json::exception& error)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Search(): "
+            "kb::Youtube::Search(): "
             "Couldn't parse API response JSON [query: \"{}\", client: \"tv_embedded\", id: {}]",
             query, error.id
         ));
@@ -103,7 +103,7 @@ Youtube::Results Youtube::Related(const std::string& videoId)
     if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
         throw std::invalid_argument(fmt::format(
-            "kc::Youtube::Related(): [videoId]: \"{}\": Not a valid video ID",
+            "kb::Youtube::Related(): [videoId]: \"{}\": Not a valid video ID",
             videoId
         ));
     }
@@ -113,7 +113,7 @@ Youtube::Results Youtube::Related(const std::string& videoId)
     if (nextResponse.code != 200)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Related(): "
+            "kb::Youtube::Related(): "
             "Couldn't get API response [video: \"{}\", client: \"tv_embedded\", response code: {}]",
             videoId, nextResponse.code
         ));
@@ -128,11 +128,11 @@ Youtube::Results Youtube::Related(const std::string& videoId)
     catch (const json::exception& error)
     {
         throw std::runtime_error(fmt::format(
-            "kc::Youtube::Related(): "
+            "kb::Youtube::Related(): "
             "Couldn't parse API response JSON [video: \"{}\", client: \"tv_embedded\", id: {}]",
             videoId, error.id
         ));
     }
 }
 
-} // namespace kc
+} // namespace kb

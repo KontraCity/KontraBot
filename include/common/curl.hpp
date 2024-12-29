@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace kc {
+namespace kb {
 
 namespace Curl
 {
@@ -36,4 +36,4 @@ namespace Curl
     Response Post(const std::string& url, const std::vector<std::string>& headers, const std::string& data);
 }
 
-} // namespace kc
+} // namespace kb

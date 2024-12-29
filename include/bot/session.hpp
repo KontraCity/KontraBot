@@ -12,7 +12,7 @@
 // Custom modules
 #include "youtube/item.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -36,10 +36,12 @@ namespace Bot
             Youtube::Playlist::Iterator iterator;
         };
 
+        // Discord members
         const dpp::snowflake guildId;
         const dpp::snowflake voiceChannelId;
         dpp::snowflake textChannelId;
 
+        // Common members
         const uint64_t number;
         const dpp::user starter;
         pt::ptime startTimestamp;
@@ -47,6 +49,7 @@ namespace Bot
         std::string voiceChannelStatus;
         std::string voiceServerEndpoint;
 
+        // Queueing members
         std::optional<PlayingVideo> playingVideo;
         std::optional<PlayingPlaylist> playingPlaylist;
         std::optional<dpp::user> playingRequester;
@@ -55,4 +58,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

@@ -6,7 +6,7 @@
 // Library nlohmann/json
 #include <nlohmann/json.hpp>
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -37,4 +37,4 @@ namespace Youtube
     }
 }
 
-} // namespace kc
+} // namespace kb

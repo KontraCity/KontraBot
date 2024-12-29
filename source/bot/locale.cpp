@@ -1,17 +1,19 @@
 ﻿#include "bot/locale/locale.hpp"
-using namespace kc::Bot::LocaleConst;
+using namespace kb::Bot::LocaleConst;
 
 // STL modules
 #include <stdexcept>
 
+// Library {fmt}
+#include <fmt/format.h>
+
 // Custom modules
-#include "bot/locale/locale_en.hpp"
-#include "bot/locale/locale_ru.hpp"
+#include "bot/locale/locales.hpp"
 #include "bot/commands.hpp"
 #include "bot/signal.hpp"
 #include "common/utility.hpp"
 
-namespace kc {
+namespace kb {
 
 Bot::Locale::Pointer Bot::Locale::Create(Type localeType)
 {
@@ -521,7 +523,7 @@ dpp::message Bot::Locale::ItemAddedMessage(const ItemAddedStrings& strings, cons
         default:
         {
             throw std::runtime_error(fmt::format(
-                "kc::Bot::Locale::ItemAddedMessage(): Item type is unknown [item: {}]",
+                "kb::Bot::Locale::ItemAddedMessage(): Item type is unknown [item: {}]",
                 static_cast<int>(item.type())
             ));
         }
@@ -649,7 +651,7 @@ dpp::message Bot::Locale::EndMessage(const EndStrings& strings, const Settings& 
         default:
         {
             throw std::runtime_error(fmt::format(
-                "kc::Bot::Locale::EndMessage(): Reason is unknown [reason: {}]",
+                "kb::Bot::Locale::EndMessage(): Reason is unknown [reason: {}]",
                 static_cast<int>(reason)
             ));
         }
@@ -669,4 +671,4 @@ dpp::message Bot::Locale::EndMessage(const EndStrings& strings, const Settings& 
     return dpp::message().add_embed(embed);
 }
 
-} // namespace kc
+} // namespace kb

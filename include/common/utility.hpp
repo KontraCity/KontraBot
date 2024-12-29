@@ -13,7 +13,7 @@
 // Library spdlog
 #include <spdlog/spdlog.h>
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 namespace dt = boost::gregorian;
@@ -79,4 +79,4 @@ namespace Utility
     pt::time_duration TimeToNextMinute();
 }
 
-} // namespace kc
+} // namespace kb

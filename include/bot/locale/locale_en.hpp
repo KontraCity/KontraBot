@@ -7,7 +7,7 @@
 #include "bot/locale/locale.hpp"
 #include "common/utility.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -663,4 +663,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

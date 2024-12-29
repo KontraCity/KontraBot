@@ -4,9 +4,11 @@
 #include <fmt/format.h>
 
 // Custom modules
+#include "bot/locale/locale_en.hpp"
 #include "bot/commands.hpp"
+#include "common/utility.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onAutocomplete(const dpp::autocomplete_t& event)
 {
@@ -102,4 +104,4 @@ void Bot::Bot::onAutocomplete(const dpp::autocomplete_t& event)
     m_logger.error(logMessage(fmt::format("Unknown option: \"{}\"", option.name)));
 }
 
-} // namespace kc
+} // namespace kb

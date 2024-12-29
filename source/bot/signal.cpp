@@ -6,9 +6,9 @@
 // Library {fmt}
 #include <fmt/format.h>
 
-namespace kc {
+namespace kb {
 
-std::string Bot::Signal::CreateSignalString(Type type, const std::string& data)
+static inline std::string CreateSignalString(Bot::Signal::Type type, const std::string& data)
 {
     return fmt::format("{}_{}", static_cast<int>(type), data);
 }
@@ -72,4 +72,4 @@ Bot::Signal::Signal(const std::string& signalString)
     m_string = CreateSignalString(m_type, m_data);
 }
 
-} // namespace kc
+} // namespace kb

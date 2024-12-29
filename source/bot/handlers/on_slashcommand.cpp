@@ -3,10 +3,15 @@
 // Library Boost.Regex
 #include <boost/regex.hpp>
 
-// Custom modules
-#include "bot/commands.hpp"
+// Library {fmt}
+#include <fmt/format.h>
 
-namespace kc {
+// Custom modules
+#include "bot/locale/locale_en.hpp"
+#include "bot/commands.hpp"
+#include "common/utility.hpp"
+
+namespace kb {
 
 void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
 {
@@ -502,4 +507,4 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
     m_logger.error(logMessage("Unknown slashcommand"));
 }
 
-} // namespace kc
+} // namespace kb

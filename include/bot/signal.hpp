@@ -4,7 +4,7 @@
 #include <string>
 #include <string_view>
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -31,13 +31,6 @@ namespace Bot
         std::string m_data;
         std::string m_string;
 
-    private:
-        /// @brief Create signal string
-        /// @param type Signal type
-        /// @param data Signal data
-        /// @return Created signal string
-        static std::string CreateSignalString(Type type, const std::string& data);
-
     public:
         /// @brief Create a signal
         /// @param type Signal type
@@ -48,6 +41,7 @@ namespace Bot
         /// @param signalString Signal string to parse
         Signal(const std::string& signalString);
 
+    public:
         /// @brief Get signal type
         /// @return Signal type
         inline Type type() const
@@ -78,4 +72,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

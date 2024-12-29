@@ -8,7 +8,7 @@
 // Library MuJS
 #include <mujs.h>
 
-namespace kc {
+namespace kb {
 
 class Interpreter
 {
@@ -26,15 +26,16 @@ private:
     std::unique_ptr<js_State, decltype(&js_freestate)> m_state;
     std::string m_lastOutput;
 
-private:
-    /// @brief Update interpreter pointer
-    void updatePointer();
-
 public:
     /// @brief Initialize JavaScript interpreter
     /// @throw std::runtime_error if internal error occurs
     Interpreter();
 
+private:
+    /// @brief Update interpreter pointer
+    void updatePointer();
+
+public:
     /// @brief Reset interpreter context
     /// @throw std::runtime_error if internal error occurs
     void reset();
@@ -47,4 +48,4 @@ public:
     std::string execute(const std::string& code);
 };
 
-} // namespace kc
+} // namespace kb

@@ -1,6 +1,6 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onVoiceReady(const dpp::voice_ready_t& event)
 {
@@ -10,4 +10,4 @@ void Bot::Bot::onVoiceReady(const dpp::voice_ready_t& event)
     m_logger.info("\"{}\": Voice client is ready", dpp::find_guild(event.voice_client->server_id)->name);
 }
 
-} // namespace kc
+} // namespace kb

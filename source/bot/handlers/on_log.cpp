@@ -1,6 +1,9 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+// Custom modules
+#include "common/utility.hpp"
+
+namespace kb {
 
 void Bot::Bot::onLog(const dpp::log_t& event, bool registerCommands)
 {
@@ -39,4 +42,4 @@ void Bot::Bot::onLog(const dpp::log_t& event, bool registerCommands)
     }
 }
 
-} // namespace kc
+} // namespace kb

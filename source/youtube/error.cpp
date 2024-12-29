@@ -3,20 +3,45 @@
 // Library {fmt}
 #include <fmt/format.h>
 
-namespace kc {
+namespace kb {
 
-const char* Youtube::YoutubeError::TypeToName(Type type)
+/// @brief Convert error type to error name
+/// @param type Error type
+/// @return Error name
+static const char* TypeToName(Youtube::YoutubeError::Type type)
 {
     switch (type)
     {
-        case Type::LoginRequired:
+        case Youtube::YoutubeError::Type::LoginRequired:
             return "LOGIN_REQUIRED";
-        case Type::Unplayable:
+        case Youtube::YoutubeError::Type::Unplayable:
             return "UNPLAYABLE";
-        case Type::YoutubeError:
+        case Youtube::YoutubeError::Type::YoutubeError:
             return "ERROR";
-        case Type::PlaylistError:
+        case Youtube::YoutubeError::Type::PlaylistError:
             return "Playlist error";
+        default:
+            return "Unknown error";
+    }
+}
+
+/// @brief Convert error type to error reason
+/// @param type Error type
+/// @return Error reason
+static const char* TypeToReason(Youtube::LocalError::Type type)
+{
+    switch (type)
+    {
+        case Youtube::LocalError::Type::PlaylistNotSupported:
+            return "Playlist is not supported";
+        case Youtube::LocalError::Type::PlaylistItemsNotSupported:
+            return "Playlist items are not supported";
+        case Youtube::LocalError::Type::EmptyPlaylist:
+            return "Playlist is empty";
+        case Youtube::LocalError::Type::AudioNotSupported:
+            return "None of the video's audio tracks are supported";
+        case Youtube::LocalError::Type::CouldntDownload:
+            return "Audio URL was found, but download was refused by YouTube";
         default:
             return "Unknown error";
     }
@@ -34,29 +59,10 @@ Youtube::YoutubeError::YoutubeError(Type type, const std::string& itemId, const 
         m_what = fmt::format("Item \"{}\": {}: {}; {}", itemId, TypeToName(type), reason, subreason);
 }
 
-const char* Youtube::LocalError::TypeToReason(Type type)
-{
-    switch (type)
-    {
-        case Type::PlaylistNotSupported:
-            return "Playlist is not supported";
-        case Type::PlaylistItemsNotSupported:
-            return "Playlist items are not supported";
-        case Type::EmptyPlaylist:
-            return "Playlist is empty";
-        case Type::AudioNotSupported:
-            return "None of the video's audio tracks are supported";
-        case Type::CouldntDownload:
-            return "Audio URL was found, but download was refused by YouTube";
-        default:
-            return "Unknown error";
-    }
-}
-
 Youtube::LocalError::LocalError(Type type, const std::string& itemId)
     : m_type(type)
     , m_itemId(itemId)
     , m_what(fmt::format("Item \"{}\": {}", itemId, TypeToReason(type)))
 {}
 
-} // namespace kc
+} // namespace kb

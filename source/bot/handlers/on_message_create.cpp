@@ -1,6 +1,6 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onMessageCreate(const dpp::message_create_t& event)
 {
@@ -15,4 +15,4 @@ void Bot::Bot::onMessageCreate(const dpp::message_create_t& event)
     event.reply(Info(guild->id).settings().locale->mention());
 }
 
-} // namespace kc
+} // namespace kb

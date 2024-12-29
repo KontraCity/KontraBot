@@ -1,6 +1,6 @@
 #include "bot/types.hpp"
 
-namespace kc {
+namespace kb {
 
 Bot::Settings::Settings(const Settings& other)
     : locale(Locale::Create(other.locale->type()))
@@ -45,4 +45,4 @@ bool Bot::Stats::operator==(const Stats& other)
         && timesMoved == other.timesMoved;
 }
 
-} // namespace kc
+} // namespace kb

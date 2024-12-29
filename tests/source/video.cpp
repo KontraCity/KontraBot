@@ -1,8 +1,14 @@
 #include "video.hpp"
 
-namespace kct {
+// Custom modules
+#include "youtube/error.hpp"
 
-const char* Video::TestCase::ResultToString(Result result)
+namespace kbt {
+
+/// @brief Convert result to string
+/// @param result Result to convert
+/// @return Converted string
+static const char* ResultToString(Video::TestCase::Result result)
 {
     switch (result)
     {
@@ -25,7 +31,10 @@ const char* Video::TestCase::ResultToString(Result result)
     }
 }
 
-Video::TestCase::Result Video::TestCase::GetResult(const std::string& id)
+/// @brief Get test result
+/// @param id ID of video to test
+/// @return Test result
+static Video::TestCase::Result GetResult(const std::string& id)
 {
     try
     {
@@ -67,30 +76,6 @@ Video::TestCase::TestCase(const char* comment, const char* id, Result result)
     , m_result(result)
 {}
 
-bool Video::TestCase::test(size_t number) const
-{
-    Result result = GetResult(m_id);
-    if (result == m_result)
-    {
-        fmt::print(
-            "{} Test case \"{}\" succeeded, result: \"{}\"\n",
-            fmt::format(fmt::fg(fmt::color::green), "[#{:02}]", number),
-            m_comment,
-            ResultToString(result)
-        );
-        return true;
-    }
-
-    fmt::print(
-        "{} Test case \"{}\" failed: expected \"{}\", got \"{}\"\n",
-        fmt::format(fmt::fg(fmt::color::red), "[#{:02}]", number),
-        m_comment,
-        ResultToString(m_result),
-        ResultToString(result)
-    );
-    return false;
-}
-
 int Video::Test()
 {
     size_t casesFailed = 0;
@@ -115,4 +100,28 @@ int Video::Test()
     return -1;
 }
 
-} // namespace kct
+bool Video::TestCase::test(size_t number) const
+{
+    Result result = GetResult(m_id);
+    if (result == m_result)
+    {
+        fmt::print(
+            "{} Test case \"{}\" succeeded, result: \"{}\"\n",
+            fmt::format(fmt::fg(fmt::color::green), "[#{:02}]", number),
+            m_comment,
+            ResultToString(result)
+        );
+        return true;
+    }
+
+    fmt::print(
+        "{} Test case \"{}\" failed: expected \"{}\", got \"{}\"\n",
+        fmt::format(fmt::fg(fmt::color::red), "[#{:02}]", number),
+        m_comment,
+        ResultToString(m_result),
+        ResultToString(result)
+    );
+    return false;
+}
+
+} // namespace kbt

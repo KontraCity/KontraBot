@@ -7,7 +7,7 @@
 #include "youtube/video.hpp"
 #include "youtube/playlist.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Youtube
 {
@@ -24,6 +24,7 @@ namespace Youtube
     public:
         using variant::variant;
 
+    public:
         /// @brief Get item type
         /// @return Item type
         inline Type type() const
@@ -40,4 +41,4 @@ namespace Youtube
     };
 }
 
-} // namespace kc
+} // namespace kb

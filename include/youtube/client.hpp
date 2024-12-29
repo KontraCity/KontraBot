@@ -16,7 +16,7 @@
 #include "common/curl.hpp"
 #include "common/interpreter.hpp"
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -231,23 +231,6 @@ namespace Youtube
         static const std::unique_ptr<Client> Instance;
 
     private:
-        /// @brief Generate UUID string
-        /// @param withoutDashes Whether to remove dashes from UUID or not
-        /// @return Generated UUID string
-        static std::string GenerateUuid(bool withoutDashes = false);
-
-        /// @brief Get current YouTube player ID
-        /// @throw std::runtime_error if internal error occurs
-        /// @return Current YouTube player ID
-        static std::string GetPlayerId();
-
-        /// @brief Convert client type to client name
-        /// @param clientType Client type
-        /// @throw std::invalid_argument if client type is unknown
-        /// @return Client name
-        static const char* TypeToName(Type clientType);
-
-    private:
         spdlog::logger m_logger;
         std::mutex m_mutex;
         std::string m_error;
@@ -259,6 +242,7 @@ namespace Youtube
         /// @brief Initialize client
         Client();
 
+    private:
         /// @brief Update client interpreter and data
         /// @throw std::runtime_error if internal error occurs
         void updatePlayer();
@@ -269,13 +253,6 @@ namespace Youtube
         Cache::YoutubeAuth updateToken();
 
     public:
-        /// @brief Get YouTube client error message
-        /// @return YouTube client error message (empty if no error)
-        inline const std::string& error() const
-        {
-            return m_error;
-        }
-
         /// @brief Check YouTube user authorization and authorize if needed
         /// @throw std::runtime_error if internal error occurs
         void checkAuthorization();
@@ -293,7 +270,15 @@ namespace Youtube
         /// @throw std::runtime_error if internal error occurs
         /// @return Decrypted URL
         std::string decryptSignatureCipher(std::string signatureCipher);
+
+    public:
+        /// @brief Get YouTube client error message
+        /// @return YouTube client error message (empty if no error)
+        inline const std::string& error() const
+        {
+            return m_error;
+        }
     };
 }
 
-} // namespace kc
+} // namespace kb

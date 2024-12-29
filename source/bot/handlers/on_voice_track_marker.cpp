@@ -1,6 +1,6 @@
 #include "bot/bot.hpp"
 
-namespace kc {
+namespace kb {
 
 void Bot::Bot::onVoiceTrackMarker(const dpp::voice_track_marker_t& event)
 {
@@ -26,4 +26,4 @@ void Bot::Bot::onVoiceTrackMarker(const dpp::voice_track_marker_t& event)
     }
 }
 
-} // namespace kc
+} // namespace kb

@@ -1,6 +1,7 @@
 #pragma once
 
 // STL modules
+#include <string>
 #include <functional>
 #include <mutex>
 #include <thread>
@@ -12,8 +13,8 @@
 // Library spdlog
 #include <spdlog/spdlog.h>
 
-/* Forward kc::Bot::Bot class declaration for other modules */
-namespace kc {
+/* Forward kb::Bot::Bot class declaration for other modules */
+namespace kb {
     namespace Bot {
         class Bot;
     }
@@ -25,7 +26,7 @@ namespace kc {
 #include "bot/player.hpp"
 #include "youtube/item.hpp"
 
-namespace kc {
+namespace kb {
 
 namespace Bot
 {
@@ -86,10 +87,18 @@ namespace Bot
         std::map<dpp::snowflake, Player> m_players;
         std::map<dpp::snowflake, std::string> m_ephemeralTokens;
 
+    public:
+        /// @brief Initialize bot
+        /// @param registerCommands Wherther or not to register commands and exit
+        Bot(bool registerCommands = false);
+
     private:
         /// @brief Presence thread implementation
         void presenceFunction();
 
+        /// @brief Update ephemeral message token 
+        /// @param confirmationEvent Message confirmation event
+        /// @param token The token to update to
         void updateEphemeralToken(const dpp::confirmation_callback_t& confirmationEvent, std::string token);
 
         /// @brief Update player's text channel ID
@@ -126,7 +135,6 @@ namespace Bot
         /// @return Result message
         dpp::message addItem(dpp::discord_client* client, const dpp::interaction& interaction, const std::string& itemId, const LogMessageFunction& logMessage, bool showRequester = false);
 
-    private:
         /// @brief Handle autocomplete event
         /// @param event The event to handle
         void onAutocomplete(const dpp::autocomplete_t& event);
@@ -171,12 +179,8 @@ namespace Bot
         /// @brief Handle voice track marker event
         /// @param event The event to handle
         void onVoiceTrackMarker(const dpp::voice_track_marker_t& event);
-
+    
     public:
-        /// @brief Initialize bot
-        /// @param registerCommands Wherther or not to register commands and exit
-        Bot(bool registerCommands = false);
-
         /// @brief Leave voice channel
         /// @param client Discord client serving guild
         /// @param guild Voice channel's guild
@@ -187,4 +191,4 @@ namespace Bot
     };
 }
 
-} // namespace kc
+} // namespace kb

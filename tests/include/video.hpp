@@ -9,9 +9,9 @@
 
 // Custom modules
 #include "youtube/video.hpp"
-using namespace kc;
+using namespace kb;
 
-namespace kct {
+namespace kbt {
 
 namespace Video
 {
@@ -53,11 +53,13 @@ namespace Video
         /// @param result Expected test result
         TestCase(const char* comment, const char* id, Result result);
 
+    public:
         /// @brief Perform the test
         /// @param number Test number
         /// @return True if test succeeded
         bool test(size_t number) const;
 
+    public:
         /// @brief Get test case comment
         /// @return Test case comment
         inline const char* comment() const
@@ -144,4 +146,4 @@ namespace Video
     int Test();
 }
 
-} // namespace kct
+} // namespace kbt

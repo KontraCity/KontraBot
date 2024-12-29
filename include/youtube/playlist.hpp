@@ -15,7 +15,7 @@
 // Custom modules
 #include "youtube/video.hpp"
 
-namespace kc {
+namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
@@ -58,22 +58,24 @@ namespace Youtube
             /// @param index Index of video to initialize iterator for
             Iterator(Playlist* root, size_t index = 0);
 
+        public:
             /// @brief Get current video with playlist watch URL
             /// @throw std::invalid_argument if iterator is invalid
             /// @return Current video with playlist watch URL
             inline std::string watchUrl() const
             {
                 if (!m_video)
-                    throw std::invalid_argument("kc::Playlist::Iterator::watchUrl(): Iterator is invalid");
+                    throw std::invalid_argument("kb::Playlist::Iterator::watchUrl(): Iterator is invalid");
                 return fmt::format("https://www.youtube.com/watch?v={}&list={}", m_video->id(), m_root->id());
             }
 
+        public:
             /// @brief Get current video pointer
             /// @return Current video pointer
             inline const pointer operator->() const
             {
                 if (!m_video)
-                    throw std::invalid_argument("kc::Playlist::Iterator::operator->(): Iterator is invalid");
+                    throw std::invalid_argument("kb::Playlist::Iterator::operator->(): Iterator is invalid");
                 return m_video;
             }
 
@@ -82,7 +84,7 @@ namespace Youtube
             inline const reference operator*() const
             {
                 if (!m_video)
-                    throw std::invalid_argument("kc::Playlist::Iterator::operator*(): Iterator is invalid");
+                    throw std::invalid_argument("kb::Playlist::Iterator::operator*(): Iterator is invalid");
                 return *m_video;
             }
 
@@ -91,7 +93,7 @@ namespace Youtube
             inline size_t index() const
             {
                 if (!m_video)
-                    throw std::invalid_argument("kc::Playlist::Iterator::index(): Iterator is invalid");
+                    throw std::invalid_argument("kb::Playlist::Iterator::index(): Iterator is invalid");
                 return m_index;
             }
 
@@ -158,23 +160,39 @@ namespace Youtube
         };
 
     private:
+        // Common members
         std::string m_id;
         std::string m_title;
         std::string m_author;
         std::string m_thumbnailUrl;
         int m_videoCount = 0;
 
+        // Optional members
         bool m_optionalKnown = false;
         uint64_t m_viewCount = 0;
         bool m_videosHidden = false;
 
+        // Contents members
         std::vector<Video> m_videos;
         std::string m_continuationToken;
 
+    public:
+        /// @brief Get playlist info
+        /// @param idUrl Playlist ID or view URL
+        /// @throw std::invalid_argument if [idUrl] is not a valid playlist ID or view URL
+        /// @throw std::runtime_error if internal error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube playlist error occurs
+        /// @throw kb::Youtube::LocalError if playlist is not supported
+        Playlist(const std::string& idUrl);
+
+        /// @brief Parse playlist info
+        /// @param playlistInfoObject API response JSON playlist info object
+        Playlist(const json& playlistInfoObject);
+        
     private:
         /// @brief Check API response playlist alerts
         /// @param browseResponseJson API "browse" JSON response
-        /// @throw kc::Youtube::YoutubeError if YouTube playlist error is found
+        /// @throw kb::Youtube::YoutubeError if YouTube playlist error is found
         void checkAlerts(const json& browseResponseJson);
 
         /// @brief Parse API response playlist author
@@ -191,7 +209,7 @@ namespace Youtube
 
         /// @brief Parse API response playlist videos
         /// @param videoContentsObject API response JSON video contents object
-        /// @throw kc::Youtube::LocalError if all playlist items are not supported
+        /// @throw kb::Youtube::LocalError if all playlist items are not supported
         void parseVideos(const json& videoContentsObject);
 
         /// @brief Parse API response video count
@@ -206,28 +224,16 @@ namespace Youtube
 
         /// @brief Download playlist info
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube playlist error occurs
-        /// @throw kc::Youtube::LocalError if playlist is not supported
+        /// @throw kb::Youtube::YoutubeError if YouTube playlist error occurs
+        /// @throw kb::Youtube::LocalError if playlist is not supported
         void downloadInfo();
 
         /// @brief Check optional fields availability
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
         void checkOptional() const;
 
     public:
-        /// @brief Get playlist info
-        /// @param idUrl Playlist ID or view URL
-        /// @throw std::invalid_argument if [idUrl] is not a valid playlist ID or view URL
-        /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube playlist error occurs
-        /// @throw kc::Youtube::LocalError if playlist is not supported
-        Playlist(const std::string& idUrl);
-
-        /// @brief Parse playlist info
-        /// @param playlistInfoObject API response JSON playlist info object
-        Playlist(const json& playlistInfoObject);
-
         /// @brief Get playlist ID
         /// @return Playlist ID
         inline const std::string& id() const
@@ -272,8 +278,8 @@ namespace Youtube
 
         /// @brief Get playlist view count: optional info may be downloaded
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        /// @throw kc::Youtube::Error if playlist is not supported
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::Error if playlist is not supported
         /// @return Playlist view count
         inline uint64_t viewCount() const
         {
@@ -283,8 +289,8 @@ namespace Youtube
 
         /// @brief Check if playlist unavailable videos are hidden: optional info may be downloaded
         /// @throw std::runtime_error if internal error occurs
-        /// @throw kc::Youtube::YoutubeError if YouTube error occurs
-        /// @throw kc::Youtube::Error if playlist is not supported
+        /// @throw kb::Youtube::YoutubeError if YouTube error occurs
+        /// @throw kb::Youtube::Error if playlist is not supported
         /// @return True if unavailable videos are hidden, false otherwise
         inline bool videosHidden() const
         {
@@ -319,4 +325,4 @@ namespace Youtube
     };
 }
 
-} // namespace kc
+} // namespace kb
