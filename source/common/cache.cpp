@@ -1,7 +1,18 @@
 #include "common/cache.hpp"
 using namespace kc::CacheConst;
 
+// STL modules
+#include <fstream>
+#include <filesystem>
+#include <stdexcept>
+
+// Library nlohmann::json
+#include <nlohmann/json.hpp>
+
 namespace kc {
+
+/* Namespace aliases and imports */
+using nlohmann::json;
 
 /*
 *   std::make_unique() needs public constructor, but the Cache class uses singleton pattern.

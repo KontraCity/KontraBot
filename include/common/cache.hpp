@@ -1,20 +1,11 @@
 #pragma once
 
 // STL modules
-#include <string>
 #include <memory>
-#include <fstream>
-#include <filesystem>
 #include <mutex>
-#include <stdexcept>
-
-// Library nlohmann::json
-#include <nlohmann/json.hpp>
+#include <string>
 
 namespace kc {
-
-/* Namespace aliases and imports */
-using nlohmann::json;
 
 namespace CacheConst
 {

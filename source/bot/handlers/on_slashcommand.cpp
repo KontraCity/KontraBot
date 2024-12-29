@@ -1,5 +1,11 @@
 #include "bot/bot.hpp"
 
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Custom modules
+#include "bot/commands.hpp"
+
 namespace kc {
 
 void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)

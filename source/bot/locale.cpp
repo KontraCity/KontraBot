@@ -1,7 +1,15 @@
 ﻿#include "bot/locale/locale.hpp"
+using namespace kc::Bot::LocaleConst;
+
+// STL modules
+#include <stdexcept>
+
+// Custom modules
 #include "bot/locale/locale_en.hpp"
 #include "bot/locale/locale_ru.hpp"
-using namespace kc::Bot::LocaleConst;
+#include "bot/commands.hpp"
+#include "bot/signal.hpp"
+#include "common/utility.hpp"
 
 namespace kc {
 

@@ -4,9 +4,6 @@
 #include <string>
 #include <stdexcept>
 
-// Library {fmt}
-#include <fmt/format.h>
-
 namespace kc {
 
 namespace Youtube

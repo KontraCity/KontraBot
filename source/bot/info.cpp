@@ -1,7 +1,31 @@
 #include "bot/info.hpp"
 using namespace kc::Bot::InfoConst;
 
+// STL modules
+#include <map>
+#include <mutex>
+#include <filesystem>
+#include <fstream>
+#include <stdexcept>
+
+// Library nlohmann::json
+#include <nlohmann/json.hpp>
+
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Library {fmt}
+#include <fmt/format.h>
+
+// Custom modules
+#include "bot/locale/locale_en.hpp"
+#include "bot/locale/locale_ru.hpp"
+#include "common/utility.hpp"
+
 namespace kc {
+
+/* Namespace aliases and imports */
+using nlohmann::json;
 
 Bot::Stats Bot::Info::GetGlobalStats()
 {

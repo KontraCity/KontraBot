@@ -3,18 +3,6 @@
 // STL modules
 #include <string>
 #include <vector>
-#include <memory>
-#include <stdexcept>
-
-// Library Curl
-#include <curl/curl.h>
-
-// Library {fmt}
-#include <fmt/format.h>
-
-// Custom modules
-#include "common/config.hpp"
-#include "common/utility.hpp"
 
 namespace kc {
 

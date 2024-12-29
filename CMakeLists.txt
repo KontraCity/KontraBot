@@ -37,7 +37,6 @@ add_library(kontrabotbase
     "source/common/config.cpp"
     "source/common/curl.cpp"
     "source/common/interpreter.cpp"
-    "source/common/stopwatch.cpp"
     "source/common/utility.cpp"
 
     # YouTube modules

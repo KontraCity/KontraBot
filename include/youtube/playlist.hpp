@@ -5,31 +5,20 @@
 #include <vector>
 #include <iterator>
 #include <cstddef>
-#include <algorithm>
-#include <stdexcept>
 
 // Library nlohmann::json
 #include <nlohmann/json.hpp>
-
-// Boost libraries
-#include <boost/date_time.hpp>
-#include <boost/regex.hpp>
 
 // Library {fmt}
 #include <fmt/format.h>
 
 // Custom modules
-#include "youtube/client.hpp"
-#include "youtube/error.hpp"
-#include "youtube/utility.hpp"
 #include "youtube/video.hpp"
 
 namespace kc {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
-namespace dt = boost::gregorian;
-namespace pt = boost::posix_time;
 
 namespace Youtube
 {

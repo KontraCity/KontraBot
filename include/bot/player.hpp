@@ -2,51 +2,32 @@
 
 // STL modules
 #include <string>
-#include <deque>
-#include <optional>
 #include <mutex>
 #include <thread>
-#include <random>
-#include <algorithm>
 
 // Library DPP
 #include <dpp/dpp.h>
 
-// Library nlohmann::json
-#include <nlohmann/json.hpp>
-
 // Library boost::date_time
 #include <boost/date_time.hpp>
 
-// Library {fmt}
-#include <fmt/format.h>
-
-/* Forward Player class declaration for other modules */
+/* Forward kc::Bot::Player class declaration for other modules */
 namespace kc {
     namespace Bot {
         class Player;
     }
 }
 
-// Custom kc::Bot modules
-#include "bot/bot.hpp"
+// Custom modules
 #include "bot/info.hpp"
 #include "bot/session.hpp"
 #include "bot/signal.hpp"
 #include "bot/timeout.hpp"
-
-// Other custom modules
-#include "common/config.hpp"
-#include "common/utility.hpp"
-
-// Custom kc::Youtube modules
-#include "youtube/extractor.hpp"
 #include "youtube/item.hpp"
 
 namespace kc {
 
 /* Namespace aliases and imports */
-using nlohmann::json;
 namespace dt = boost::gregorian;
 namespace pt = boost::posix_time;
 
@@ -71,7 +52,7 @@ namespace Bot
 
     private:
         spdlog::logger m_logger;
-        Bot* m_root;
+        class Bot* m_root;
         Timeout m_timeout;
         dpp::discord_client* m_client;
         Session m_session;

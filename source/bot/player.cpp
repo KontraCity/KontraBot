@@ -1,5 +1,17 @@
 #include "bot/player.hpp"
 
+// STL modules
+#include <random>
+#include <algorithm>
+
+// Library {fmt}
+#include <fmt/format.h>
+
+// Custom modules
+#include "bot/bot.hpp"
+#include "common/utility.hpp"
+#include "youtube/extractor.hpp"
+
 namespace kc {
 
 std::vector<Youtube::Video::Chapter>::const_iterator Bot::Player::DeduceChapter(const std::vector<Youtube::Video::Chapter>& chapters, pt::time_duration timestamp)

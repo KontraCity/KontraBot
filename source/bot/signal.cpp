@@ -1,5 +1,11 @@
 #include "bot/signal.hpp"
 
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Library {fmt}
+#include <fmt/format.h>
+
 namespace kc {
 
 std::string Bot::Signal::CreateSignalString(Type type, const std::string& data)

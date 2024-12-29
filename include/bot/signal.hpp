@@ -4,12 +4,6 @@
 #include <string>
 #include <string_view>
 
-// Library Boost.Regex
-#include <boost/regex.hpp>
-
-// Library {fmt}
-#include <fmt/format.h>
-
 namespace kc {
 
 namespace Bot

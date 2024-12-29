@@ -10,6 +10,7 @@
 #include "common/cache.hpp"
 #include "common/config.hpp"
 #include "common/utility.hpp"
+#include "youtube/client.hpp"
 using namespace kc;
 
 struct ParseResult

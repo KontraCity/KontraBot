@@ -1,7 +1,22 @@
 #include "common/config.hpp"
 using namespace kc::ConfigConst;
 
+// STL modules
+#include <fstream>
+
+// Library nlohmann::json
+#include <nlohmann/json.hpp>
+
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Library {fmt}
+#include <fmt/format.h>
+
 namespace kc {
+
+/* Namespace aliases and imports */
+using nlohmann::json;
 
 /*
 *   std::make_unique() needs public constructor, but the Config class uses singleton pattern.

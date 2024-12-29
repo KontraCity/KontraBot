@@ -1,5 +1,17 @@
 #include "youtube/playlist.hpp"
 
+// STl modules
+#include <algorithm>
+#include <stdexcept>
+
+// Boost libraries
+#include <boost/regex.hpp>
+
+// Custom modules
+#include "youtube/client.hpp"
+#include "youtube/error.hpp"
+#include "youtube/utility.hpp"
+
 namespace kc {
 
 Youtube::Playlist::Iterator::Iterator()

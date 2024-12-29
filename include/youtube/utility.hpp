@@ -2,7 +2,6 @@
 
 // STL modules
 #include <string>
-#include <algorithm>
 
 // Library nlohmann/json
 #include <nlohmann/json.hpp>

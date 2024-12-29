@@ -2,35 +2,14 @@
 
 // STL modules
 #include <string>
-#include <map>
-#include <mutex>
-#include <memory>
-#include <filesystem>
-#include <fstream>
-#include <stdexcept>
 
 // Library DPP
 #include <dpp/dpp.h>
 
-// Library nlohmann::json
-#include <nlohmann/json.hpp>
-
-// Library Boost.Regex
-#include <boost/regex.hpp>
-
-// Library {fmt}
-#include <fmt/format.h>
-
 // Custom modules
-#include "bot/locale/locale_en.hpp"
-#include "bot/locale/locale_ru.hpp"
 #include "bot/types.hpp"
-#include "common/utility.hpp"
 
 namespace kc {
-
-/* Namespace aliases and imports */
-using nlohmann::json;
 
 namespace Bot
 {

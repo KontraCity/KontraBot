@@ -1,5 +1,8 @@
 #include "bot/bot.hpp"
 
+// Custom modules
+#include "bot/commands.hpp"
+
 namespace kc {
 
 void Bot::Bot::onReady(const dpp::ready_t& event)

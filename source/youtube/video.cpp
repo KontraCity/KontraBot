@@ -1,5 +1,19 @@
 #include "youtube/video.hpp"
 
+// STL modules
+#include <sstream>
+#include <algorithm>
+#include <stdexcept>
+
+// Boost libraries
+#include <boost/regex.hpp>
+
+// Custom modules
+#include "common/utility.hpp"
+#include "youtube/client.hpp"
+#include "youtube/error.hpp"
+#include "youtube/utility.hpp"
+
 namespace kc {
 
 bool Youtube::Video::parseDuration(const json& videoInfoObject)

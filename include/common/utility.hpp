@@ -1,11 +1,8 @@
 #pragma once
 
 // STL modules
-#include <optional>
 #include <string>
-#include <random>
-#include <chrono>
-#include <thread>
+#include <optional>
 
 // Library DPP
 #include <dpp/dpp.h>
@@ -15,13 +12,6 @@
 
 // Library spdlog
 #include <spdlog/spdlog.h>
-#include <spdlog/sinks/stdout_color_sinks.h>
-
-// Library {fmt}
-#include <fmt/format.h>
-
-// Library utf8.h
-#include "external/utf8.h"
 
 namespace kc {
 

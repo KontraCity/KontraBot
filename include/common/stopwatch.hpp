@@ -7,29 +7,42 @@ namespace kc {
 
 class Stopwatch
 {
-public:
-    using Seconds = std::chrono::seconds;
-    using Milliseconds = std::chrono::milliseconds;
-    using Microseconds = std::chrono::microseconds;
-    using Nanoseconds = std::chrono::nanoseconds;
-
 private:
-    std::chrono::high_resolution_clock::time_point m_start;
+    using clock = std::chrono::high_resolution_clock;
+    clock::time_point m_start;
 
 public:
-    /// @brief Start stopwatch
-    Stopwatch();
+    /// @brief Initialize and start stopwatch
+    Stopwatch()
+        : m_start(clock::now())
+    {}
 
+public:
     /// @brief Reset stopwatch
-    void reset();
-
-    /// @brief Get elapsed time from start/reset
-    /// @tparam Unit to get elapsed time in
-    /// @return Elapsed time
-    template <typename Unit>
-    inline uint64_t elapsed() const
+    inline void reset()
     {
-        return std::chrono::duration_cast<Unit>(std::chrono::high_resolution_clock::now() - m_start).count();
+        m_start = clock::now();
+    }
+
+    /// @brief Get elapsed time in seconds
+    /// @return Elapsed time in seconds
+    inline float seconds() const
+    {
+        return milliseconds() / 1000.0f;
+    }
+
+    /// @brief Get elapsed time in milliseconds
+    /// @return Elapsed time in milliseconds
+    inline float milliseconds() const
+    {
+        return microseconds() / 1000.0f;
+    }
+
+    /// @brief Get elapsed time in microseconds
+    /// @return Elapsed time in microseconds
+    inline size_t microseconds() const
+    {
+        return std::chrono::duration_cast<std::chrono::microseconds>(clock::now() - m_start).count();
     }
 };
 

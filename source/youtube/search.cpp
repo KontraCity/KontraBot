@@ -1,6 +1,24 @@
 #include "youtube/search.hpp"
 
+// STL modules
+#include <stdexcept>
+
+// Library nlohmann/json
+#include <nlohmann/json.hpp>
+
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Library {fmt}
+#include <fmt/format.h>
+
+// Custom modules
+#include "youtube/client.hpp"
+
 namespace kc {
+
+/* Namespace aliases and imports */
+using nlohmann::json;
 
 Youtube::Results::Results(Type type, const std::string& query)
     : m_type(type)

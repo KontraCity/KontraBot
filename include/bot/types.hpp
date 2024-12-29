@@ -3,7 +3,7 @@
 // STL modules
 #include <memory>
 
-/* Forward Settings and Stats structs declaration for other modules */
+/* Forward kc::Bot::Settings and kc::Bot::Stats structs declaration for other modules */
 namespace kc {
     namespace Bot {
         struct Settings;

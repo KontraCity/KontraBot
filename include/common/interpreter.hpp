@@ -1,17 +1,12 @@
 #pragma once
 
 // STL modules
-#include <string>
-#include <cstdint>
-#include <memory>
 #include <mutex>
-#include <stdexcept>
+#include <memory>
+#include <string>
 
 // Library MuJS
 #include <mujs.h>
-
-// Library {fmt}
-#include <fmt/format.h>
 
 namespace kc {
 

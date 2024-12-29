@@ -1,19 +1,11 @@
 #pragma once
 
 // STL modules
-#include <mutex>
 #include <string>
 #include <vector>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
-#include <stdexcept>
-
-// Library nlohmann/json
-#include <nlohmann/json.hpp>
-
-// Library Boost.Regex
-#include <boost/regex.hpp>
 
 extern "C" {
     // FFmpeg libraries
@@ -22,22 +14,10 @@ extern "C" {
     #include <libswresample/swresample.h>
 }
 
-// Library Curl
-#include <curl/curl.h>
-
-// Library {fmt}
-#include <fmt/format.h>
-
-// Custom modules
-#include "common/config.hpp"
-#include "youtube/client.hpp"
-#include "youtube/error.hpp"
-#include "youtube/video.hpp"
+// Library spdlog
+#include <spdlog/spdlog.h>
 
 namespace kc {
-
-/* Namespace aliases and imports */
-using nlohmann::json;
 
 namespace Youtube
 {

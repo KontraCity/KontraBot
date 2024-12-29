@@ -1,7 +1,32 @@
 #include "youtube/extractor.hpp"
 using namespace kc::Youtube::ExtractorConst;
 
+// STL modules
+#include <stdexcept>
+
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Library nlohmann/json
+#include <nlohmann/json.hpp>
+
+// Library Curl
+#include <curl/curl.h>
+
+// Library {fmt}
+#include <fmt/format.h>
+
+// Custom modules
+#include "common/config.hpp"
+#include "common/utility.hpp"
+#include "youtube/client.hpp"
+#include "youtube/error.hpp"
+#include "youtube/video.hpp"
+
 namespace kc {
+
+/* Namespace aliases and imports */
+using nlohmann::json;
 
 Youtube::Extractor::Frame::Frame()
     : m_timestamp(-1)
@@ -237,7 +262,10 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         std::lock_guard lock(m_mutex);
         m_threadStatus = ThreadStatus::Idle;
         m_cv.notify_all();
-        m_logger.info("Download finished successfully (current: {} bytes, total: {} bytes)", m_buffer.size(), m_fileSize);
+        if (m_buffer.size() == m_fileSize)
+            m_logger.info("Download finished successfully (total: {})", m_fileSize);
+        else
+            m_logger.info("Download finished successfully (current/total: {}/{})", m_buffer.size(), m_fileSize);
     }
     catch (const std::runtime_error& error)
     {

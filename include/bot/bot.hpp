@@ -1,39 +1,29 @@
 #pragma once
 
 // STL modules
-#include <map>
-#include <vector>
 #include <functional>
-#include <optional>
 #include <mutex>
+#include <thread>
+#include <map>
 
 // Library DPP
 #include <dpp/dpp.h>
 
-// Library {fmt}
-#include <fmt/format.h>
+// Library spdlog
+#include <spdlog/spdlog.h>
 
-/* Forward Bot class declaration for other modules */
+/* Forward kc::Bot::Bot class declaration for other modules */
 namespace kc {
     namespace Bot {
         class Bot;
     }
 }
 
-// Custom kc::Bot modules
+// Custom modules
 #include "bot/locale/locale.hpp"
-#include "bot/commands.hpp"
 #include "bot/info.hpp"
 #include "bot/player.hpp"
-#include "bot/session.hpp"
-
-// Other custom modules
-#include "common/config.hpp"
-#include "common/utility.hpp"
-
-// Custom kc::Youtube modules
 #include "youtube/item.hpp"
-#include "youtube/search.hpp"
 
 namespace kc {
 

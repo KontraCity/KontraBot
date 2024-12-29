@@ -3,27 +3,18 @@
 // STL modules
 #include <string>
 #include <memory>
-#include <algorithm>
 #include <mutex>
-#include <stdexcept>
 
 // Library nlohmann/json
 #include <nlohmann/json.hpp>
 
-// Libraries Boost.Regex, Boost.Uuid
-#include <boost/regex.hpp>
-#include <boost/uuid/uuid.hpp>
-#include <boost/uuid/uuid_generators.hpp>
-#include <boost/uuid/uuid_io.hpp>
-
-// Library {fmt}
-#include <fmt/format.h>
+// Library spdlog
+#include <spdlog/spdlog.h>
 
 // Custom modules
 #include "common/cache.hpp"
 #include "common/curl.hpp"
 #include "common/interpreter.hpp"
-#include "common/utility.hpp"
 
 namespace kc {
 
@@ -35,7 +26,7 @@ namespace Youtube
     namespace ClientConst
     {
         // JavaScript interpreter signature decryption function name
-        constexpr const char* SignatureDecrypt = "_SingatureDecryption";
+        constexpr const char* SignatureDecrypt = "_SingatureDecrypt";
 
         // Clients API keys, headers and POST data
         constexpr const char* ClientsData =

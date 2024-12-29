@@ -1,5 +1,15 @@
 #include "bot/bot.hpp"
 
+// Library Boost.Regex
+#include <boost/regex.hpp>
+
+// Custom modules
+#include "bot/locale/locale_en.hpp"
+#include "bot/locale/locale_ru.hpp"
+#include "bot/commands.hpp"
+#include "common/config.hpp"
+#include "common/utility.hpp"
+
 namespace kc {
 
 size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake channelId)

@@ -3,24 +3,11 @@
 // STL modules
 #include <string>
 #include <vector>
-#include <stdexcept>
-
-// Library nlohmann/json
-#include <nlohmann/json.hpp>
-
-// Library Boost.Regex
-#include <boost/regex.hpp>
-
-// Library {fmt}
-#include <fmt/format.h>
 
 // Custom modules
 #include "youtube/item.hpp"
 
 namespace kc {
-
-/* Namespace aliases and imports */
-using nlohmann::json;
 
 namespace Youtube
 {

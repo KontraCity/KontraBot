@@ -1,5 +1,11 @@
 #include "bot/bot.hpp"
 
+// Library {fmt}
+#include <fmt/format.h>
+
+// Custom modules
+#include "bot/commands.hpp"
+
 namespace kc {
 
 void Bot::Bot::onAutocomplete(const dpp::autocomplete_t& event)

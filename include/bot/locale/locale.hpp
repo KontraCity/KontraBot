@@ -4,15 +4,11 @@
 #include <memory>
 #include <string>
 #include <optional>
-#include <stdexcept>
 
 // Library DPP
-#include <dpp/dpp.h>
+#include <dpp/snowflake.h>
 
-// Library utf8.h
-#include "external/utf8.h"
-
-/* Forward Locale class declaration for other modules */
+/* Forward kc::Bot::Locale class declaration for other modules */
 namespace kc {
     namespace Bot {
         class Locale;
@@ -21,16 +17,12 @@ namespace kc {
 
 // Custom kc::Bot modules
 #include "bot/session.hpp"
-#include "bot/signal.hpp"
 #include "bot/types.hpp"
 
 // Custom kc::Youtube modules
 #include "youtube/error.hpp"
 #include "youtube/item.hpp"
 #include "youtube/search.hpp"
-
-// Other custom modules
-#include "common/utility.hpp"
 
 namespace kc {
 

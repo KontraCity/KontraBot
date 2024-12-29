@@ -5,7 +5,7 @@
 
 // Custom modules
 #include "bot/locale/locale.hpp"
-#include "bot/commands.hpp"
+#include "common/utility.hpp"
 
 namespace kc {
 

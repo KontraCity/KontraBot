@@ -1,6 +1,23 @@
 #include "youtube/client.hpp"
 using namespace kc::Youtube::ClientConst;
 
+// STL modules
+#include <algorithm>
+#include <stdexcept>
+
+// Boost libraries
+#include <boost/regex.hpp>
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
+// Library {fmt}
+#include <fmt/format.h>
+
+// Custom modules
+#include "common/config.hpp"
+#include "common/utility.hpp"
+
 namespace kc {
 
 /*

@@ -1,23 +1,10 @@
 #pragma once
 
 // STL modules
-#include <string>
 #include <memory>
-#include <fstream>
-
-// Library nlohmann::json
-#include <nlohmann/json.hpp>
-
-// Library Boost.Regex
-#include <boost/regex.hpp>
-
-// Library {fmt}
-#include <fmt/format.h>
+#include <string>
 
 namespace kc {
-
-/* Namespace aliases and imports */
-using nlohmann::json;
 
 namespace ConfigConst
 {

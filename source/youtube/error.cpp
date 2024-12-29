@@ -1,5 +1,8 @@
 #include "youtube/error.hpp"
 
+// Library {fmt}
+#include <fmt/format.h>
+
 namespace kc {
 
 const char* Youtube::YoutubeError::TypeToName(Type type)

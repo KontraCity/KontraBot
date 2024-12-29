@@ -1,6 +1,12 @@
 #include "bot/commands.hpp"
 using namespace kc::Bot::CommandsConst;
 
+// STL modules
+#include <stdexcept>
+
+// Library {fmt}
+#include <fmt/format.h>
+
 namespace kc {
 
 /*

@@ -1,5 +1,8 @@
 #include "youtube/utility.hpp"
 
+// STL modules
+#include <algorithm>
+
 namespace kc {
 
 std::string Youtube::Utility::ExtractThumbnailUrl(const json& thumbnailsObject)

@@ -3,13 +3,9 @@
 // STL modules
 #include <memory>
 #include <vector>
-#include <stdexcept>
 
 // Library DPP
 #include <dpp/dpp.h>
-
-// Library {fmt}
-#include <fmt/format.h>
 
 namespace kc {
 

@@ -1,5 +1,19 @@
 #include "common/utility.hpp"
 
+// STL modules
+#include <random>
+#include <chrono>
+#include <thread>
+
+// Library spdlog
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+// Library {fmt}
+#include <fmt/format.h>
+
+// Library utf8.h
+#include "external/utf8.h"
+
 namespace kc {
 
 spdlog::logger Utility::CreateLogger(const std::string& name, std::optional<bool> forceColor)

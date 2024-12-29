@@ -1,5 +1,11 @@
 #include "common/interpreter.hpp"
 
+// STL modules
+#include <stdexcept>
+
+// Library {fmt}
+#include <fmt/format.h>
+
 namespace kc {
 
 void Interpreter::Output(js_State* state)
