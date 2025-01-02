@@ -142,21 +142,21 @@ Youtube::Extractor::Extractor(const std::string& videoId)
     , m_seekPosition(0)
 {
     av_log_set_callback([](void* opaque, int level, const char* format, va_list arguments)
+    {
+        static std::mutex mutex;
+        std::lock_guard lock(mutex);
+
+        /*
+            *  The format string provided by ffmpeg libraries contains '\n' character at the end.
+            *  The same character is inserted by spdlog, so the one in format string should be discarded.
+        */
+        std::string string(1024, '\0');
+        int stringLength = vsnprintf(string.data(), string.size(), format, arguments);
+        string.resize(stringLength - 1);
+
+        static spdlog::logger logger = kb::Utility::CreateLogger("ffmpeg");
+        switch (level)
         {
-            static std::mutex mutex;
-            std::lock_guard lock(mutex);
-
-            /*
-             *  The format string provided by ffmpeg libraries contains '\n' character at the end.
-             *  The same character is inserted by spdlog, so the one in format string should be discarded.
-            */
-            std::string string(1024, '\0');
-            int stringLength = vsnprintf(string.data(), string.size(), format, arguments);
-            string.resize(stringLength - 1);
-
-            static spdlog::logger logger = kb::Utility::CreateLogger("ffmpeg");
-            switch (level)
-            {
             case AV_LOG_INFO:
             {
                 logger.info(string);
@@ -182,8 +182,8 @@ Youtube::Extractor::Extractor(const std::string& videoId)
             {
                 break;
             }
-            }
-        });
+        }
+    });
 
     if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
     {
@@ -486,18 +486,9 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
 
         if (Config::Instance->proxyEnabled())
         {
-            std::string endpoint = fmt::format("{}:{}", Config::Instance->proxyHost(), Config::Instance->proxyPort());
-            result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, endpoint.c_str());
+            result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, Config::Instance->proxyUrl().c_str());
             if (result != CURLE_OK)
                 throw std::runtime_error(fmt::format("Couldn't configure request proxy [return code: {}]", static_cast<int>(result)));
-
-            if (Config::Instance->proxyAuthRequired())
-            {
-                std::string credentials = fmt::format("{}:{}", Config::Instance->proxyAuthUser(), Config::Instance->proxyAuthPassword());
-                result = curl_easy_setopt(curl.get(), CURLOPT_PROXYUSERPWD, credentials.c_str());
-                if (result != CURLE_OK)
-                    throw std::runtime_error(fmt::format("Couldn't configure request proxy authentication [return code: {}]", static_cast<int>(result)));
-            }
         }
 
         result = curl_easy_setopt(curl.get(), CURLOPT_LOW_SPEED_LIMIT, 15360);

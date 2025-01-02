@@ -30,16 +30,9 @@ void Config::GenerateSampleFile()
     if (!configFile)
         throw std::runtime_error("kb::Bot::Config::GenerateSampleFile(): Couldn't create sample configuration file");
 
-    json proxyAuthObject;
-    proxyAuthObject[Objects::Proxy::Auth::Required] = Defaults::Proxy::Auth::Required;
-    proxyAuthObject[Objects::Proxy::Auth::User] = Defaults::Proxy::Auth::User;
-    proxyAuthObject[Objects::Proxy::Auth::Password] = Defaults::Proxy::Auth::Password;
-
     json proxyObject;
     proxyObject[Objects::Proxy::Enabled] = Defaults::Proxy::Enabled;
-    proxyObject[Objects::Proxy::Host] = Defaults::Proxy::Host;
-    proxyObject[Objects::Proxy::Port] = Defaults::Proxy::Port;
-    proxyObject[Objects::Proxy::Auth::Object] = proxyAuthObject;
+    proxyObject[Objects::Proxy::Url] = Defaults::Proxy::Url;
 
     json configJson;
     configJson[Objects::DiscordBotApiToken] = Defaults::DiscordBotApiToken;
@@ -65,13 +58,7 @@ Config::Config()
 
         json proxyObject = configJson.at(Objects::Proxy::Object);
         m_proxyEnabled = proxyObject.at(Objects::Proxy::Enabled);
-        m_proxyHost = proxyObject.at(Objects::Proxy::Host);
-        m_proxyPort = proxyObject.at(Objects::Proxy::Port);
-
-        json proxyAuthObject = proxyObject.at(Objects::Proxy::Auth::Object);
-        m_proxyAuthRequired = proxyAuthObject.at(Objects::Proxy::Auth::Required);
-        m_proxyAuthUser = proxyAuthObject.at(Objects::Proxy::Auth::User);
-        m_proxyAuthPassword = proxyAuthObject.at(Objects::Proxy::Auth::Password);
+        m_proxyUrl = proxyObject.at(Objects::Proxy::Url);
     }
     catch (const json::exception&)
     {

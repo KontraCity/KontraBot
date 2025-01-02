@@ -20,16 +20,7 @@ namespace ConfigConst
         {
             constexpr const char* Object = "proxy";
             constexpr const char* Enabled = "enabled";
-            constexpr const char* Host = "host";
-            constexpr const char* Port = "port";
-
-            namespace Auth
-            {
-                constexpr const char* Object = "auth";
-                constexpr const char* Required = "required";
-                constexpr const char* User = "user";
-                constexpr const char* Password = "password";
-            }
+            constexpr const char* Url = "url";
         }
     }
 
@@ -41,15 +32,7 @@ namespace ConfigConst
         namespace Proxy
         {
             constexpr bool Enabled = false;
-            constexpr const char* Host = "0.0.0.0";
-            constexpr uint16_t Port = 8080;
-
-            namespace Auth
-            {
-                constexpr bool Required = false;
-                constexpr const char* User = "user";
-                constexpr const char* Password = "password";
-            }
+            constexpr const char* Url = "socks5h://localhost:8080";
         }
     }
 }
@@ -74,13 +57,7 @@ private:
 
     // Proxy configuration
     bool m_proxyEnabled = ConfigConst::Defaults::Proxy::Enabled;
-    std::string m_proxyHost;
-    uint16_t m_proxyPort;
-
-    // Proxy authentication configuration
-    bool m_proxyAuthRequired = ConfigConst::Defaults::Proxy::Auth::Required;
-    std::string m_proxyAuthUser;
-    std::string m_proxyAuthPassword;
+    std::string m_proxyUrl;
 
 private:
     /// @brief Read and parse configuration file
@@ -115,39 +92,11 @@ public:
         return m_proxyEnabled;
     }
 
-    /// @brief Get proxy host
-    /// @return Proxy host
-    inline const std::string& proxyHost() const
+    /// @brief Get proxy URL
+    /// @return Proxy URL
+    inline const std::string& proxyUrl() const
     {
-        return m_proxyHost;
-    }
-
-    /// @brief Get proxy port
-    /// @return Proxy port
-    inline uint16_t proxyPort() const
-    {
-        return m_proxyPort;
-    }
-
-    /// @brief Check if proxy authentication is required
-    /// @return True if proxy authentication is enabled
-    inline bool proxyAuthRequired() const
-    {
-        return m_proxyAuthRequired;
-    }
-
-    /// @brief Get proxy authentication user
-    /// @return Proxy authentication user
-    inline const std::string& proxyAuthUser() const
-    {
-        return m_proxyAuthUser;
-    }
-
-    /// @brief Get proxy authentication password
-    /// @return Proxy authentication password
-    inline const std::string& proxyAuthPassword() const
-    {
-        return m_proxyAuthPassword;
+        return m_proxyUrl;
     }
 };
 
