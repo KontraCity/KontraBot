@@ -138,7 +138,7 @@ void Youtube::Client::updatePlayer()
         throw std::runtime_error("kb::Youtube::Client::update(): Couldn't extract signature timestamp from player code");
     m_clients["tv_embedded"]["data"]["playbackContext"]["contentPlaybackContext"]["signatureTimestamp"] = std::stoi(matches.str(1));
 
-    if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(R"(=function\(a\)\{a=a\.split\(""\);([\w\$]+)\.[\s\S]*?return a\.join\(""\)\};)")))
+    if (!boost::regex_search(playerCodeResponse.data, matches, boost::regex(R"(=function\(.\)\{.=.\.split\(""\);([\w\$]+)\.[\s\S]*?return .\.join\(""\)\};)")))
         throw std::runtime_error("kb::Youtube::Client::update(): Couldn't extract signature decrypt function from player code");
     m_interpreter->reset();
     m_interpreter->execute(SignatureDecrypt + matches.str(0));
