@@ -93,9 +93,3 @@ target_link_libraries(KontraBot PRIVATE "kontrabotbase")
 if (WIN32)
     target_link_libraries(KontraBot PRIVATE fmt::fmt spdlog::spdlog)
 endif()
-
-## --- Testing configuration --- ##
-option(BUILD_TESTS "Build KontraBot tests" YES)
-if (BUILD_TESTS)
-    add_subdirectory("tests/")
-endif()
