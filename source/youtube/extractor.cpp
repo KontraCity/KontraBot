@@ -484,9 +484,9 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request URL [return code: {}]", static_cast<int>(result)));
 
-        if (Config::Instance->proxyEnabled())
+        if (Config::ProxyEnabled())
         {
-            result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, Config::Instance->proxyUrl().c_str());
+            result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, Config::ProxyUrl().c_str());
             if (result != CURLE_OK)
                 throw std::runtime_error(fmt::format("Couldn't configure request proxy [return code: {}]", static_cast<int>(result)));
         }

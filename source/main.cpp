@@ -7,7 +7,6 @@
 // Custom modules
 #include "bot/bot.hpp"
 #include "bot/info.hpp"
-#include "core/cache.hpp"
 #include "core/config.hpp"
 #include "core/utility.hpp"
 #include "youtube/client.hpp"
@@ -170,16 +169,9 @@ static bool CheckSingletons(const ParseResult& result)
 {
     spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
 
-    if (!Cache::Instance->error().empty())
+    if (!Config::GetError().empty())
     {
-        logger.error("Cache error: {}", Cache::Instance->error());
-        logger.info("Hint: Check or delete cache file \"{}\"", CacheConst::CacheFile);
-        return false;
-    }
-
-    if (!Config::Instance->error().empty())
-    {
-        logger.error("Configuration error: {}", Config::Instance->error());
+        logger.error("Configuration error: {}", Config::GetError());
         logger.info("Hint: Check configuration file \"{}\"", ConfigConst::ConfigFile);
         logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
         return false;
@@ -192,23 +184,6 @@ static bool CheckSingletons(const ParseResult& result)
     }
 
     return true;
-}
-
-/// @brief Check YouTube client authorization
-/// @return True if no errors occured
-static bool CheckClientAuthorization()
-{
-    spdlog::logger logger = Utility::CreateLogger("auth");
-    try
-    {
-        Youtube::Client::Instance->checkAuthorization();
-        return true;
-    }
-    catch (const std::runtime_error& error)
-    {
-        logger.error("Couldn't authenticate: \"{}\"", error.what());
-        return false;
-    }
 }
 
 int main(int argc, char** argv)
@@ -235,10 +210,6 @@ int main(int argc, char** argv)
         Bot::Bot bot(true);
         return 0;
     }
-
-    bool authorizationCheck = CheckClientAuthorization();
-    if (!authorizationCheck)
-        return 1;
 
     fmt::print(
         "Welcome to KontraBot NG\n"

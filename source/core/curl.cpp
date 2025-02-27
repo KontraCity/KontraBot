@@ -66,9 +66,9 @@ static Curl::Response Request(const std::string& url, const std::vector<std::str
         ));
     }
 
-    if (Config::Instance->proxyEnabled())
+    if (Config::ProxyEnabled())
     {
-        result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, Config::Instance->proxyUrl().c_str());
+        result = curl_easy_setopt(curl.get(), CURLOPT_PROXY, Config::ProxyUrl().c_str());
         if (result != CURLE_OK)
         {
             throw std::runtime_error(fmt::format(

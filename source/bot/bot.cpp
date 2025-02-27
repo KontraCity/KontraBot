@@ -20,7 +20,7 @@ size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake chann
 }
 
 Bot::Bot::Bot(bool registerCommands)
-    : cluster(Config::Instance->discordBotApiToken())
+    : cluster(Config::DiscordBotApiToken())
     , m_logger(Utility::CreateLogger("bot"))
 {
     on_log(std::bind(&Bot::onLog, this, std::placeholders::_1, registerCommands));

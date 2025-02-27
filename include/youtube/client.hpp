@@ -12,7 +12,6 @@
 #include <spdlog/spdlog.h>
 
 // Custom modules
-#include "core/cache.hpp"
 #include "core/curl.hpp"
 #include "core/interpreter.hpp"
 
@@ -247,16 +246,7 @@ namespace Youtube
         /// @throw std::runtime_error if internal error occurs
         void updatePlayer();
 
-        /// @brief Update YouTube authorization token
-        /// @throw std::runtime_error if internal error occurs
-        /// @return Updated YouTube authorization info
-        Cache::YoutubeAuth updateToken();
-
     public:
-        /// @brief Check YouTube user authorization and authorize if needed
-        /// @throw std::runtime_error if internal error occurs
-        void checkAuthorization();
-
         /// @brief Perform YouTube API request
         /// @param clientType Client type to use
         /// @param requestMethod Request method name

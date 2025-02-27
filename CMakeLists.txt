@@ -35,10 +35,11 @@ add_executable(KontraBot "source/main.cpp"
     "source/bot/timeout.cpp"
     "source/bot/types.cpp"
 
-    "source/core/cache.cpp"
+    
     "source/core/config.cpp"
     "source/core/curl.cpp"
     "source/core/interpreter.cpp"
+    "source/core/io.cpp"
     "source/core/utility.cpp"
 
     "source/youtube/client.cpp"
