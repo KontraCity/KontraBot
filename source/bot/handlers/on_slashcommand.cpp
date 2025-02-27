@@ -9,7 +9,7 @@
 // Custom modules
 #include "bot/locale/locale_en.hpp"
 #include "bot/commands.hpp"
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

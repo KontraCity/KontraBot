@@ -1,4 +1,4 @@
-#include "common/cache.hpp"
+#include "core/cache.hpp"
 using namespace kb::CacheConst;
 
 // STL modules

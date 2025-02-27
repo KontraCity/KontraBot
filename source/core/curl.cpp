@@ -1,4 +1,4 @@
-#include "common/curl.hpp"
+#include "core/curl.hpp"
 
 // STL modules
 #include <memory>
@@ -11,8 +11,8 @@
 #include <fmt/format.h>
 
 // Custom modules
-#include "common/config.hpp"
-#include "common/utility.hpp"
+#include "core/config.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

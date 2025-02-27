@@ -15,8 +15,8 @@ using namespace kb::Youtube::ClientConst;
 #include <fmt/format.h>
 
 // Custom modules
-#include "common/config.hpp"
-#include "common/utility.hpp"
+#include "core/config.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

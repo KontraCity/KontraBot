@@ -6,8 +6,8 @@
 // Custom modules
 #include "bot/locale/locales.hpp"
 #include "bot/commands.hpp"
-#include "common/config.hpp"
-#include "common/utility.hpp"
+#include "core/config.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

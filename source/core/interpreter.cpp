@@ -1,4 +1,4 @@
-#include "common/interpreter.hpp"
+#include "core/interpreter.hpp"
 
 // STL modules
 #include <stdexcept>

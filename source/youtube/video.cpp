@@ -9,7 +9,7 @@
 #include <boost/regex.hpp>
 
 // Custom modules
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 #include "youtube/client.hpp"
 #include "youtube/error.hpp"
 #include "youtube/utility.hpp"

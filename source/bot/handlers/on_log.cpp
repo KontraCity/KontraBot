@@ -1,7 +1,7 @@
 #include "bot/bot.hpp"
 
 // Custom modules
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

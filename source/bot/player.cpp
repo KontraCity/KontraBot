@@ -10,7 +10,7 @@
 // Custom modules
 #include "bot/locale/locale_en.hpp"
 #include "bot/bot.hpp"
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 #include "youtube/extractor.hpp"
 
 namespace kb {

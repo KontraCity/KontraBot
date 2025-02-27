@@ -12,9 +12,9 @@
 #include <spdlog/spdlog.h>
 
 // Custom modules
-#include "common/cache.hpp"
-#include "common/curl.hpp"
-#include "common/interpreter.hpp"
+#include "core/cache.hpp"
+#include "core/curl.hpp"
+#include "core/interpreter.hpp"
 
 namespace kb {
 

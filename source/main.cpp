@@ -7,9 +7,9 @@
 // Custom modules
 #include "bot/bot.hpp"
 #include "bot/info.hpp"
-#include "common/cache.hpp"
-#include "common/config.hpp"
-#include "common/utility.hpp"
+#include "core/cache.hpp"
+#include "core/config.hpp"
+#include "core/utility.hpp"
 #include "youtube/client.hpp"
 using namespace kb;
 

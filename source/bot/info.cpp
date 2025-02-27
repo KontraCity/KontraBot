@@ -19,7 +19,7 @@ using namespace kb::Bot::InfoConst;
 
 // Custom modules
 #include "bot/locale/locales.hpp"
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

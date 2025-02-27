@@ -5,7 +5,7 @@
 
 // Custom modules
 #include "bot/locale/locale.hpp"
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

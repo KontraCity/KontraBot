@@ -11,7 +11,7 @@ using namespace kb::Bot::LocaleConst;
 #include "bot/locale/locales.hpp"
 #include "bot/commands.hpp"
 #include "bot/signal.hpp"
-#include "common/utility.hpp"
+#include "core/utility.hpp"
 
 namespace kb {
 

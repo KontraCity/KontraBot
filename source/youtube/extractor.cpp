@@ -17,8 +17,8 @@ using namespace kb::Youtube::ExtractorConst;
 #include <fmt/format.h>
 
 // Custom modules
-#include "common/config.hpp"
-#include "common/utility.hpp"
+#include "core/config.hpp"
+#include "core/utility.hpp"
 #include "youtube/client.hpp"
 #include "youtube/error.hpp"
 #include "youtube/video.hpp"
