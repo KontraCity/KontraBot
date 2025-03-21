@@ -36,7 +36,7 @@ namespace Bot
         /// @brief Check if settings are equal
         /// @param other Other settings to check against
         /// @return True if both settings are equal
-        bool operator==(const Settings& other);
+        bool operator==(const Settings& other) const;
     };
 
     struct Stats
@@ -55,7 +55,7 @@ namespace Bot
         /// @brief Check if stats are equal
         /// @param other Other stats to check against
         /// @return True if both stats are equal
-        bool operator==(const Stats& other);
+        bool operator==(const Stats& other) const;
     };
 }
 

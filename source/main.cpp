@@ -1,15 +1,21 @@
-﻿// STL modules
+﻿#include <dpp/dpp.h>
+
+#include <spdlog/sinks/stdout_color_sinks.h>
+
+// STL modules
 #include <filesystem>
 
 // Library {fmt}
 #include <fmt/format.h>
+
+#include <ytcpp/core/logger.hpp>
+#include <ytcpp/innertube.hpp>
 
 // Custom modules
 #include "bot/bot.hpp"
 #include "bot/info.hpp"
 #include "core/config.hpp"
 #include "core/utility.hpp"
-#include "youtube/client.hpp"
 using namespace kb;
 
 struct ParseResult
@@ -177,13 +183,16 @@ static bool CheckSingletons(const ParseResult& result)
         return false;
     }
 
-    if (!Youtube::Client::Instance->error().empty())
-    {
-        logger.error("YouTube client error: {}", Youtube::Client::Instance->error());
-        return false;
-    }
-
     return true;
+}
+
+static void YtcppInit() {
+    auto sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    sink->set_pattern("[%^%d.%m.%C %H:%M:%S %L%$] [%n] %v");
+    sink->set_color_mode(spdlog::color_mode::always);
+    ytcpp::Logger::Sinks().push_back(std::move(sink));
+    ytcpp::Logger::SetLevel(spdlog::level::debug);
+    ytcpp::Innertube::Authorize();
 }
 
 int main(int argc, char** argv)
@@ -216,6 +225,7 @@ int main(int argc, char** argv)
         "GitHub repository: https://github.com/KontraCity/KontraBot\n"
     );
 
+    YtcppInit();
     Bot::Bot bot;
-    bot.start(false);
+    bot.start(dpp::st_wait);
 }

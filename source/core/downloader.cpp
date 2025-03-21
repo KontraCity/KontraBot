@@ -1,7 +1,8 @@
-#include "youtube/extractor.hpp"
-using namespace kb::Youtube::ExtractorConst;
+#include "core/downloader.hpp"
+using namespace kb::DownloaderConst;
 
 // STL modules
+#include <algorithm>
 #include <stdexcept>
 
 // Library Boost.Regex
@@ -19,32 +20,31 @@ using namespace kb::Youtube::ExtractorConst;
 // Custom modules
 #include "core/config.hpp"
 #include "core/utility.hpp"
-#include "youtube/client.hpp"
-#include "youtube/error.hpp"
-#include "youtube/video.hpp"
+#include "ytcpp/format.hpp"
+#include "ytcpp/utility.hpp"
 
 namespace kb {
 
 /* Namespace aliases and imports */
 using nlohmann::json;
 
-Youtube::Extractor::Frame::Frame()
+Downloader::Frame::Frame()
     : m_timestamp(-1)
 {}
 
-void Youtube::Extractor::Frame::clear()
+void Downloader::Frame::clear()
 {
     m_timestamp = -1;
     vector::clear();
 }
 
-int Youtube::Extractor::ProgressCallback(Extractor* target, double downloadTotal, double downloadNow, double uploadTotal, double uploadNow)
+int Downloader::ProgressCallback(Downloader* target, double downloadTotal, double downloadNow, double uploadTotal, double uploadNow)
 {
     std::lock_guard lock(target->m_mutex);
     return static_cast<int>(target->m_threadStatus == ThreadStatus::Stopped);
 }
 
-size_t Youtube::Extractor::HeaderWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target)
+size_t Downloader::HeaderWriter(uint8_t* data, size_t itemSize, size_t itemCount, Downloader* target)
 {
     std::lock_guard lock(target->m_mutex);
     if (!target->m_fileSize)
@@ -57,7 +57,7 @@ size_t Youtube::Extractor::HeaderWriter(uint8_t* data, size_t itemSize, size_t i
     return itemSize * itemCount;
 }
 
-size_t Youtube::Extractor::ExtractorWriter(uint8_t* data, size_t itemSize, size_t itemCount, Extractor* target)
+size_t Downloader::DownloaderWriter(uint8_t* data, size_t itemSize, size_t itemCount, Downloader* target)
 {
     std::lock_guard lock(target->m_mutex);
     target->m_buffer.insert(target->m_buffer.end(), data, data + itemCount);
@@ -65,9 +65,9 @@ size_t Youtube::Extractor::ExtractorWriter(uint8_t* data, size_t itemSize, size_
     return itemSize * itemCount;
 }
 
-int Youtube::Extractor::Read(void* root, uint8_t* buffer, int bufferLength)
+int Downloader::Read(void* root, uint8_t* buffer, int bufferLength)
 {
-    Extractor* extractor = reinterpret_cast<Extractor*>(root);
+    Downloader* extractor = reinterpret_cast<Downloader*>(root);
     std::unique_lock lock(extractor->m_mutex);
 
     while (true)
@@ -98,9 +98,9 @@ int Youtube::Extractor::Read(void* root, uint8_t* buffer, int bufferLength)
     }
 }
 
-int64_t Youtube::Extractor::Seek(void* root, int64_t offset, int whence)
+int64_t Downloader::Seek(void* root, int64_t offset, int whence)
 {
-    Extractor* extractor = reinterpret_cast<Extractor*>(root);
+    Downloader* extractor = reinterpret_cast<Downloader*>(root);
     std::unique_lock lock(extractor->m_mutex);
 
     if (whence == AVSEEK_SIZE)
@@ -126,9 +126,9 @@ int64_t Youtube::Extractor::Seek(void* root, int64_t offset, int whence)
     return extractor->m_position;
 }
 
-Youtube::Extractor::Extractor(const std::string& videoId)
+Downloader::Downloader(const std::string& videoId)
     : m_logger(kb::Utility::CreateLogger(fmt::format("extractor \"{}\"", videoId)))
-    , m_videoId(videoId)
+    , m_videoId(ytcpp::Utility::ExtractVideoId(videoId))
     , m_fileSize(0)
     , m_threadStatus(ThreadStatus::Idle)
     , m_position(0)
@@ -185,117 +185,35 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         }
     });
 
-    if (!boost::regex_match(videoId, boost::regex(VideoConst::ValidateId)))
-    {
-        throw std::invalid_argument(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): [videoId]: \"{}\": "
-            "Not a valid video ID",
-            videoId
-        ));
+    ytcpp::Format::List formats(m_videoId);
+    uint64_t bestBitrate = 0;
+    for (const ytcpp::Format::Instance& format : formats) {
+        if (format->type() != ytcpp::Format::Type::Audio)
+            continue;
+
+        if (format->bitrate() < bestBitrate)
+            continue;
+        bestBitrate = format->bitrate();
+        m_audioUrl = format->url();
     }
 
-    for (int attempt = 1; true; ++attempt)
     {
-        Curl::Response playerResponse = Client::Instance->requestApi(Client::Type::IOS, "player", { {"videoId", m_videoId} });
-        if (playerResponse.code != 200)
-        {
-            throw std::runtime_error(fmt::format(
-                "kb::Youtube::Extractor::Extractor(): "
-                "Couldn't get API response [video: \"{}\", client: \"ios\", response code: {}]",
-                m_videoId, playerResponse.code
-            ));
-        }
+        std::unique_lock lock(m_mutex);
+        startThread();
+        m_cv.wait(lock);
+    }
 
-        try
-        {
-            json playerResponseJson = json::parse(playerResponse.data);
-            bool clientFallback = (playerResponseJson.at("playabilityStatus").at("status") != "OK");
-
-            std::string responseVideoId = playerResponseJson.at("videoDetails").at("videoId");
-            if (responseVideoId != videoId)
-            {
-                m_logger.warn("API response is for wrong video \"{}\", trying \"tv_embedded\" client", responseVideoId);
-                clientFallback = true;
-            }
-
-            if (clientFallback)
-            {
-                playerResponse = Client::Instance->requestApi(Client::Type::TvEmbedded, "player", { {"videoId", m_videoId} });
-                if (playerResponse.code != 200)
-                {
-                    throw std::runtime_error(fmt::format(
-                        "kb::Youtube::Extractor::Extractor(): Couldn't get API response [video: \"{}\", player: \"tv_embedded\", response code: {}]",
-                        m_videoId, playerResponse.code
-                    ));
-                }
-
-                playerResponseJson = json::parse(playerResponse.data);
-                if (playerResponseJson.at("playabilityStatus").at("status") != "OK")
-                    throw YoutubeError(YoutubeError::Type::Unknown, m_videoId, "unknown error");
-            }
-
-            bool urlResolved = false;
-            int bestBitrate = 0;
-            std::string bestMimeType;
-            for (const json& formatObject : playerResponseJson.at("streamingData").at("adaptiveFormats"))
-            {
-                std::string mimeType = formatObject.at("mimeType");
-                if (mimeType.find("audio/") == std::string::npos)
-                    continue;
-
-                int bitrate = formatObject.at("bitrate");
-                if (bitrate < bestBitrate)
-                    continue;
-                bestBitrate = bitrate;
-                bestMimeType = mimeType;
-
-                if (formatObject.contains("url"))
-                {
-                    m_audioUrl = formatObject.at("url");
-                    urlResolved = true;
-                }
-                else
-                {
-                    m_audioUrl = formatObject.at("signatureCipher");
-                    urlResolved = false;
-                }
-            }
-
-            if (m_audioUrl.empty())
-                throw LocalError(LocalError::Type::AudioNotSupported, m_videoId);
-            if (!urlResolved)
-                m_audioUrl = Youtube::Client::Instance->decryptSignatureCipher(m_audioUrl);
-        }
-        catch (const json::exception& error)
-        {
-            throw std::runtime_error(fmt::format(
-                "kb::Youtube::Extractor::Extractor(): "
-                "Couldn't parse API response JSON [video: \"{}\", id: {}]",
-                m_videoId, error.id
-            ));
-        }
-
-        {
-            std::unique_lock lock(m_mutex);
-            startThread();
-            m_cv.wait(lock);
-        }
-
-        if (m_threadStatus != ThreadStatus::Error)
-            break;
+    if (m_threadStatus == ThreadStatus::Error) {
         stopThread();
-
-        if (attempt == MaxExtractionAttempts)
-            throw LocalError(LocalError::Type::CouldntDownload, m_videoId);
-        m_logger.warn("Extraction attempt {}/{} failed, retrying", attempt, MaxExtractionAttempts);
+        throw std::runtime_error("Download error");
     }
 
-    m_io = avio_alloc_context(nullptr, 0, 0, this, &Extractor::Read, nullptr, &Extractor::Seek);
+    m_io = avio_alloc_context(nullptr, 0, 0, this, &Downloader::Read, nullptr, &Downloader::Seek);
     if (!m_io)
     {
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't allocate IO context [video: \"{}\"]",
             m_videoId
         ));
@@ -307,7 +225,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't allocate format context [video: \"{}\"]",
             m_videoId
         ));
@@ -321,7 +239,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't open input [video: \"{}\", return code: {}]",
             m_videoId, result
         ));
@@ -334,7 +252,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't find audio stream info [video: \"{}\", return code: {}]",
             m_videoId, result
         ));
@@ -347,7 +265,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't find best audio stream [video: \"{}\", return code: {}]",
             m_videoId, result
         ));
@@ -364,7 +282,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't find audio decoder [video: \"{}\"]",
             m_videoId
         ));
@@ -377,7 +295,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't allocate codec context [video: \"{}\"]",
             videoId
         ));
@@ -391,7 +309,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't fill codec context with stream parameters [video: \"{}\", return code: {}]",
             videoId, result
         ));
@@ -406,7 +324,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't open audio decoder context [video: \"{}\", return code: {}]",
             m_videoId, result
         ));
@@ -436,7 +354,7 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't allocate resampler context [video: \"{}\", return code: {}]",
             m_videoId, result
         ));
@@ -451,14 +369,14 @@ Youtube::Extractor::Extractor(const std::string& videoId)
         avio_context_free(&m_io);
         stopThread();
         throw std::runtime_error(fmt::format(
-            "kb::Youtube::Extractor::Extractor(): "
+            "kb::Downloader::Downloader(): "
             "Couldn't initialize resampler [video: \"{}\", return code: {}]",
             m_videoId, result
         ));
     }
 }
 
-Youtube::Extractor::~Extractor()
+Downloader::~Downloader()
 {
     swr_free(&m_resampler);
     avcodec_free_context(&m_codec);
@@ -467,7 +385,7 @@ Youtube::Extractor::~Extractor()
     stopThread();
 }
 
-void Youtube::Extractor::threadFunction(uint64_t startPosition)
+void Downloader::threadFunction(uint64_t startPosition)
 {
     {
         std::lock_guard lock(m_mutex);
@@ -507,7 +425,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request progress callback target [return code: {}]", static_cast<int>(result)));
 
-        result = curl_easy_setopt(curl.get(), CURLOPT_XFERINFOFUNCTION, &Extractor::ProgressCallback);
+        result = curl_easy_setopt(curl.get(), CURLOPT_XFERINFOFUNCTION, &Downloader::ProgressCallback);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request progress callback function [return code: {}]", static_cast<int>(result)));
 
@@ -519,7 +437,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request header target [return code: {}]", static_cast<int>(result)));
 
-        result = curl_easy_setopt(curl.get(), CURLOPT_HEADERFUNCTION, &Extractor::HeaderWriter);
+        result = curl_easy_setopt(curl.get(), CURLOPT_HEADERFUNCTION, &Downloader::HeaderWriter);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request header function [return code: {}]", static_cast<int>(result)));
 
@@ -527,7 +445,7 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request write target [return code: {}]", static_cast<int>(result)));
 
-        result = curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, &Extractor::ExtractorWriter);
+        result = curl_easy_setopt(curl.get(), CURLOPT_WRITEFUNCTION, &Downloader::DownloaderWriter);
         if (result != CURLE_OK)
             throw std::runtime_error(fmt::format("Couldn't configure request write function [return code: {}]", static_cast<int>(result)));
 
@@ -608,27 +526,27 @@ void Youtube::Extractor::threadFunction(uint64_t startPosition)
     }
 }
 
-void Youtube::Extractor::startThread(uint64_t startPosition)
+void Downloader::startThread(uint64_t startPosition)
 {
     if (m_thread.joinable())
         m_thread.join();
-    m_thread = std::thread(&Extractor::threadFunction, this, startPosition);
+    m_thread = std::thread(&Downloader::threadFunction, this, startPosition);
 }
 
-void Youtube::Extractor::stopThread()
+void Downloader::stopThread()
 {
     m_threadStatus = ThreadStatus::Stopped;
     if (m_thread.joinable())
         m_thread.join();
 }
 
-void Youtube::Extractor::seekTo(int64_t timestamp)
+void Downloader::seekTo(int64_t timestamp)
 {
     m_seekPosition = timestamp * m_unitsPerSecond;
     av_seek_frame(m_format, m_stream->index, m_seekPosition, AVSEEK_FLAG_BACKWARD);
 }
 
-Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
+Downloader::Frame Downloader::extractFrame()
 {
     Frame rawFrame = m_overflowFrame;
     m_overflowFrame.clear();
@@ -662,7 +580,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         {
             av_packet_unref(&packet);
             throw std::runtime_error(fmt::format(
-                "kb::Youtube::Extractor::extractFrame(): "
+                "kb::Downloader::extractFrame(): "
                 "Couldn't send packet [video: \"{}\", return code: {}]",
                 m_videoId, result
             ));
@@ -673,7 +591,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
         {
             av_packet_unref(&packet);
             throw std::runtime_error(fmt::format(
-                "kb::Youtube::Extractor::extractFrame(): "
+                "kb::Downloader::extractFrame(): "
                 "Couldn't allocate frame [video: \"{}\"]",
                 m_videoId
             ));
@@ -688,7 +606,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kb::Youtube::Extractor::extractFrame(): "
+                    "kb::Downloader::extractFrame(): "
                     "Couldn't allocate samples buffer [video: \"{}\", return code: {}]",
                     m_videoId, bytesAllocated
                 ));
@@ -701,7 +619,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kb::Youtube::Extractor::extractFrame(): "
+                    "kb::Downloader::extractFrame(): "
                     "Couldn't convert samples [video: \"{}\", return code: {}]",
                     m_videoId, samplesConverted
                 ));
@@ -714,7 +632,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kb::Youtube::Extractor::extractFrame(): "
+                    "kb::Downloader::extractFrame(): "
                     "Couldn't get converted bytes count [video: \"{}\", return code: {}]",
                     m_videoId, bytesConverted
                 ));
@@ -736,7 +654,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                 av_frame_free(&frame);
                 av_packet_unref(&packet);
                 throw std::runtime_error(fmt::format(
-                    "kb::Youtube::Extractor::extractFrame(): "
+                    "kb::Downloader::extractFrame(): "
                     "Couldn't flush resampler [video: \"{}\", return code: {}]",
                     m_videoId, samplesConverted
                 ));
@@ -750,7 +668,7 @@ Youtube::Extractor::Frame Youtube::Extractor::extractFrame()
                     av_frame_free(&frame);
                     av_packet_unref(&packet);
                     throw std::runtime_error(fmt::format(
-                        "kb::Youtube::Extractor::extractFrame(): "
+                        "kb::Downloader::extractFrame(): "
                         "Couldn't get converted bytes count [video: \"{}\", return code: {}]",
                         m_videoId, bytesConverted
                     ));

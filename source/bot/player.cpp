@@ -10,28 +10,30 @@
 // Custom modules
 #include "bot/locale/locale_en.hpp"
 #include "bot/bot.hpp"
+#include "core/downloader.hpp"
 #include "core/utility.hpp"
-#include "youtube/extractor.hpp"
 
 namespace kb {
 
-/// @brief Deduce frame's chapter from frame timestamp
-/// @param chapters Video chapters
-/// @param timestamp Frame's timestamp
-/// @return Frame's chapter
-static std::vector<Youtube::Video::Chapter>::const_iterator DeduceChapter(const std::vector<Youtube::Video::Chapter>& chapters, pt::time_duration timestamp)
-{
-    auto chapterEntry = std::lower_bound(
-        chapters.begin(),
-        chapters.end(),
-        timestamp,
-        [](const Youtube::Video::Chapter& chapter, pt::time_duration timestamp) { return chapter.timestamp <= timestamp; }
-    );
+/* Temporarily unsupported!
+    /// @brief Deduce frame's chapter from frame timestamp
+    /// @param chapters Video chapters
+    /// @param timestamp Frame's timestamp
+    /// @return Frame's chapter
+    static std::vector<ytcpp::Video::Chapter>::const_iterator DeduceChapter(const std::vector<ytcpp::Video::Chapter>& chapters, pt::time_duration timestamp)
+    {
+        auto chapterEntry = std::lower_bound(
+            chapters.begin(),
+            chapters.end(),
+            timestamp,
+            [](const ytcpp::Video::Chapter& chapter, pt::time_duration timestamp) { return chapter.timestamp <= timestamp; }
+        );
 
-    if (chapterEntry != chapters.begin())
-        chapterEntry -= 1;
-    return chapterEntry;
-}
+        if (chapterEntry != chapters.begin())
+            chapterEntry -= 1;
+        return chapterEntry;
+    }
+*/
 
 Bot::Player::Player(Bot* root, dpp::discord_client* client, const dpp::interaction& interaction, dpp::snowflake voiceChannelId, Info& info)
     : m_logger(Utility::CreateLogger(fmt::format("player \"{}\"", interaction.get_guild().name)))
@@ -69,8 +71,10 @@ void Bot::Player::extractNextVideo(const Info& info)
         if (m_session.playingPlaylist->iterator)
         {
             m_session.playingVideo.emplace(Session::PlayingVideo{ *(m_session.playingPlaylist->iterator++) });
+            /* Temporarily unsupported!
             if (!m_session.playingVideo->video.chapters().empty())
                 chapterReached(m_session.playingVideo->video.chapters()[0], info);
+            */
             return;
         }
 
@@ -83,17 +87,21 @@ void Bot::Player::extractNextVideo(const Info& info)
     m_session.playingRequester.emplace(std::move(nextItem.requester));
     switch (nextItem.item.type())
     {
-        case Youtube::Item::Type::Video:
-            m_session.playingVideo.emplace(Session::PlayingVideo{ std::move(std::get<Youtube::Video>(nextItem.item)) });
+        case ytcpp::Item::Type::Video:
+            m_session.playingVideo.emplace(Session::PlayingVideo{ std::move(std::get<ytcpp::Video>(nextItem.item)) });
+            /* Temporarily unsupported!
             if (!m_session.playingVideo->video.chapters().empty())
                 chapterReached(m_session.playingVideo->video.chapters()[0], info);
+            */
             break;
-        case Youtube::Item::Type::Playlist:
-            m_session.playingPlaylist.emplace(Session::PlayingPlaylist{ std::move(std::get<Youtube::Playlist>(nextItem.item)), {} });
+        case ytcpp::Item::Type::Playlist:
+            m_session.playingPlaylist.emplace(Session::PlayingPlaylist{ std::move(std::get<ytcpp::Playlist>(nextItem.item)), {} });
             m_session.playingPlaylist->iterator = m_session.playingPlaylist->playlist.begin();
             m_session.playingVideo.emplace(Session::PlayingVideo{ *(m_session.playingPlaylist->iterator++) });
+            /* Temporarily unsupported!
             if (!m_session.playingVideo->video.chapters().empty())
                 chapterReached(m_session.playingVideo->video.chapters()[0], info);
+            */
             break;
     }
     m_session.queue.pop_front();
@@ -105,7 +113,8 @@ void Bot::Player::incrementPlayedTracks(Info& info)
     ++m_session.tracksPlayed;
 }
 
-void Bot::Player::chapterReached(const Youtube::Video::Chapter& chapter, const Info& info)
+/* Temporarily unsupported!
+void Bot::Player::chapterReached(const ytcpp::Video::Chapter& chapter, const Info& info)
 {
     if (m_session.playingVideo->chapter.name == chapter.name)
         return;
@@ -113,6 +122,7 @@ void Bot::Player::chapterReached(const Youtube::Video::Chapter& chapter, const I
     m_session.playingVideo->chapter = chapter;
     updateStatus(info);
 }
+*/
 
 void Bot::Player::checkPlayingVideo()
 {
@@ -140,7 +150,7 @@ void Bot::Player::updateStatus(const Info& info)
         return;
     }
 
-    if (!m_session.playingVideo || m_session.playingVideo->video.type() != Youtube::Video::Type::Normal)
+    if (!m_session.playingVideo || m_session.playingVideo->video.isLivestream() || m_session.playingVideo->video.isUpcoming())
     {
         setStatus(info.settings().locale->notPlaying());
         return;
@@ -151,6 +161,7 @@ void Bot::Player::updateStatus(const Info& info)
         return;
     std::string prefix = client->is_paused() ? fmt::format("{} ", info.settings().locale->paused()) : "";
 
+/* Temporarily unsupported!
     if (!m_session.playingVideo->chapter.name.empty())
     {
         setStatus(prefix + fmt::format(
@@ -162,6 +173,7 @@ void Bot::Player::updateStatus(const Info& info)
         ));
         return;
     }
+*/
 
     if (!m_session.playingPlaylist)
     {
@@ -173,7 +185,7 @@ void Bot::Player::updateStatus(const Info& info)
         return;
     }
 
-    Youtube::Playlist::Iterator iterator = m_session.playingPlaylist->iterator;
+    ytcpp::Playlist::Iterator iterator = m_session.playingPlaylist->iterator;
     --iterator;
     setStatus(prefix + fmt::format(
         "{} #{}: {} [{}]",
@@ -195,26 +207,19 @@ void Bot::Player::threadFunction()
             return;
         }
 
-        if (m_session.playingVideo->video.type() != Youtube::Video::Type::Normal)
+        if (m_session.playingVideo->video.isLivestream() || m_session.playingVideo->video.isUpcoming())
         {
             dpp::discord_voice_client* client = getVoiceClient();
             if (!client)
                 return;
 
-            switch (m_session.playingVideo->video.type())
-            {
-                case Youtube::Video::Type::Livestream:
-                {
-                    client->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
-                    m_logger.info("Skipping livestream \"{}\"", m_session.playingVideo->video.title());
-                    break;
-                }
-                case Youtube::Video::Type::Premiere:
-                {
-                    client->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
-                    m_logger.info("Skipping premiere \"{}\"", m_session.playingVideo->video.title());
-                    break;
-                }
+            if (m_session.playingVideo->video.isLivestream()) {
+                client->insert_marker(Signal(Signal::Type::LivestreamSkipped, m_session.playingVideo->video.id()));
+                m_logger.info("Skipping livestream \"{}\"", m_session.playingVideo->video.title());
+            }
+            else if (m_session.playingVideo->video.isUpcoming()) {
+                client->insert_marker(Signal(Signal::Type::PremiereSkipped, m_session.playingVideo->video.id()));
+                m_logger.info("Skipping premiere \"{}\"", m_session.playingVideo->video.title());
             }
             return;
         }
@@ -227,12 +232,14 @@ void Bot::Player::threadFunction()
     bool errorOccured = false;
     try
     {
-        Youtube::Extractor extractor(videoId);
-        Youtube::Video::Chapter lastChapter;
+        Downloader downloader(videoId); 
+/* Temporarily unsupported!
+        ytcpp::Video::Chapter lastChapter;
+*/
         pt::time_duration lastCheckTimestamp;
         while (true)
         {
-            Youtube::Extractor::Frame frame = extractor.extractFrame();
+            Downloader::Frame frame = downloader.extractFrame();
             if (frame.empty())
                 break;
 
@@ -251,10 +258,11 @@ void Bot::Player::threadFunction()
                     }
                     client->stop_audio();
 
-                    extractor.seekTo(m_session.seekTimestamp);
+                    downloader.seekTo(m_session.seekTimestamp);
                     m_session.seekTimestamp = -1;
                 }
 
+/* Temporarily unsupported!
                 if (!m_session.playingVideo->video.chapters().empty())
                 {
                     pt::time_duration currentTimestamp(0, 0, 0, frame.timestamp() * 1'000);
@@ -276,7 +284,8 @@ void Bot::Player::threadFunction()
                         }
                     }
                 }
-                
+*/
+
                 dpp::discord_voice_client* client = getVoiceClient();
                 if (!client)
                 {
@@ -287,7 +296,7 @@ void Bot::Player::threadFunction()
             }
         }
     }
-    catch (const Youtube::YoutubeError& error)
+    catch (const ytcpp::YtError& error)
     {
         m_logger.error(
             "Couldn't play \"{}\": YouTube error: {}",
@@ -296,10 +305,10 @@ void Bot::Player::threadFunction()
         );
         errorOccured = true;
     }
-    catch (const Youtube::LocalError& error)
+    catch (const ytcpp::Error& error)
     {
         m_logger.error(
-            "Couldn't play \"{}\": Local error: {}",
+            "Couldn't play \"{}\": ytcpp error: {}",
             m_session.playingVideo->video.id(),
             error.what()
         );
@@ -415,18 +424,20 @@ void Bot::Player::signalMarker(const Signal& signal, Info& info)
 {
     std::lock_guard lock(m_mutex);
 
+/* Temporarily unsupported!
     if (signal.type() == Signal::Type::ChapterReached)
     {
         auto chapterEntry = std::find_if(
             m_session.playingVideo->video.chapters().begin(),
             m_session.playingVideo->video.chapters().end(),
-            [signal](const Youtube::Video::Chapter& chapter) { return chapter.name == signal.data(); }
+            [signal](const ytcpp::Video::Chapter& chapter) { return chapter.name == signal.data(); }
         );
         if (chapterEntry != m_session.playingVideo->video.chapters().end())
             chapterReached(*chapterEntry, info);
         return;
     }
-
+*/
+    
     extractNextVideo(info);
     if (signal.type() == Signal::Type::Played)
         incrementPlayedTracks(info);
@@ -466,7 +477,7 @@ Bot::Session Bot::Player::session()
     return m_session;
 }
 
-void Bot::Player::addItem(const Youtube::Item& item, const dpp::user& requester, const Info& info)
+void Bot::Player::addItem(const ytcpp::Item& item, const dpp::user& requester, const Info& info)
 {
     std::unique_lock lock(m_mutex);
     if (!getVoiceClient())
@@ -517,12 +528,14 @@ void Bot::Player::seek(uint64_t timestamp, const Info& info)
     if (!client)
         return;
 
+/* Temporarily unsupported!
     if (!m_session.playingVideo->video.chapters().empty())
     {
         auto chapterEntry = DeduceChapter(m_session.playingVideo->video.chapters(), pt::time_duration(0, 0, timestamp));
         chapterReached(*chapterEntry, info);
     }
-
+*/
+    
     m_session.seekTimestamp = timestamp;
     if (m_threadStatus != ThreadStatus::Running)
         startThread();

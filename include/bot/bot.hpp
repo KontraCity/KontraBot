@@ -24,7 +24,7 @@ namespace kb {
 #include "bot/locale/locale.hpp"
 #include "bot/info.hpp"
 #include "bot/player.hpp"
-#include "youtube/item.hpp"
+#include "ytcpp/item.hpp"
 
 namespace kb {
 
@@ -70,7 +70,7 @@ namespace Bot
         {
             dpp::user requester;
             dpp::snowflake textChannelId;
-            Youtube::Item item;
+            ytcpp::Item item;
         };
 
     public:
@@ -124,7 +124,7 @@ namespace Bot
         /// @param info Guild info
         /// @param item Start item requested by user
         /// @return Join status
-        JoinStatus joinUserVoice(dpp::discord_client* client, const dpp::interaction& interaction, Info& info, const Youtube::Item& item = {});
+        JoinStatus joinUserVoice(dpp::discord_client* client, const dpp::interaction& interaction, Info& info, const ytcpp::Item& item = {});
 
         /// @brief Add item to queue
         /// @param client Discord client handling event

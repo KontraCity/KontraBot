@@ -33,7 +33,7 @@ void Bot::Bot::onSelectClick(const dpp::select_click_t& event)
             std::thread([this, event, logMessage, signal]()
             {
                 event.thinking();
-                event.edit_original_response(addItem(event.from, event.command, signal.data(), logMessage, true));
+                event.edit_original_response(addItem(event.from(), event.command, signal.data(), logMessage, true));
             }).detach();
             break;
         }

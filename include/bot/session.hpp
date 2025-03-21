@@ -9,8 +9,7 @@
 // Boost libraries
 #include <boost/date_time.hpp>
 
-// Custom modules
-#include "youtube/item.hpp"
+#include <ytcpp/item.hpp>
 
 namespace kb {
 
@@ -20,20 +19,22 @@ namespace Bot
     {
         struct EnqueuedItem
         {
-            Youtube::Item item;
+            ytcpp::Item item;
             dpp::user requester;
         };
 
         struct PlayingVideo
         {
-            Youtube::Video video;
+            ytcpp::Video video;
+            /* Temporarily unsupported!
             Youtube::Video::Chapter chapter;
+            */
         };
 
         struct PlayingPlaylist
         {
-            Youtube::Playlist playlist;
-            Youtube::Playlist::Iterator iterator;
+            ytcpp::Playlist playlist;
+            ytcpp::Playlist::Iterator iterator;
         };
 
         // Discord members

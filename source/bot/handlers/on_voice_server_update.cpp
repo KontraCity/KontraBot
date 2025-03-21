@@ -34,7 +34,7 @@ void Bot::Bot::onVoiceServerUpdate(const dpp::voice_server_update_t& event)
         playerEntry->second.updateVoiceServerEndpoint(event.endpoint);
     }
     
-    dpp::voiceconn* connection = event.from->get_voice(event.guild_id);
+    dpp::voiceconn* connection = event.from()->get_voice(event.guild_id);
     connection->disconnect();
     connection->websocket_hostname = event.endpoint;
     connection->connect(event.guild_id);

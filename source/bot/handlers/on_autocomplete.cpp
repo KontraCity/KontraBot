@@ -46,12 +46,18 @@ void Bot::Bot::onAutocomplete(const dpp::autocomplete_t& event)
             return;
         }
 
+        // Temporarily unsupported!
+        interaction_response_create(event.command.id, event.command.token, dpp::interaction_response(dpp::ir_autocomplete_reply));
+        m_logger.info(logMessage(fmt::format("Chapters are temporarily unsupported", session.playingVideo->video.title())));
+        return;
+        /* Temporarily unsupported!
         if (session.playingVideo->video.chapters().empty())
         {
             interaction_response_create(event.command.id, event.command.token, dpp::interaction_response(dpp::ir_autocomplete_reply));
             m_logger.info(logMessage(fmt::format("Video \"{}\" has no chapters", session.playingVideo->video.title())));
             return;
         }
+        
 
         if (value.empty() || value.find_first_not_of(' ') == std::string::npos)
         {
@@ -98,6 +104,7 @@ void Bot::Bot::onAutocomplete(const dpp::autocomplete_t& event)
             LocaleEn::Cardinal(response.autocomplete_choices.size())
         )));
         return;
+        */
     }
 
     interaction_response_create(event.command.id, event.command.token, dpp::interaction_response(dpp::ir_autocomplete_reply));

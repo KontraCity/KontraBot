@@ -36,7 +36,7 @@ void Bot::Bot::onButtonClick(const dpp::button_click_t& event)
             std::thread([this, event, logMessage, signal]()
             {
                 event.thinking();
-                event.edit_original_response(addItem(event.from, event.command, signal.data(), logMessage, true));
+                event.edit_original_response(addItem(event.from(), event.command, signal.data(), logMessage, true));
             }).detach();
             break;
         }
@@ -47,7 +47,7 @@ void Bot::Bot::onButtonClick(const dpp::button_click_t& event)
                 try
                 {
                     event.thinking(true);
-                    Youtube::Results results = Youtube::Related(signal.data());
+                    ytcpp::SearchResults results = ytcpp::RelatedSearch(signal.data());
                     std::lock_guard lock(m_mutex);
 
                     event.edit_original_response(

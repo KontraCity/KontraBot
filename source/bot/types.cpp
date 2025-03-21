@@ -19,7 +19,7 @@ Bot::Settings& Bot::Settings::operator=(const Bot::Settings& other)
     return *this;
 }
 
-bool Bot::Settings::operator==(const Settings& other)
+bool Bot::Settings::operator==(const Settings& other) const
 {
     if (!locale || !other.locale)
         return static_cast<bool>(locale) == static_cast<bool>(other.locale) && timeoutMinutes == other.timeoutMinutes && changeStatus == other.changeStatus;
@@ -36,7 +36,7 @@ Bot::Stats& Bot::Stats::operator+=(const Stats& other)
     return *this;
 }
 
-bool Bot::Stats::operator==(const Stats& other)
+bool Bot::Stats::operator==(const Stats& other) const
 {
     return interactionsProcessed == other.interactionsProcessed
         && sessionsConducted == other.sessionsConducted

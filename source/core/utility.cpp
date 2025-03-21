@@ -86,9 +86,11 @@ std::string Utility::Truncate(const std::string& string, size_t maxLength)
 
 bool Utility::CaseInsensitiveStringContains(std::string string, std::string substring)
 {
-    utf8lwr(string.data());
-    utf8lwr(substring.data());
-    return static_cast<bool>(utf8str(string.data(), substring.data()));
+    utf8_int8_t* stringData = reinterpret_cast<utf8_int8_t*>(string.data());
+    utf8_int8_t* substringData = reinterpret_cast<utf8_int8_t*>(substring.data());
+    utf8lwr(stringData);
+    utf8lwr(substringData);
+    return static_cast<bool>(utf8str(stringData, substringData));
 }
 
 int64_t Utility::RandomNumber(int64_t min, int64_t max)

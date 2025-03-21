@@ -58,9 +58,9 @@ namespace Bot
             MentionReplyStrings strings = {};
             strings.ifYouNeedAnyHelp = "**If you need any help about how I play music, use {}.**";
             strings.differentLanguagesHint = {
-                u8">>> ***Я могу разговаривать на разных языках!***\n"
-                u8"Сейчас это **`Английский`**.\n"
-                u8"Используй {}, если тебе надо его поменять."
+                ">>> ***Я могу разговаривать на разных языках!***\n"
+                "Сейчас это **`Английский`**.\n"
+                "Используй {}, если тебе надо его поменять."
             };
             return MentionReplyMessage(strings);
         }
@@ -72,9 +72,9 @@ namespace Bot
             HelpStrings strings = {};
             strings.hereAreAllOfMyCommands = "Here are all of my commands";
             strings.differentLanguagesHint = {
-                u8">>> ***Я могу разговаривать на разных языках!***\n"
-                u8"Сейчас это **`Английский`**.\n"
-                u8"Используй {}, если тебе надо его поменять."
+                ">>> ***Я могу разговаривать на разных языках!***\n"
+                "Сейчас это **`Английский`**.\n"
+                "Используй {}, если тебе надо его поменять."
             };
             strings.helpDescription = "Show this help message.";
             strings.sessionDescription = "Show information about current session: playing video and its chapters, playing playlist and its videos, videos/playlists in queue and more.";
@@ -137,10 +137,7 @@ namespace Bot
             strings.nothingIsPlaying = "Nothing is playing. Go ahead and add something to queue!";
             strings.video = "Video";
             strings.chapter = "Chapter";
-            strings.videoInfo = {
-                "by {}, [{}]\n"
-                "{}, {} view{}"
-            };
+            strings.videoInfo = "by {}, [{}]";
             strings.requestedBy = "Requested by **{}**";
             strings.lastVideoPlaylistInfo = {
                 "Playlist by {}\n"
@@ -329,49 +326,33 @@ namespace Bot
             return ProblemMessage("Sorry, I can't play premieres");
         }
 
+        virtual inline dpp::message cantPlayEmptyPlaylists() {
+            return ProblemMessage("This playlist is empty");
+        }
+
+        virtual inline dpp::message temporarilyUnsupported() {
+            return GenericMessage(
+                LocaleConst::Colors::TemporarilyUnsupported,
+                LocaleConst::Emojis::TemporarilyUnsupported,
+                "Sorry, this is temporarily unsupported", true
+            );
+        }
+
         /// @brief Create youtube error message
         /// @param error Error in question
         /// @return Ephemeral message
-        virtual inline dpp::message youtubeError(const Youtube::YoutubeError& error)
+        virtual inline dpp::message youtubeError(const ytcpp::YtError& error)
         {
             switch (error.type())
             {
-                case Youtube::YoutubeError::Type::LoginRequired:
+                case ytcpp::YtError::Type::Private:
                     return ProblemMessage("This video is private");
-                case Youtube::YoutubeError::Type::Unplayable:
-                {
-                    dpp::message message = ProblemMessage("This video is blocked");
-                    message.embeds[0].add_field("", {
-                        ">>> ***The video is not blocked for you?***\n"
-                        "For various reasons, a video may be available in one country but blocked in another. "
-                        "Perhaps you and I live in different countries."
-                    });
-                    return message;
-                }
-                case Youtube::YoutubeError::Type::YoutubeError:
-                    return ProblemMessage("YouTube error occured");
-                case Youtube::YoutubeError::Type::PlaylistError:
-                    return ProblemMessage("This playlist is private");
+                case ytcpp::YtError::Type::Unplayable:
+                    return ProblemMessage("This video is unplayable");
+                case ytcpp::YtError::Type::Unavailable:
+                    return ProblemMessage("This video is unavailable");
                 default:
                     return ProblemMessage("YouTube refused to let me play this item");
-            }
-        }
-
-        /// @brief Create local error message
-        /// @param error Error in question
-        /// @return Ephemeral message
-        virtual inline dpp::message localError(const Youtube::LocalError& error)
-        {
-            switch (error.type())
-            {
-                case Youtube::LocalError::Type::PlaylistItemsNotSupported:
-                    return ProblemMessage("Sorry, I can't play any of the videos in the playlist");
-                case Youtube::LocalError::Type::PlaylistNotSupported:
-                    return ProblemMessage("Sorry, I can't play YouTube #Shorts playlists");
-                case Youtube::LocalError::Type::EmptyPlaylist:
-                    return ProblemMessage("This playlist is empty");
-                default:
-                    return unknownError();
             }
         }
 
@@ -388,7 +369,7 @@ namespace Bot
         /// @param requester User that added the item if needs to be shown in message
         /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
-        virtual inline dpp::message itemAdded(const Youtube::Item& item, bool paused, const std::optional<dpp::user>& requester = {})
+        virtual inline dpp::message itemAdded(const ytcpp::Item& item, bool paused, const std::optional<dpp::user>& requester = {})
         {
             ItemAddedStrings strings = {};
             strings.requestedBy = "Requested by {}";
@@ -408,7 +389,7 @@ namespace Bot
         /// @brief Create search message
         /// @param results Search results
         /// @return Ephemeral message
-        virtual inline dpp::message search(const Youtube::Results& results)
+        virtual inline dpp::message search(const ytcpp::SearchResults& results)
         {
             SearchStrings strings = {};
             strings.noResults = "No results";
@@ -431,7 +412,7 @@ namespace Bot
         /// @param video Playing video
         /// @param paused Whether or not player is paused
         /// @return Normal message
-        virtual inline dpp::message paused(const Youtube::Video& video, bool paused)
+        virtual inline dpp::message paused(const ytcpp::Video& video, bool paused)
         {
             return SuccessMessage(fmt::format(
                 "{} *{}*",
@@ -443,7 +424,7 @@ namespace Bot
         /// @brief Create "Duration of video <video> is only <duration>!" message
         /// @param video Playing video
         /// @return Ephemeral message
-        virtual inline dpp::message timestampOutOfBounds(const Youtube::Video& video)
+        virtual inline dpp::message timestampOutOfBounds(const ytcpp::Video& video)
         {
             return ProblemMessage(fmt::format("Duration of video *{}* is `{}`", video.title(), Utility::NiceString(video.duration())));
         }
@@ -453,7 +434,7 @@ namespace Bot
         /// @param timestamp Seek timestamp
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const Youtube::Video& video, pt::time_duration timestamp, bool paused)
+        virtual inline dpp::message seeking(const ytcpp::Video& video, pt::time_duration timestamp, bool paused)
         {
             dpp::message message = SuccessMessage(fmt::format("Seeking *{}* to `{}`", video.title(), Utility::NiceString(timestamp)));
             if (paused)
@@ -461,12 +442,13 @@ namespace Bot
             return message;
         }
 
+/* Temporarily unsupported!
         /// @brief Create "Seeking <video> to chapter <chapter>, <timestamp>" message
         /// @param video Seeking video
         /// @param chapter The chapter in question
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const Youtube::Video& video, const Youtube::Video::Chapter& chapter, bool paused)
+        virtual inline dpp::message seeking(const ytcpp::Video& video, const ytcpp::Video::Chapter& chapter, bool paused)
         {
             dpp::message message = SuccessMessage(fmt::format(
                 "Seeking *{}* to chapter *{}: {}*, `{}`",
@@ -483,7 +465,7 @@ namespace Bot
         /// @brief Create "Video <video> has no chapters" message
         /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message noChapters(const Youtube::Video& video)
+        virtual inline dpp::message noChapters(const ytcpp::Video& video)
         {
             return ProblemMessage(fmt::format("Video *{}* has no chapters", video.title()));
         }
@@ -491,10 +473,12 @@ namespace Bot
         /// @brief Get "Video <video> doesn't have such chapter" message
         /// @param video The video in question
         /// @return Ephemeral message
-        virtual inline dpp::message unknownChapter(const Youtube::Video& video)
+        virtual inline dpp::message unknownChapter(const ytcpp::Video& video)
         {
             return ProblemMessage(fmt::format("Video *{}* doesn't have such chapter", video.title()));
         }
+*/
+        
 
         /// @brief Create "Queue is empty" message
         /// @return Ephemeral message
@@ -526,16 +510,16 @@ namespace Bot
         /// @param item Skipped item
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message skipped(const Youtube::Item& item, bool paused)
+        virtual inline dpp::message skipped(const ytcpp::Item& item, bool paused)
         {
             dpp::message message;
             switch (item.type())
             {
-                case Youtube::Item::Type::Video:
-                    message = SuccessMessage(fmt::format("Skipped video *{}*", std::get<Youtube::Video>(item).title()));
+                case ytcpp::Item::Type::Video:
+                    message = SuccessMessage(fmt::format("Skipped video *{}*", std::get<ytcpp::Video>(item).title()));
                     break;
-                case Youtube::Item::Type::Playlist:
-                    message = SuccessMessage(fmt::format("Skipped playlist *{}*", std::get<Youtube::Playlist>(item).title()));
+                case ytcpp::Item::Type::Playlist:
+                    message = SuccessMessage(fmt::format("Skipped playlist *{}*", std::get<ytcpp::Playlist>(item).title()));
                     break;
                 default:
                     return unknownError();
@@ -591,7 +575,7 @@ namespace Bot
         /// @brief Create "Something went wrong, I couldn't play <video>" message
         /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message playError(const Youtube::Video& video)
+        virtual inline dpp::message playError(const ytcpp::Video& video)
         {
             return ErrorMessage(fmt::format("Something went wrong, couldn't play *{}*", video.title())).set_flags(0);
         }
@@ -599,7 +583,7 @@ namespace Bot
         /// @brief Create "Something happened with my connection to Discord... Playing <video> from the start" message
         /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message reconnectedPlay(const Youtube::Video& video)
+        virtual inline dpp::message reconnectedPlay(const ytcpp::Video& video)
         {
             return QuestionMessage(fmt::format(
                 "Something happened with my connection to Discord... Playing *{}* from the start",

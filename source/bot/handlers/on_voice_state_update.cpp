@@ -5,7 +5,7 @@ namespace kb {
 void Bot::Bot::onVoiceStateUpdate(const dpp::voice_state_update_t& event)
 {
     dpp::guild* guild = dpp::find_guild(event.state.guild_id);
-    dpp::voiceconn* botVoice = event.from->get_voice(event.state.guild_id);
+    dpp::voiceconn* botVoice = event.from()->get_voice(event.state.guild_id);
 
     std::lock_guard lock(m_mutex);
     Info info = updateInfoProcessedInteractions(guild->id);
@@ -13,14 +13,14 @@ void Bot::Bot::onVoiceStateUpdate(const dpp::voice_state_update_t& event)
     if (event.state.user_id != me.id)
     {
         if (botVoice && CountVoiceMembers(*guild, botVoice->channel_id) == 1)
-            leaveVoice(event.from, *guild, info, Locale::EndReason::EverybodyLeft);
+            leaveVoice(event.from(), *guild, info, Locale::EndReason::EverybodyLeft);
         return;
     }
 
     if (botVoice && botVoice->channel_id != event.state.channel_id)
     {
         info.stats().timesMoved += 1;
-        leaveVoice(event.from, *guild, info, Locale::EndReason::Moved);
+        leaveVoice(event.from(), *guild, info, Locale::EndReason::Moved);
         return;
     }
 

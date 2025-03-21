@@ -19,10 +19,10 @@ namespace kb {
 #include "bot/session.hpp"
 #include "bot/types.hpp"
 
-// Custom kb::Youtube modules
-#include "youtube/error.hpp"
-#include "youtube/item.hpp"
-#include "youtube/search.hpp"
+#include <ytcpp/core/error.hpp>
+#include <ytcpp/yt_error.hpp>
+#include <ytcpp/item.hpp>
+#include <ytcpp/search.hpp>
 
 namespace kb {
 
@@ -36,6 +36,7 @@ namespace Bot
         {
             constexpr uint32_t Success = dpp::colors::dark_green;
             constexpr uint32_t Question = dpp::colors::yellow;
+            constexpr uint32_t TemporarilyUnsupported = dpp::colors::yellow;
             constexpr uint32_t Problem = dpp::colors::red;
             constexpr uint32_t Error = dpp::colors::dark_red;
             constexpr uint32_t End = 0x0ea8ea;
@@ -44,14 +45,15 @@ namespace Bot
 
         namespace Emojis
         {
-            constexpr const char* Success = u8"✅";
-            constexpr const char* Question = u8"❔";
-            constexpr const char* Problem = u8"❌";
-            constexpr const char* Error = u8"💀";
-            constexpr const char* Boring = u8"🥱";
-            constexpr const char* Play = u8"▶️";
-            constexpr const char* Playlist = u8"🔢";
-            constexpr const char* Search = u8"🔍";
+            constexpr const char* Success = "✅";
+            constexpr const char* Question = "❔";
+            constexpr const char* Problem = "❌";
+            constexpr const char* TemporarilyUnsupported = "😞";
+            constexpr const char* Error = "💀";
+            constexpr const char* Boring = "🥱";
+            constexpr const char* Play = "▶️";
+            constexpr const char* Playlist = "🔢";
+            constexpr const char* Search = "🔍";
         }
     }
 
@@ -117,7 +119,7 @@ namespace Bot
             const char* nothingIsPlaying;       // "Nothing is playing. Go ahead and add something to queue!" string
             const char* video;                  // "Video" string
             const char* chapter;                // "Chapter" string
-            const char* videoInfo;              // "by {}, [{}]" <newline> "{}, {} view{}" string
+            const char* videoInfo;              // "by {}, [{}]" string
             const char* requestedBy;            // "Requested by {}" string
             const char* lastVideoPlaylistInfo;  // "Playlist by {}" <newline> "Last video is playing" string
             const char* playlistInfo;           // "Playlist by {}" <newline> "{} video{} left" string
@@ -283,14 +285,14 @@ namespace Bot
         /// @param requester User that added the item if needs to be shown in message
         /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
-        static dpp::message ItemAddedMessage(const ItemAddedStrings& strings, const Youtube::Item& item, CardinalFunction cardinalFunction, const std::optional<dpp::user>& requester = {});
+        static dpp::message ItemAddedMessage(const ItemAddedStrings& strings, const ytcpp::Item& item, CardinalFunction cardinalFunction, const std::optional<dpp::user>& requester = {});
 
         /// @brief Create search message
         /// @param strings Locale's search strings
         /// @param cardinalFunction Locale's cardinal ending function
         /// @param results Search results
         /// @return Ephemeral message
-        static dpp::message SearchMessage(const SearchStrings& strings, CardinalFunction cardinalFunction, const Youtube::Results& results);
+        static dpp::message SearchMessage(const SearchStrings& strings, CardinalFunction cardinalFunction, const ytcpp::SearchResults& results);
 
         /// @brief Create session end message
         /// @param strings Locale's session end strings
@@ -408,15 +410,14 @@ namespace Bot
         /// @return Ephemeral message
         virtual inline dpp::message cantPlayPremieres() = 0;
 
+        virtual inline dpp::message cantPlayEmptyPlaylists() = 0;
+
+        virtual inline dpp::message temporarilyUnsupported() = 0;
+
         /// @brief Create youtube error message
         /// @param error Error in question
         /// @return Ephemeral message
-        virtual inline dpp::message youtubeError(const Youtube::YoutubeError& error) = 0;
-
-        /// @brief Create local error message
-        /// @param error Error in question
-        /// @return Ephemeral message
-        virtual inline dpp::message localError(const Youtube::LocalError& error) = 0;
+        virtual inline dpp::message youtubeError(const ytcpp::YtError& error) = 0;
 
         /// @brief Create unknown error message
         /// @return Ephemeral message
@@ -428,12 +429,12 @@ namespace Bot
         /// @param requester User that added the item if needs to be shown in message
         /// @throw std::runtime_error if item type is unknown
         /// @return Normal message
-        virtual inline dpp::message itemAdded(const Youtube::Item& item, bool paused, const std::optional<dpp::user>& requester = {}) = 0;
+        virtual inline dpp::message itemAdded(const ytcpp::Item& item, bool paused, const std::optional<dpp::user>& requester = {}) = 0;
 
         /// @brief Create search message
         /// @param results Search results
         /// @return Ephemeral message
-        virtual inline dpp::message search(const Youtube::Results& results) = 0;
+        virtual inline dpp::message search(const ytcpp::SearchResults& results) = 0;
 
         /// @brief Create "Nothing is playing" message
         /// @return Ephemeral message
@@ -443,27 +444,28 @@ namespace Bot
         /// @param video Playing video
         /// @param paused Whether or not player is paused
         /// @return Normal message
-        virtual inline dpp::message paused(const Youtube::Video& video, bool paused) = 0;
+        virtual inline dpp::message paused(const ytcpp::Video& video, bool paused) = 0;
 
         /// @brief Create "Duration of video <video> is only <duration>!" message
         /// @param video Playing video
         /// @return Ephemeral message
-        virtual inline dpp::message timestampOutOfBounds(const Youtube::Video& video) = 0;
+        virtual inline dpp::message timestampOutOfBounds(const ytcpp::Video& video) = 0;
 
         /// @brief Create "Seeking <video> to <timestamp>" message
         /// @param video Seeking video
         /// @param timestamp Seek timestamp
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message seeking(const Youtube::Video& video, pt::time_duration timestamp, bool paused) = 0;
+        virtual inline dpp::message seeking(const ytcpp::Video& video, pt::time_duration timestamp, bool paused) = 0;
 
+/* Temporarily unsupported!
         /// @brief Create "Seeking <video> to chapter <chapter>, <timestamp>" message
         /// @param video Seeking video
         /// @param chapter The chapter in question
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
         virtual inline dpp::message seeking(const Youtube::Video& video, const Youtube::Video::Chapter& chapter, bool paused) = 0;
-
+      
         /// @brief Create "Video <video> has no chapters" message
         /// @param video The video in question
         /// @return Ephemeral message
@@ -473,6 +475,7 @@ namespace Bot
         /// @param video The video in question
         /// @return Ephemeral message
         virtual inline dpp::message unknownChapter(const Youtube::Video& video) = 0;
+*/
 
         /// @brief Create "Queue is empty" message
         /// @return Ephemeral message
@@ -492,7 +495,7 @@ namespace Bot
         /// @param item Skipped item
         /// @param paused Whether or not to display paused player warning
         /// @return Normal message
-        virtual inline dpp::message skipped(const Youtube::Item& item, bool paused) = 0;
+        virtual inline dpp::message skipped(const ytcpp::Item& item, bool paused) = 0;
 
         /// @brief Create "No playlist is playing" message
         /// @return Ephemeral message
@@ -521,12 +524,12 @@ namespace Bot
         /// @brief Create "Something went wrong, I couldn't play <video>" message
         /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message playError(const Youtube::Video& video) = 0;
+        virtual inline dpp::message playError(const ytcpp::Video& video) = 0;
 
         /// @brief Create "Something happened with my connection to Discord... Playing <video> from the start" message
         /// @param video The video in question
         /// @return Normal message
-        virtual inline dpp::message reconnectedPlay(const Youtube::Video& video) = 0;
+        virtual inline dpp::message reconnectedPlay(const ytcpp::Video& video) = 0;
 
         /// @brief Create session end message
         /// @param settings Guild's settings

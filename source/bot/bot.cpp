@@ -9,6 +9,8 @@
 #include "core/config.hpp"
 #include "core/utility.hpp"
 
+#include <ytcpp/utility.hpp>
+
 namespace kb {
 
 size_t Bot::Bot::CountVoiceMembers(const dpp::guild& guild, dpp::snowflake channelId)
@@ -37,7 +39,7 @@ Bot::Bot::Bot(bool registerCommands)
                 }
             });
 
-        start(true);
+        start(dpp::st_return);
         return;
     }
 
@@ -171,7 +173,7 @@ bool Bot::Bot::playerControlsLocked(const dpp::guild& guild, dpp::snowflake user
     return playerEntry->second.session().voiceChannelId != voiceMemberEntry->second.channel_id;
 }
 
-Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const dpp::interaction& interaction, Info& info, const Youtube::Item& item)
+Bot::Bot::JoinStatus Bot::Bot::joinUserVoice(dpp::discord_client* client, const dpp::interaction& interaction, Info& info, const ytcpp::Item& item)
 {
     dpp::guild* guild = dpp::find_guild(interaction.guild_id);
     const dpp::user& user = interaction.get_issuing_user();
@@ -209,23 +211,19 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
 
     try
     {
-        if (boost::regex_search(itemId, boost::regex(Youtube::VideoConst::ValidateId)) ||
-            boost::regex_search(itemId, boost::regex(Youtube::VideoConst::ExtractId)))
+        if (!ytcpp::Utility::GetVideoId(itemId).empty())
         {
-            Youtube::Video video(itemId);
+            ytcpp::Video video(itemId);
             std::lock_guard lock(m_mutex);
             Info info(guild.id);
 
-            switch (video.type())
-            {
-                case Youtube::Video::Type::Normal:
-                    break;
-                case Youtube::Video::Type::Livestream:
-                    m_logger.info(logMessage("Livestreams can't be played"));
-                    return info.settings().locale->cantPlayLivestreams();
-                case Youtube::Video::Type::Premiere:
-                    m_logger.info(logMessage("Premieres can't be played"));
-                    return info.settings().locale->cantPlayPremieres();
+            if (video.isLivestream()) {
+                m_logger.info(logMessage("Livestreams can't be played"));
+                return info.settings().locale->cantPlayLivestreams();
+            }
+            else if (video.isUpcoming()) {
+                m_logger.info(logMessage("Premieres can't be played"));
+                return info.settings().locale->cantPlayPremieres();
             }
 
             JoinStatus joinStatus = joinUserVoice(client, interaction, info, video);
@@ -249,9 +247,13 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
             return info.settings().locale->itemAdded(video, playerEntry->second.paused(), showRequester ? interaction.get_issuing_user() : std::optional<dpp::user>{});
         }
 
-        Youtube::Playlist playlist(itemId);
+        ytcpp::Playlist playlist(itemId);
         std::lock_guard lock(m_mutex);
         Info info(guild.id);
+        if (playlist.empty()) {
+            m_logger.info(logMessage("Empty playlists can't be played"));
+            return info.settings().locale->cantPlayEmptyPlaylists();
+        }
 
         JoinStatus joinStatus = joinUserVoice(client, interaction, info, playlist);
         PlayerEntry playerEntry = m_players.find(guild.id);
@@ -273,17 +275,17 @@ dpp::message Bot::Bot::addItem(dpp::discord_client* client, const dpp::interacti
         m_logger.info(logMessage(fmt::format("Added \"{}\" [{} videos]", playlist.title(), Utility::NiceString(playlist.videoCount()))));
         return info.settings().locale->itemAdded(playlist, playerEntry->second.paused(), showRequester ? interaction.get_issuing_user() : std::optional<dpp::user>{});
     }
-    catch (const Youtube::YoutubeError& error)
+    catch (const ytcpp::YtError& error)
     {
         std::lock_guard lock(m_mutex);
         m_logger.error(logMessage(fmt::format("YouTube error: {}", error.what())));
         return Info(guild.id).settings().locale->youtubeError(error);
     }
-    catch (const Youtube::LocalError& error)
+    catch (const ytcpp::Error& error)
     {
         std::lock_guard lock(m_mutex);
-        m_logger.error(logMessage(fmt::format("Local error: {}", error.what())));
-        return Info(guild.id).settings().locale->localError(error);
+        m_logger.error(logMessage(fmt::format("ytcpp error: {}", error.what())));
+        return Info(guild.id).settings().locale->unknownError();
     }
     catch (const std::runtime_error& error)
     {

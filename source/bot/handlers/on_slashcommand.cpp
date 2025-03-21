@@ -11,6 +11,8 @@
 #include "bot/commands.hpp"
 #include "core/utility.hpp"
 
+#include <ytcpp/utility.hpp>
+
 namespace kb {
 
 void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
@@ -165,7 +167,7 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
 
     if (interaction.name == CommandsConst::Join::Name)
     {
-        JoinStatus joinStatus = joinUserVoice(event.from, event.command, info);
+        JoinStatus joinStatus = joinUserVoice(event.from(), event.command, info);
         switch (joinStatus.result)
         {
             case JoinStatus::Result::Joined:
@@ -204,7 +206,7 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
         if (playerEntry != m_players.end())
             session.emplace(playerEntry->second.session());
 
-        LeaveStatus leaveStatus = leaveVoice(event.from, guild, info, Locale::EndReason::UserRequested);
+        LeaveStatus leaveStatus = leaveVoice(event.from(), guild, info, Locale::EndReason::UserRequested);
         switch (leaveStatus.result)
         {
             case LeaveStatus::Result::Left:
@@ -228,8 +230,8 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
     {
         const std::string& whatOption = std::get<std::string>(interaction.options[0].value);
         boost::smatch matches, videoMatches, playlistMatches;
-        if (boost::regex_search(whatOption, videoMatches, boost::regex(Youtube::VideoConst::ExtractId)) &&
-            boost::regex_search(whatOption, playlistMatches, boost::regex(Youtube::PlaylistConst::ExtractId)))
+
+        if (!ytcpp::Utility::GetVideoId(whatOption).empty() && !ytcpp::Utility::GetPlaylistId(whatOption).empty())
         {
             event.reply(info.settings().locale->ambiguousPlay(videoMatches.str(1), playlistMatches.str(1)));
             event.get_original_response(std::bind(&Bot::updateEphemeralToken, this, std::placeholders::_1, event.command.token));
@@ -239,18 +241,17 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
 
         std::thread([this, event, guild, logMessage, whatOption]()
         {
-            if (boost::regex_search(whatOption, boost::regex(Youtube::VideoConst::ExtractId)) ||
-                boost::regex_search(whatOption, boost::regex(Youtube::PlaylistConst::ExtractId)))
+            if (!ytcpp::Utility::GetVideoId(whatOption).empty() || !ytcpp::Utility::GetPlaylistId(whatOption).empty())
             {
                 event.thinking();
-                event.edit_original_response(addItem(event.from, event.command, whatOption, logMessage));
+                event.edit_original_response(addItem(event.from(), event.command, whatOption, logMessage));
                 return;
             }
 
             try
             {
                 event.thinking(true);
-                Youtube::Results results = Youtube::Search(whatOption);
+                ytcpp::SearchResults results = ytcpp::QuerySearch(whatOption);
                 std::lock_guard lock(m_mutex);
 
                 event.edit_original_response(
@@ -349,6 +350,11 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
             }
         }
 
+        event.reply(info.settings().locale->temporarilyUnsupported());
+        m_logger.info(logMessage(fmt::format("Chapters are temporarily unsupported")));
+        return;
+
+        /* Temporarily unsupported!
         if (session.playingVideo->video.chapters().empty())
         {
             event.reply(info.settings().locale->noChapters(session.playingVideo->video));
@@ -374,6 +380,9 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
         event.reply(info.settings().locale->unknownChapter(session.playingVideo->video));
         m_logger.info(logMessage(fmt::format("Video \"{}\" doesn't have such chapter", session.playingVideo->video.title())));
         return;
+        */
+
+        
     }
 
     if (interaction.name == CommandsConst::Shuffle::Name)

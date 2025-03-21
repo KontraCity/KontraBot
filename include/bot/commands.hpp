@@ -183,25 +183,25 @@ namespace Bot
             namespace Help
             {
                 constexpr const char* Name = CommandsConst::Help::Name;
-                constexpr const char* Description = u8"Показать справочное сообщение";
+                constexpr const char* Description = "Показать справочное сообщение";
             }
 
             namespace Session
             {
                 constexpr const char* Name = CommandsConst::Session::Name;
-                constexpr const char* Description = u8"Показать информацию о текущей сессии";
+                constexpr const char* Description = "Показать информацию о текущей сессии";
             }
 
             namespace Settings
             {
                 constexpr const char* Name = CommandsConst::Settings::Name;
-                constexpr const char* Description = u8"Показать настройки этого сервера";
+                constexpr const char* Description = "Показать настройки этого сервера";
             }
 
             namespace Stats
             {
                 constexpr const char* Name = CommandsConst::Stats::Name;
-                constexpr const char* Description = u8"Показать статистику этого сервера";
+                constexpr const char* Description = "Показать статистику этого сервера";
             }
 
             namespace Set
@@ -211,47 +211,47 @@ namespace Bot
                 namespace Language
                 {
                     constexpr const char* Name = CommandsConst::Set::Language::Name;
-                    constexpr const char* Description = u8"Установить язык, на котором я буду разговаривать";
+                    constexpr const char* Description = "Установить язык, на котором я буду разговаривать";
 
                     namespace Language
                     {
-                        constexpr const char* Name = u8"язык";
-                        constexpr const char* Description = u8"На каком языке мне говорить?";
+                        constexpr const char* Name = "язык";
+                        constexpr const char* Description = "На каком языке мне говорить?";
                         constexpr const char* Id = "ru";
-                        constexpr const char* Label = u8"Русский";
+                        constexpr const char* Label = "Русский";
                     }
                 }
 
                 namespace Timeout
                 {
                     constexpr const char* Name = CommandsConst::Set::Timeout::Name;
-                    constexpr const char* Description = u8"Установить продолжительность тайм-аута бездействия";
+                    constexpr const char* Description = "Установить продолжительность тайм-аута бездействия";
 
                     namespace Duration
                     {
-                        constexpr const char* Name = u8"продолжительность";
-                        constexpr const char* Description = u8"Какую продолжительность тайм-аута бездействия установить? (в минутах)";
+                        constexpr const char* Name = "продолжительность";
+                        constexpr const char* Description = "Какую продолжительность тайм-аута бездействия установить? (в минутах)";
                     }
                 }
 
                 namespace ChangeStatus
                 {
                     constexpr const char* Name = CommandsConst::Set::ChangeStatus::Name;
-                    constexpr const char* Description = u8"Скажи мне, можно ли мне менять статус голосового канала, когда я играю, или нет?";
+                    constexpr const char* Description = "Скажи мне, можно ли мне менять статус голосового канала, когда я играю, или нет?";
 
                     namespace Change
                     {
-                        constexpr const char* Name = u8"изменять";
-                        constexpr const char* Description = u8"Можно ли мне изменять статус голосового канала или нет?";
+                        constexpr const char* Name = "изменять";
+                        constexpr const char* Description = "Можно ли мне изменять статус голосового канала или нет?";
 
                         namespace Yes
                         {
-                            constexpr const char* Label = u8"Да";
+                            constexpr const char* Label = "Да";
                         }
 
                         namespace No
                         {
-                            constexpr const char* Label = u8"Нет";
+                            constexpr const char* Label = "Нет";
                         }
                     }
                 }
@@ -260,49 +260,49 @@ namespace Bot
             namespace Join
             {
                 constexpr const char* Name = CommandsConst::Join::Name;
-                constexpr const char* Description = u8"Зайти в твой голосовой канал";
+                constexpr const char* Description = "Зайти в твой голосовой канал";
             }
 
             namespace Leave
             {
                 constexpr const char* Name = CommandsConst::Leave::Name;
-                constexpr const char* Description = u8"Выйти из голосового канала, в котором я сейчас сижу";
+                constexpr const char* Description = "Выйти из голосового канала, в котором я сейчас сижу";
             }
 
             namespace Play
             {
                 constexpr const char* Name = CommandsConst::Play::Name;
-                constexpr const char* Description = u8"Сыграть видео или плейлист с YouTube";
+                constexpr const char* Description = "Сыграть видео или плейлист с YouTube";
 
                 namespace What
                 {
-                    constexpr const char* Name = u8"что";
-                    constexpr const char* Description = u8"Какое видео или плейлист ты хочешь сыграть?";
+                    constexpr const char* Name = "что";
+                    constexpr const char* Description = "Какое видео или плейлист ты хочешь сыграть?";
                 }
             }
 
             namespace Pause
             {
                 constexpr const char* Name = CommandsConst::Pause::Name;
-                constexpr const char* Description = u8"Поставить играющее видео на паузу или снять с неё, если оно уже стоит на паузе";
+                constexpr const char* Description = "Поставить играющее видео на паузу или снять с неё, если оно уже стоит на паузе";
             }
 
             namespace Seek
             {
                 constexpr const char* Name = CommandsConst::Seek::Name;
-                constexpr const char* Description = u8"Перемотать играющее видео на время или главу";
+                constexpr const char* Description = "Перемотать играющее видео на время или главу";
 
                 namespace TimestampChapter
                 {
-                    constexpr const char* Name = u8"время-глава";
-                    constexpr const char* Description = u8"На какое время или главу перемотать?";
+                    constexpr const char* Name = "время-глава";
+                    constexpr const char* Description = "На какое время или главу перемотать?";
                 }
             }
 
             namespace Shuffle
             {
                 constexpr const char* Name = CommandsConst::Shuffle::Name;
-                constexpr const char* Description = u8"Перемешать видео и плейлисты в очереди";
+                constexpr const char* Description = "Перемешать видео и плейлисты в очереди";
             }
 
             namespace Skip
@@ -312,26 +312,26 @@ namespace Bot
                 namespace Video
                 {
                     constexpr const char* Name = CommandsConst::Skip::Video::Name;
-                    constexpr const char* Description = u8"Пропустить играющее видео";
+                    constexpr const char* Description = "Пропустить играющее видео";
                 }
 
                 namespace Playlist
                 {
                     constexpr const char* Name = CommandsConst::Skip::Playlist::Name;
-                    constexpr const char* Description = u8"Пропустить играющий плейлист";
+                    constexpr const char* Description = "Пропустить играющий плейлист";
                 }
             }
 
             namespace Clear
             {
                 constexpr const char* Name = CommandsConst::Clear::Name;
-                constexpr const char* Description = u8"Очистить очередь";
+                constexpr const char* Description = "Очистить очередь";
             }
 
             namespace Stop
             {
                 constexpr const char* Name = CommandsConst::Stop::Name;
-                constexpr const char* Description = u8"Остановить воспроизведение играющего видео/плейлиста и очистить очередь";
+                constexpr const char* Description = "Остановить воспроизведение играющего видео/плейлиста и очистить очередь";
             }
         }
     }

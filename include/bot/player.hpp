@@ -23,7 +23,7 @@ namespace kb {
 #include "bot/session.hpp"
 #include "bot/signal.hpp"
 #include "bot/timeout.hpp"
-#include "youtube/item.hpp"
+#include "ytcpp/item.hpp"
 
 namespace kb {
 
@@ -76,11 +76,13 @@ namespace Bot
         /// @param info Guild's info
         void incrementPlayedTracks(Info& info);
 
+/* Temporarily unsupported!
         /// @brief Update playing chapter
         /// @param chapter The reached chapter
         /// @param info Guild's info
         void chapterReached(const Youtube::Video::Chapter& chapter, const Info& info);
-
+*/
+        
         /// @brief Start send thread if there is a playing video or enable timeout
         void checkPlayingVideo();
 
@@ -144,7 +146,7 @@ namespace Bot
         /// @param item Item to add
         /// @param requester User that requested the item to be added
         /// @param info Guild's info
-        void addItem(const Youtube::Item& item, const dpp::user& requester, const Info& info);
+        void addItem(const ytcpp::Item& item, const dpp::user& requester, const Info& info);
 
         /// @brief Check if player is paused
         /// @return True if player is paused
