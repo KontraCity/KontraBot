@@ -229,11 +229,11 @@ void Bot::Bot::onSlashcommand(const dpp::slashcommand_t& event)
     if (interaction.name == CommandsConst::Play::Name)
     {
         const std::string& whatOption = std::get<std::string>(interaction.options[0].value);
-        boost::smatch matches, videoMatches, playlistMatches;
-
-        if (!ytcpp::Utility::GetVideoId(whatOption).empty() && !ytcpp::Utility::GetPlaylistId(whatOption).empty())
+        std::string videoId = ytcpp::Utility::GetVideoId(whatOption);
+        std::string playlistId = ytcpp::Utility::GetPlaylistId(whatOption);
+        if (!videoId.empty() && !playlistId.empty())
         {
-            event.reply(info.settings().locale->ambiguousPlay(videoMatches.str(1), playlistMatches.str(1)));
+            event.reply(info.settings().locale->ambiguousPlay(videoId, playlistId));
             event.get_original_response(std::bind(&Bot::updateEphemeralToken, this, std::placeholders::_1, event.command.token));
             m_logger.info(logMessage("Ambiguous"));
             return;

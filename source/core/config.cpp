@@ -1,5 +1,4 @@
 #include "core/config.hpp"
-using namespace kb::ConfigConst;
 
 #include <nlohmann/json.hpp>
 using nlohmann::json;
@@ -9,8 +8,26 @@ using nlohmann::json;
 
 namespace kb {
 
-// std::make_unique won't work here: new is used instead
-const std::unique_ptr<Config> Config::Instance(new Config);
+namespace Objects {
+    constexpr const char* DiscordBotApiToken = "discord_bot_api_token";
+    constexpr const char* YoutubeAuthEnabled = "youtube_auth_enabled";
+
+    namespace Proxy {
+        constexpr const char* Object = "proxy";
+        constexpr const char* Enabled = "enabled";
+        constexpr const char* Url = "url";
+    }
+}
+
+namespace Defaults {
+    constexpr const char* DiscordBotApiToken = "Enter Discord bot API token here";
+    constexpr bool YoutubeAuthEnabled = false;
+
+    namespace Proxy {
+        constexpr bool Enabled = false;
+        constexpr const char* Url = "Enter proxy URL here";
+    }
+}
 
 void Config::GenerateSampleFile() {
     json proxyObject;
@@ -20,23 +37,24 @@ void Config::GenerateSampleFile() {
     json configJson;
     configJson[Objects::DiscordBotApiToken] = Defaults::DiscordBotApiToken;
     configJson[Objects::Proxy::Object] = proxyObject;
-    IO::WriteFile(ConfigFile, configJson.dump(4) + '\n');
+    IO::WriteFile(Filename, configJson.dump(4) + '\n');
 }
 
 Config::Config() {
     std::string fileContents;
     try {
-        fileContents = IO::ReadFile(ConfigFile);
+        fileContents = IO::ReadFile(Filename);
     }
     catch (...) {
         m_error = "Couldn't open config file";
     }
 
     try {
-        json configJson = json::parse(fileContents);
+        const json configJson = json::parse(fileContents);
         m_discordBotApiToken = configJson.at(Objects::DiscordBotApiToken);
+        m_youtubeAuthEnabled = configJson.at(Objects::YoutubeAuthEnabled);
 
-        json proxyObject = configJson.at(Objects::Proxy::Object);
+        const json& proxyObject = configJson.at(Objects::Proxy::Object);
         m_proxyEnabled = proxyObject.at(Objects::Proxy::Enabled);
         m_proxyUrl = proxyObject.at(Objects::Proxy::Url);
     }

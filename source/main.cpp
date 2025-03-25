@@ -116,12 +116,12 @@ static int ShowHelpMessage(const ParseResult& result)
 /// @return Executable exit code
 static int GenerateFiles()
 {
-    if (std::filesystem::is_regular_file(ConfigConst::ConfigFile))
+    if (std::filesystem::is_regular_file(Config::Filename))
     {
         fmt::print(
             "Configuration file \"{}\" already exists.\n"
             "Delete it first to confirm that you don't care about its contents.\n",
-            ConfigConst::ConfigFile
+            Config::Filename
         );
         return 1;
     }
@@ -145,7 +145,7 @@ static int GenerateFiles()
         fmt::print(
             "Couldn't create configuration file \"{}\".\n"
             "Please check permissions.\n",
-            ConfigConst::ConfigFile
+            Config::Filename
         );
         return 1;
     }
@@ -163,7 +163,7 @@ static int GenerateFiles()
     fmt::print(
         "Configuration file \"{}\" and information directory \"{}/\" were created.\n"
         "Please configure the file before starting KontraBot.\n",
-        ConfigConst::ConfigFile, Bot::InfoConst::InfoDirectory
+        Config::Filename, Bot::InfoConst::InfoDirectory
     );
     return 0;
 }
@@ -175,10 +175,10 @@ static bool CheckSingletons(const ParseResult& result)
 {
     spdlog::logger logger = Utility::CreateLogger("init", result.forceColor);
 
-    if (!Config::GetError().empty())
+    if (!Config::Error().empty())
     {
-        logger.error("Configuration error: {}", Config::GetError());
-        logger.info("Hint: Check configuration file \"{}\"", ConfigConst::ConfigFile);
+        logger.error("Configuration error: {}", Config::Error());
+        logger.info("Hint: Check configuration file \"{}\"", Config::Filename);
         logger.info("Hint: You can generate necessary files by running {} --generate", result.executableName);
         return false;
     }
@@ -192,7 +192,7 @@ static void YtcppInit() {
     sink->set_color_mode(spdlog::color_mode::always);
     ytcpp::Logger::Sinks().push_back(std::move(sink));
     ytcpp::Logger::SetLevel(spdlog::level::debug);
-    ytcpp::Innertube::Authorize();
+    ytcpp::Innertube::AuthEnabled(Config::YoutubeAuthEnabled());
 }
 
 int main(int argc, char** argv)
