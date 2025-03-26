@@ -10,7 +10,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(dpp CONFIG REQUIRED)
 find_package(Boost REQUIRED)
 
-set(BuildExample NO)
+set(BuildYtcppExample NO)
 add_subdirectory("ytcpp/")
 include_directories("ytcpp/ytcpp/include/")
 
